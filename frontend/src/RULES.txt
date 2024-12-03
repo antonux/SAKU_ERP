@@ -1,0 +1,2 @@
+We got 3 types of users. Admin, Store, and Warehouse.
+These are react based structure. 
