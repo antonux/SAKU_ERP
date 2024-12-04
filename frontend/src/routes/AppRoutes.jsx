@@ -15,16 +15,18 @@ const AppRoutes = () => {
   const role = "admin";
 
   return (
-    <div className="font-sans">
+      <div className="flex flex-col w-full h-screen">
       <Navbar />
-      <Sidebar />
-      <div className="bg-[#f8f9fd] min-h-screen">
-        <Routes>
-          {role === "admin" && <Route path="/*" element={<AdminRoutes />} />}
-          {role === "store" && <Route path="/*" element={<StoreRoutes />} />}
-          {role === "warehouse" && <Route path="/*" element={<WarehouseRoutes />} />}
-          <Route path="" element={<Navigate to="/error" />} />
-        </Routes>
+      <div className="flex flex-1">
+        <Sidebar />
+        <div className="flex-1 bg-[#f8f9fd] px-5 overflow-y-auto">
+          <Routes>
+            {role === "admin" && <Route path="/*" element={<AdminRoutes />} />}
+            {role === "store" && <Route path="/*" element={<StoreRoutes />} />}
+            {role === "warehouse" && <Route path="/*" element={<WarehouseRoutes />} />}
+            <Route path="" element={<Navigate to="/error" />} />
+          </Routes>
+        </div>
       </div>
     </div>
   );

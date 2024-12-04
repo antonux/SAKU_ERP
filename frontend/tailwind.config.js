@@ -9,6 +9,9 @@ export default {
       fontFamily: {
         sans: ['Inter', 'sans-serif'], // Adds Inter as the primary sans font
       },
+       transitionProperty: {
+        width: 'width',
+      },
     },
   },
   plugins: [

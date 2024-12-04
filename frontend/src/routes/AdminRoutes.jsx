@@ -7,24 +7,32 @@ import { Routes, Route } from "react-router-dom";
 // pages
 import Settings from "../pages/Shared/Settings";
 import Overview from "../pages/Shared/overview";
+import Request from "../pages/Admin/Request";
 
 const AdminRoutes = () => {
   return (
-    <Routes>
-      {/* <Route path="/" element={<Overview />} />
+    <div className="">
+      <Routes>
+        {/* <Route path="/" element={<Overview />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/users" element={<Users />} /> */}
-      {/* Add more admin-specific routes as needed */}
-      <Route
-        path="/shared/settings"
-        element={<Settings />}
-      />
-      <Route
-        path="/shared/overview"
-        element={<Overview />}
-      />
-      
-    </Routes>
+        {/* Add more admin-specific routes as needed */}
+        <Route
+          path="/shared/settings"
+          element={<Settings />}
+        />
+        <Route
+          path="/shared/overview"
+          element={<Overview />}
+        />
+
+        <Route
+          path="/admin/request"
+          element={<Request />}
+        />
+
+      </Routes>
+    </div>
   );
 };
 

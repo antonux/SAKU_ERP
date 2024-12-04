@@ -4,7 +4,7 @@ import { useSidebar } from "../contexts/SidebarContext";
 const Navbar = () => {
   const { toggleSidebar, isSidebarOpen } = useSidebar();
   return (
-    <nav className={`navbar fixed bg-white z-50 w-full text-[#373737] px-4 py-6 flex gap-6 items-center transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"}`}>
+    <nav className={`navbar fixed top-0 bg-white z-50 w-full text-[#373737] px-4 py-6 flex gap-6 items-center transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"}`}>
       <button className="text-[#373737] text-xl" onClick={toggleSidebar}>
         ☰ 
       </button>

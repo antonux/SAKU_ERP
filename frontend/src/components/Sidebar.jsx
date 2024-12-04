@@ -11,8 +11,9 @@ const Sidebar = ({ role }) => {
 
   return (
     <aside
-      className={`flex flex-col items-center sidebar bg-white w-64 transform ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } transition-transform duration-300 fixed h-full`}
+      className={`flex flex-col items-center sidebar sticky top-0 left-0 bg-white h-full transition-all duration-300 ease-in-out ${
+    isSidebarOpen ? "translate-x-0 w-64" : "-translate-x-[10rem] w-0"
+  }`}
     >
       <h1 className="pt-6 font-extrabold tracking-wide text-3xl bg-gradient-to-r from-[#2CC56F] to-[#BEDC7C] bg-clip-text text-transparent">
         SAKU
