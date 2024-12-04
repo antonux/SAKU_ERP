@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 // import { useRole } from "../hooks/useRole";
 
 import AdminRoutes from "../routes/AdminRoutes";
