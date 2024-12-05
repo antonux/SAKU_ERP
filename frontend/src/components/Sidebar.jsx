@@ -1,8 +1,9 @@
 import { React, useState } from "react";
 import roleConfig from "../utils/roleConfig";
 // context
-import { useSidebar } from "../contexts/SidebarContext";
+import { useSidebar } from "../contexts/SideBarContext";
 import { NavLink } from 'react-router-dom';
+import { MdLogout } from "react-icons/md";
 
 const Sidebar = ({ role }) => {
   const links = roleConfig["admin"]?.sidebarLinks || [];
@@ -11,7 +12,7 @@ const Sidebar = ({ role }) => {
 
   return (
     <aside
-      className={`flex flex-col items-center sidebar sticky top-0 left-0 bg-white h-full transition-all duration-300 ease-in-out ${
+      className={`flex flex-col items-center shadow-md sidebar sticky top-0 left-0 bg-white h-auto transition-all duration-300 ease-in-out ${
     isSidebarOpen ? "translate-x-0 w-64" : "-translate-x-[10rem] w-0"
   }`}
     >
@@ -42,8 +43,9 @@ const Sidebar = ({ role }) => {
             </NavLink>
           </li>
         ))}
+        {/* <h1 className="flex items-center mt-[30%] gap-2 font-medium px-[5.9rem] py-[.9rem] text-[#666973]"><MdLogout className="mr-2 size-5 z-50" /> Logout</h1> */}
       </div>
-
+        
     </aside>
   );
 };

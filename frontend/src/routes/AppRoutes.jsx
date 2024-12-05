@@ -15,11 +15,11 @@ const AppRoutes = () => {
   const role = "admin";
 
   return (
-      <div className="flex flex-col w-full h-screen">
+    <div className="flex flex-col w-full h-screen overflow-hidden">
       <Navbar />
       <div className="flex flex-1">
         <Sidebar />
-        <div className="flex-1 bg-[#f8f9fd] px-5 overflow-y-auto">
+        <div className="flex-1 bg-[#f8f9fd] px-5 min-w-0">
           <Routes>
             {role === "admin" && <Route path="/*" element={<AdminRoutes />} />}
             {role === "store" && <Route path="/*" element={<StoreRoutes />} />}

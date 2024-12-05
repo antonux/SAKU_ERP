@@ -8,6 +8,7 @@ import { Routes, Route } from "react-router-dom";
 import Settings from "../pages/Shared/Settings";
 import Overview from "../pages/Shared/overview";
 import Request from "../pages/Admin/Request";
+import Inventory from "../pages/Admin/Inventory";
 
 const AdminRoutes = () => {
   return (
@@ -17,18 +18,25 @@ const AdminRoutes = () => {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/users" element={<Users />} /> */}
         {/* Add more admin-specific routes as needed */}
-        <Route
-          path="/shared/settings"
-          element={<Settings />}
-        />
+
         <Route
           path="/shared/overview"
           element={<Overview />}
         />
 
         <Route
+          path="/shared/settings"
+          element={<Settings />}
+        />
+
+        <Route
           path="/admin/request"
           element={<Request />}
+        />
+
+        <Route
+          path="/admin/inventory"
+          element={<Inventory />}
         />
 
       </Routes>
