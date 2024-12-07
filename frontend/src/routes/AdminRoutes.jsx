@@ -9,6 +9,9 @@ import Settings from "../pages/Shared/Settings";
 import Overview from "../pages/Shared/overview";
 import Request from "../pages/Admin/Request";
 import Inventory from "../pages/Admin/Inventory";
+import Accounts from "../pages/Admin/Accounts";
+import Notifications from "../pages/Shared/Notifications";
+import Suppliers from "../pages/Shared/Suppliers";
 
 const AdminRoutes = () => {
   return (
@@ -25,11 +28,6 @@ const AdminRoutes = () => {
         />
 
         <Route
-          path="/shared/settings"
-          element={<Settings />}
-        />
-
-        <Route
           path="/admin/request"
           element={<Request />}
         />
@@ -37,6 +35,26 @@ const AdminRoutes = () => {
         <Route
           path="/admin/inventory"
           element={<Inventory />}
+        />
+
+        <Route
+          path="/admin/suppliers"
+          element={<Suppliers />}
+        />
+
+        <Route
+          path="/admin/accounts"
+          element={<Accounts />}
+        />
+
+        <Route
+          path="/admin/notifications"
+          element={<Notifications />}
+        />
+
+        <Route
+          path="/shared/settings"
+          element={<Settings />}
         />
 
       </Routes>
