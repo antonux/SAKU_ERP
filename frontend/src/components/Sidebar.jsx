@@ -2,19 +2,21 @@ import { React, useState } from "react";
 import roleConfig from "../utils/roleConfig";
 // context
 import { useSidebar } from "../contexts/SideBarContext";
+import { useRole } from "../contexts/RoleContext";
+// others
 import { NavLink } from 'react-router-dom';
 import { MdLogout } from "react-icons/md";
 
-const Sidebar = ({ role }) => {
-  const links = roleConfig["admin"]?.sidebarLinks || [];
+const Sidebar = () => {
+  const { user } = useRole();
+  const links = roleConfig[user]?.sidebarLinks || [];
   const { isSidebarOpen } = useSidebar();
 
 
   return (
     <aside
-      className={`flex flex-col items-center shadow-md sidebar sticky top-0 left-0 bg-white h-auto transition-all duration-300 ease-in-out ${
-    isSidebarOpen ? "translate-x-0 w-64" : "-translate-x-[10rem] w-0"
-  }`}
+      className={`flex flex-col items-center shadow-md sidebar sticky top-0 left-0 bg-white h-auto transition-all duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0 w-64" : "-translate-x-[10rem] w-0"
+        }`}
     >
       <h1 className="pt-6 font-extrabold tracking-wide text-3xl bg-gradient-to-r from-[#2CC56F] to-[#BEDC7C] bg-clip-text text-transparent">
         SAKU
@@ -45,7 +47,7 @@ const Sidebar = ({ role }) => {
         ))}
         {/* <h1 className="flex items-center mt-[30%] gap-2 font-medium px-[5.9rem] py-[.9rem] text-[#666973]"><MdLogout className="mr-2 size-5 z-50" /> Logout</h1> */}
       </div>
-        
+
     </aside>
   );
 };
