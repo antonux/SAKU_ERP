@@ -1,30 +1,48 @@
-import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { useEffect, React } from "react";
+import {useNavigate, Routes, Route, Navigate } from "react-router-dom";
 // import { useRole } from "../hooks/useRole";
 
 import AdminRoutes from "../routes/AdminRoutes";
-// import StoreRoutes from "../routes/StoreRoutes";
+import StoreRoutes from "../routes/StoreRoutes";
 // import WarehouseRoutes from "../routes/StoreRoutes";
 
 //components
 import Navbar from "../components/navbar";
-import Sidebar from "../components/sidebar";
+import Sidebar from "../components/Sidebar";
+
+// login
+import Login from '../pages/Shared/Login'
+
+// context
+import { useRole } from "../contexts/RoleContext";
 
 const AppRoutes = () => {
-  // const { role } = useRole();
-  const role = "admin";
+  const { user } = useRole();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/")
+    }
+  }, [user, navigate])
 
   return (
     <div className="flex flex-col w-full h-screen overflow-hidden">
-      <Navbar />
+      {user && <Navbar />}
       <div className="flex flex-1">
-        <Sidebar />
+        {user && <Sidebar />}
         <div className="flex-1 bg-[#f8f9fd] px-5 min-w-0">
           <Routes>
-            {role === "admin" && <Route path="/*" element={<AdminRoutes />} />}
-            {role === "store" && <Route path="/*" element={<StoreRoutes />} />}
-            {role === "warehouse" && <Route path="/*" element={<WarehouseRoutes />} />}
-            <Route path="" element={<Navigate to="/error" />} />
+            {!user &&
+              <Route
+                path="/"
+                element={<Login />}
+              />
+            }
+            {user === "admin" && <Route path="/*" element={<AdminRoutes />} />}
+            {user === "store" && <Route path="/*" element={<StoreRoutes />} />}
+            {user === "warehouse" && <Route path="/*" element={<WarehouseRoutes />} />}
+            <Route path="" element={<Navigate to="/overview" />} />
           </Routes>
         </div>
       </div>

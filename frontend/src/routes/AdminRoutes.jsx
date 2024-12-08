@@ -1,13 +1,9 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import { MemoryRouter } from "react-router-dom";
-// import Overview from "../pages/Shared/overview";
-// import Dashboard from "../pages/Admin/dashboard";
-// import Users from "../pages/Admin/users";
 
 // pages
 import Settings from "../pages/Shared/Settings";
-import Overview from "../pages/Shared/overview";
+import Overview from "../pages/Shared/Overview";
 import Request from "../pages/Admin/Request";
 import Purchase from "../pages/Admin/Purchase";
 import Inventory from "../pages/Admin/Inventory";
@@ -28,57 +24,57 @@ const AdminRoutes = () => {
         {/* Add more admin-specific routes as needed */}
 
         <Route
-          path="/shared/overview"
+          path="/overview"
           element={<Overview />}
         />
 
         <Route
-          path="/admin/request"
+          path="/request"
           element={<Request />}
         />
 
         <Route
-          path="/admin/purchase"
+          path="/purchase"
           element={<Purchase />}
         />
 
         <Route
-          path="/admin/inventory"
+          path="/inventory"
           element={<Inventory />}
         />
 
         <Route
-          path="/admin/suppliers"
+          path="/suppliers"
           element={<Suppliers />}
         />
 
         <Route
-          path="/admin/accounts"
+          path="/accounts"
           element={<Accounts />}
         />
 
         <Route
-          path="/admin/notifications"
+          path="/notifications"
           element={<Notifications />}
         />
 
         <Route
-          path="/shared/settings"
+          path="/settings"
           element={<Settings />}
         />
 
         <Route
-          path="/admin/inventory/add-stock"
+          path="/inventory/add-stock"
           element={<AddStock />}
         />
 
         <Route
-          path="/admin/inventory/view-stock"
+          path="/inventory/view-stock"
           element={<ViewStock />}
         />
 
         <Route
-          path="/admin/request/view-more"
+          path="/request/view-more"
           element={<RequestViewMore />}
         />
 

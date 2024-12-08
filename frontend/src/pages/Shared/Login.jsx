@@ -3,6 +3,7 @@ import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import ForgotPassword from "../../components/Shared/LoginForgotPassword";
 import VerifyEmail from "../../components/Shared/LoginVerifyEmail";
 import ResetPassword from "../../components/Shared/LoginResetPassword";
+import { useRole } from "../../contexts/RoleContext";
 
 
 const Login = () => {
@@ -10,6 +11,9 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  const { logUser, user } = useRole();
+  console.log(user)
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -129,7 +133,7 @@ const Login = () => {
                     </label>
                     <input
                       id="email"
-                      type="email"
+                      type="text" // EMAIL
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
@@ -186,6 +190,7 @@ const Login = () => {
                 </div>
                 <div>
                   <button
+                    onClick={() => logUser(email)}
                     type="submit"
                     className="w-full flex justify-center py-4 px-4 mt-8 border border-transparent rounded-lg shadow-sm text-sm font-normal text-white bg-[#56cc73] hover:bg-[#48af62] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
                   >
