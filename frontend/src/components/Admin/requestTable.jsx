@@ -66,7 +66,7 @@ const Table = () => {
               <td className="px-6 py-5">{item.date}</td>
               <td className="px-6 py-5 text-orange-400">{item.status}</td>
               <td className="px-6 py-5">
-                <Link to="/admin/request/view-more">
+                <Link to="/request/view-more">
                   <button className="text-blue-500 hover:underline">
                     {item.action}
                   </button>

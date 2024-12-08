@@ -9,13 +9,13 @@ const AddStock = () => {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.pathname !== "/admin/request") {
+    if (location.pathname !== "/request") {
       localStorage.setItem("lastRequestPath", location.pathname);
     }
   }, []);
 
   const handleGoBack = () => {
-    localStorage.setItem("lastRequestPath", "/admin/request");
+    localStorage.setItem("lastRequestPath", "/request");
     const lp = localStorage.getItem("lastRequestPath")
     navigate(lp)
   };

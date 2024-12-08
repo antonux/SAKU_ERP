@@ -5,7 +5,7 @@ const AddStockInput = ({ isUpdate, setIsUpdate }) => {
   const location = useLocation();
   const [isView, setIsView] = useState(true)
   useEffect(() => {
-    if (location.pathname == "/admin/inventory/add-stock") {
+    if (location.pathname == "/inventory/add-stock") {
       setIsView(false);
     }
   }, []);

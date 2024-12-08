@@ -14,13 +14,13 @@ const AddStock = () => {
   const [preview, setPreview] = useState("/images/products/tire.jpg");
 
   useEffect(() => {
-    if (location.pathname !== "/admin/inventory") {
+    if (location.pathname !== "/inventory") {
       localStorage.setItem("lastInventoryPath", location.pathname);
     }
   }, []);
 
   const handleGoBack = () => {
-    localStorage.setItem("lastInventoryPath", "/admin/inventory");
+    localStorage.setItem("lastInventoryPath", "/inventory");
     const lp = localStorage.getItem("lastInventoryPath")
     navigate(lp)
   };

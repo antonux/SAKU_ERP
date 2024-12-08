@@ -1,15 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { IoIosSearch } from "react-icons/io";
 import { Link } from "react-router-dom";
 
+// context
+import { useRole } from "../../contexts/RoleContext";
+
 const Table = () => {
   const [inventoryFilter, setInventoryFilter] = useState("All");
+  const [isStore, setIsStore] = useState(false);
+  const { user } = useRole();
+  const role = user;
+
   const inventoryFilterClass = (value) =>
     `px-4 font-normal rounded-full text-[#272525] ${inventoryFilter === value
       ? "border-[1px] border-black"
       : "border-[1px] border-transparent"
     } hover:border-gray-400 transition duration-200 ease-in-out`;
-
 
   const testData = new Array(10).fill({
     image: "/images/products/tire.jpg",
@@ -22,8 +28,14 @@ const Table = () => {
     status: "In Stock",
     action: "View",
   });
+
+
+
+
+
+
   return (
-    <div className="rounded-lg shadow-md overflow-auto scrollbar-thin">
+    <div className="rounded-lg h-full bg-white shadow-md overflow-auto scrollbar-thin">
       <table className="w-full text-sm text-left text-gray-500">
         <thead className='sticky top-0'>
           <tr className="text-xs text-gray-700 bg-white">
@@ -31,7 +43,7 @@ const Table = () => {
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-5">
                   <h1 className="text-xl font-semibold text-[#272525]">
-                    Stock List
+                    {role === "store" ? "Store Stock List" : "Stock List"}
                   </h1>
                   <div className="relative ml-4"> {/* Add margin for spacing */}
                     <IoIosSearch className="absolute size-5 left-2 top-1/2 transform -translate-y-1/2 text-[#2a2929]" /> {/* Position the icon */}
@@ -42,7 +54,7 @@ const Table = () => {
                     />
                   </div>
                 </div>
-                <div className="flex text-sm space-x-2 gap-2 text-center pr-12 cursor-pointer">
+                <div className={`flex text-sm space-x-2 gap-2 text-center pr-12 cursor-pointer ${role == "store" ? "hidden" : ""}`}>
                   <h1 className="font-normal text-[#272525] cursor-default">
                     Location:
                   </h1>
@@ -71,7 +83,7 @@ const Table = () => {
             <th scope="col" className="px-6 py-3">Total Amount</th>
             <th scope="col" className="px-6 py-3">Quantity</th>
             <th scope="col" className="px-6 py-3">Status</th>
-            <th scope="col" className="px-6 py-3">Action</th>
+            <th scope="col" className={`px-6 py-3 ${role == "store" ? "hidden" : ""}`}>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -97,8 +109,8 @@ const Table = () => {
               <td className="px-6 py-3 text-green-500">
                 {item.status}
               </td>
-              <td className="px-6 py-4">
-                <Link to="/admin/inventory/view-stock">
+              <td className={`px-6 py-4 ${role == "store" ? "hidden" : ""}`}>
+                <Link to="/inventory/view-stock">
                   <button className="text-blue-500 hover:underline">
                     {item.action}
                   </button>
