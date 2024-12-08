@@ -7,7 +7,7 @@ function App() {
   return (
     <div className="font-sans">
       <BrowserRouter>
-        <Login />
+        <AppRoutes />
       </BrowserRouter>
     </div>
   )

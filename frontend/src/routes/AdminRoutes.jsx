@@ -1,5 +1,6 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
+import { MemoryRouter } from "react-router-dom";
 // import Overview from "../pages/Shared/overview";
 // import Dashboard from "../pages/Admin/dashboard";
 // import Users from "../pages/Admin/users";
@@ -9,6 +10,8 @@ import Settings from "../pages/Shared/Settings";
 import Overview from "../pages/Shared/overview";
 import Request from "../pages/Admin/Request";
 import Inventory from "../pages/Admin/Inventory";
+import AddStock from "../pages/Admin/InventoryAddStock";
+import ViewStock from "../pages/Admin/InventoryViewProduct";
 
 const AdminRoutes = () => {
   return (
@@ -37,6 +40,16 @@ const AdminRoutes = () => {
         <Route
           path="/admin/inventory"
           element={<Inventory />}
+        />
+
+        <Route
+          path="/admin/inventory/add-stock"
+          element={<AddStock />}
+        />
+
+        <Route
+          path="/admin/inventory/view-stock"
+          element={<ViewStock />}
         />
 
       </Routes>

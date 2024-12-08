@@ -6,13 +6,13 @@ const GoBackButton = () => {
   const navigate = useNavigate();
 
   return (
-    <button 
-      onClick={() => navigate(-1)} 
-      className=" text-[#238b45] px-4 py-2 rounded flex gap-2 items-center"
+    <div
+      // onClick={() => navigate(-1)} 
+      className=" text-[#555555] hover:text-[#313131] px-4 py-2 rounded flex gap-2 items-center"
     >
       <MdArrowBackIosNew className='size-6'/>
       Back
-    </button>
+    </div>
   );
 };
 

@@ -26,7 +26,7 @@ const Sidebar = ({ role }) => {
               to={link.path}
               className={({ isActive }) =>
                 `flex items-center gap-2 font-medium px-[5.9rem] py-[.9rem] relative
-          ${isActive ? "text-green-500" : "text-[#666973]"}`}
+          ${isActive ? "text-green-500" : "text-[#666973] hover:scale-105 hover:text-[#858891]"}`}
             >
               {({ isActive }) => (
                 <>

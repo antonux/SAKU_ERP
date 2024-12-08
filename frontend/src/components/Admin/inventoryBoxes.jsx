@@ -1,7 +1,7 @@
 
 const Boxes = () => {
   return (
-    <div className='flex w-full gap-3'>
+    <div className='flex w-full justify-around gap-3'>
       {/* Categories ----------------------------------------------------- */}
       <div className="BOX1 flex flex-col gap-3 font-medium">
         <div className="bg-[#f8f6f2] flex flex-col gap-1 p-5 w-[13rem] rounded-lg border-[1px] border-[#eaf0f2]">
