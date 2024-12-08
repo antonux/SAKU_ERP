@@ -9,12 +9,14 @@ import { MemoryRouter } from "react-router-dom";
 import Settings from "../pages/Shared/Settings";
 import Overview from "../pages/Shared/overview";
 import Request from "../pages/Admin/Request";
+import Purchase from "../pages/Admin/Purchase";
 import Inventory from "../pages/Admin/Inventory";
 import Accounts from "../pages/Admin/Accounts";
 import Notifications from "../pages/Shared/Notifications";
 import Suppliers from "../pages/Shared/Suppliers";
 import AddStock from "../pages/Admin/InventoryAddStock";
 import ViewStock from "../pages/Admin/InventoryViewProduct";
+import RequestViewMore from "../pages/Admin/RequestViewMore";
 
 const AdminRoutes = () => {
   return (
@@ -33,6 +35,11 @@ const AdminRoutes = () => {
         <Route
           path="/admin/request"
           element={<Request />}
+        />
+
+        <Route
+          path="/admin/purchase"
+          element={<Purchase />}
         />
 
         <Route
@@ -68,6 +75,11 @@ const AdminRoutes = () => {
         <Route
           path="/admin/inventory/view-stock"
           element={<ViewStock />}
+        />
+
+        <Route
+          path="/admin/request/view-more"
+          element={<RequestViewMore />}
         />
 
       </Routes>

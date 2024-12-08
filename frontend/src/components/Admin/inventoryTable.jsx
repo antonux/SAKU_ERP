@@ -80,7 +80,7 @@ const Table = () => {
               key={index}
               className="bg-white border-b hover:bg-gray-50"
             >
-              <td className="px-6 py-4">
+              <td className="px-6 py-3">
                 <source srcSet={`${item.image}?quality=50`} type="image/jpeg" />
                 <img
                   src={item.image}
@@ -88,13 +88,13 @@ const Table = () => {
                   className="size-10 object-cover"
                 />
               </td>
-              <td className="px-6 py-4">{item.name}</td>
-              <td className="px-6 py-4">{item.size_model}</td>
-              <td className="px-6 py-4">{item.category}</td>
-              <td className="px-6 py-4">{item.unitPrice}</td>
-              <td className="px-6 py-4">{item.totalAmount}</td>
-              <td className="px-6 py-4">{item.quantity}</td>
-              <td className="px-6 py-4 text-green-500">
+              <td className="px-6 py-3">{item.name}</td>
+              <td className="px-6 py-3">{item.size_model}</td>
+              <td className="px-6 py-3">{item.category}</td>
+              <td className="px-6 py-3">{item.unitPrice}</td>
+              <td className="px-6 py-3">{item.totalAmount}</td>
+              <td className="px-6 py-3">{item.quantity}</td>
+              <td className="px-6 py-3 text-green-500">
                 {item.status}
               </td>
               <td className="px-6 py-4">
