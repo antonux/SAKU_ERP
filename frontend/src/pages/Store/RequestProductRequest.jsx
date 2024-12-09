@@ -3,11 +3,15 @@ import { useEffect, useState } from "react";
 
 // Components
 import GoBackButton from "../../components/buttons/Backbutton";
+import FloatingComponent from "../../components/Shared/floatingInventory";
 
 // Context
 import { useRole } from "../../contexts/RoleContext";
 
 const AddStock = () => {
+  const [showFloating, setShowFloating] = useState(false);
+  const [isFading, setIsFading] = useState(false);
+  console.log(showFloating)
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useRole();
@@ -37,6 +41,9 @@ const AddStock = () => {
         <GoBackButton />
       </button>
       <div className="flex flex-col pt-5 px-7 pb-10 gap-10 mt-[6rem] w-full h-full shadow-md overflow-auto rounded-lg bg-white text-black scrollbar-thin">
+        {showFloating &&
+          <FloatingComponent onClose={() => setShowFloating(false)} />
+        }
         <h1 className="text-xl font-semibold text-[#272525]">Product Request Form</h1>
         <div className="flex gap-5 whitespace-nowrap items-center">
           <div className="w-[20rem]">
@@ -44,8 +51,10 @@ const AddStock = () => {
             <input
               type="text"
               id="product"
+              onClick={() => setShowFloating(true)}
+              readOnly
               placeholder="Choose product"
-              className="mt-1 block w-full px-3 py-3 text-center text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none"
+              className="mt-1 block cursor-pointer w-full px-3 py-3 text-center text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none"
             />
           </div>
           <div className="w-[20rem]">
