@@ -4,9 +4,13 @@ import { useEffect, useState } from "react";
 // Components
 import GoBackButton from "../../components/buttons/Backbutton";
 
+// Context
+import { useRole } from "../../contexts/RoleContext";
+
 const AddStock = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useRole();
 
   useEffect(() => {
     if (location.pathname !== "/request") {
@@ -87,9 +91,16 @@ const AddStock = () => {
           </table>
         </div>
         <div>
-          <button className="bg-[#7ad0ac] text-white font-light text-base px-12 py-[0.62rem] rounded-xl hover:bg-[#78cca9] focus:outline-none focus:ring-2 focus:ring-green-50">
-            Approve
-          </button>
+          {user !== "store" &&
+            <button className="bg-[#7ad0ac] text-white font-light text-base px-12 py-[0.62rem] rounded-xl hover:bg-[#78cca9] focus:outline-none focus:ring-2 focus:ring-green-50">
+              Approve
+            </button>
+          }
+          {user == "store" &&
+            <button className="bg-red-500 text-white font-light text-base px-12 py-[0.62rem] rounded-xl hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-green-50">
+              Cancel
+            </button>
+          }
         </div>
       </div>
     </div>

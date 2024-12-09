@@ -119,7 +119,7 @@ const Login = () => {
   };
 
   return (
-    <div className="flex w-full min-h-screen justify-center items-center">
+    <div className="flex w-full min-h-screen justify-center items-center bg-white">
       <div className="flex gap-48 z-50">
         <div className="w-full flex flex-col gap-5">
           {view === 'login' && (

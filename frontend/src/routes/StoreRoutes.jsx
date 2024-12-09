@@ -4,10 +4,11 @@ import { Routes, Route } from "react-router-dom";
 // pages
 import Settings from "../pages/Shared/Settings";
 import Overview from "../pages/Shared/Overview";
-import Request from "../pages/Admin/Request";
+import Request from "../pages/Store/Request";
 import Inventory from "../pages/Store/Inventory";
 import Notifications from "../pages/Shared/Notifications";
-import RequestViewMore from "../pages/Admin/RequestViewMore";
+import RequestViewMore from "../pages/Shared/RequestViewMore";
+import ProductRequest from "../pages/Store/RequestProductRequest";
 
 const AdminRoutes = () => {
   return (
@@ -35,18 +36,23 @@ const AdminRoutes = () => {
 
 
         <Route
-          path="/admin/notifications"
+          path="/notifications"
           element={<Notifications />}
         />
 
         <Route
-          path="/shared/settings"
+          path="/settings"
           element={<Settings />}
         />
 
         <Route
-          path="/admin/request/view-more"
+          path="/request/view-more"
           element={<RequestViewMore />}
+        />
+        
+        <Route
+          path="/request/product-request"
+          element={<ProductRequest />}
         />
 
       </Routes>

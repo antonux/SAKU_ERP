@@ -12,7 +12,7 @@ import Notifications from "../pages/Shared/Notifications";
 import Suppliers from "../pages/Shared/Suppliers";
 import AddStock from "../pages/Admin/InventoryAddStock";
 import ViewStock from "../pages/Admin/InventoryViewProduct";
-import RequestViewMore from "../pages/Admin/RequestViewMore";
+import RequestViewMore from "../pages/Shared/RequestViewMore";
 
 const AdminRoutes = () => {
   return (

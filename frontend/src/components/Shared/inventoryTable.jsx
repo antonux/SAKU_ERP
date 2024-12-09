@@ -7,7 +7,6 @@ import { useRole } from "../../contexts/RoleContext";
 
 const Table = () => {
   const [inventoryFilter, setInventoryFilter] = useState("All");
-  const [isStore, setIsStore] = useState(false);
   const { user } = useRole();
   const role = user;
 
