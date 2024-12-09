@@ -18,13 +18,6 @@ import { useRole } from "../contexts/RoleContext";
 
 const AppRoutes = () => {
   const { user } = useRole();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!user) {
-      navigate("/")
-    }
-  }, [user, navigate])
 
   return (
     <div className="flex flex-col w-full h-screen overflow-hidden">

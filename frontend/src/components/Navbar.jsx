@@ -3,14 +3,17 @@ import React from "react";
 // context
 import { useSidebar } from "../contexts/SideBarContext";
 import { useRole } from "../contexts/RoleContext";
+import { useNavigate } from "react-router-dom";
 
 
 const Navbar = () => {
   const { user } = useRole();
   const { toggleSidebar, isSidebarOpen } = useSidebar();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     localStorage.clear();
+    navigate("/")
     window.location.reload();
   };
 
