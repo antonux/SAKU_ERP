@@ -1,3 +1,6 @@
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+
 const Accounts = () => {
     const staffData = [
         {
@@ -57,10 +60,11 @@ const Accounts = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                     </div>
-
-                    <button className="bg-[#7ad0ac] text-white px-6 py-2 rounded-full hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
-                        Add New Staff
-                    </button>
+                    <Link to="/accounts/add-account">
+                        <button className="bg-[#7ad0ac] text-white px-6 py-2 rounded-full hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
+                            Add New Staff
+                        </button>
+                    </Link>
                 </div>
             </div>
             <div className="rounded-lg shadow-md overflow-auto scrollbar-thin">

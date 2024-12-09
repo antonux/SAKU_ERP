@@ -1,5 +1,5 @@
 
-import Boxes from "../../components/Admin/inventoryBoxes";
+import Boxes from "../../components/Shared/inventoryBoxes";
 import Table from "../../components/Shared/inventoryTable";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";

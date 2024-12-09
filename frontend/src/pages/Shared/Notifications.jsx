@@ -39,7 +39,7 @@ const Notifications = () => {
             <div className="px-10 py-3 flex shrink-0 h-[5rem] justify-between items-center w-full shadow-md overflow-auto rounded-lg bg-white text-black scrollbar-thin">
                 <h1 className='text-2xl font-semibold'>Notifications (3 unread)</h1>
                 <button className="bg-[#7ad0ac] text-white px-16 py-3 rounded-full hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
-                    Add New Staff
+                    Clear all
                 </button>
             </div>
 
