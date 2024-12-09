@@ -1,3 +1,6 @@
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+
 const Suppliers = () => {
   const supplierData = [
     {
@@ -71,10 +74,11 @@ const Suppliers = () => {
             <p className="text-3xl font-semibold">0</p>
             <p className="text-sm text-gray-500">Inactive Suppliers</p>
           </div>
-
-          <button className="bg-[#7ad0ac] text-white px-6 py-2 rounded-full hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
-            New Supplier
-          </button>
+          <Link to="/suppliers/add-supplier">
+            <button className="bg-[#7ad0ac] text-white px-6 py-2 rounded-full hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
+              New Supplier
+            </button>
+          </Link>
         </div>
       </div>
 
@@ -113,9 +117,11 @@ const Suppliers = () => {
                 <td className="px-6 py-4">{supplier.role}</td>
                 <td className="px-6 py-4">{supplier.productOffered}</td>
                 <td className="px-6 py-4">
-                  <button className="text-blue-500 hover:underline">
-                    View more
-                  </button>
+                  <Link to="/suppliers/view-supplier">
+                    <button className="text-blue-500 hover:underline">
+                      View more
+                    </button>
+                  </Link>
                 </td>
               </tr>
             ))}

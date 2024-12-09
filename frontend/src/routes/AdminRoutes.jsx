@@ -6,13 +6,16 @@ import Settings from "../pages/Shared/Settings";
 import Overview from "../pages/Shared/Overview";
 import Request from "../pages/Admin/Request";
 import Purchase from "../pages/Admin/Purchase";
-import Inventory from "../pages/Admin/Inventory";
+import Inventory from "../pages/Shared/Inventory";
 import Accounts from "../pages/Admin/Accounts";
 import Notifications from "../pages/Shared/Notifications";
 import Suppliers from "../pages/Shared/Suppliers";
-import AddStock from "../pages/Admin/InventoryAddStock";
-import ViewStock from "../pages/Admin/InventoryViewProduct";
+import AddStock from "../pages/Shared/InventoryAddStock";
+import ViewStock from "../pages/Shared/InventoryViewProduct";
 import RequestViewMore from "../pages/Shared/RequestViewMore";
+import AddSupplier from "../pages/Shared/SuppliersAddSupplier";
+import AddAccount from "../pages/Admin/AccountsAddAccount";
+import ViewSupplier from "../pages/Shared/SuppliersViewSupplier";
 
 const AdminRoutes = () => {
   return (
@@ -49,8 +52,23 @@ const AdminRoutes = () => {
         />
 
         <Route
+          path="/suppliers/add-supplier"
+          element={<AddSupplier />}
+        />
+
+        <Route
+          path="/suppliers/view-supplier"
+          element={<ViewSupplier />}
+        />
+
+        <Route
           path="/accounts"
           element={<Accounts />}
+        />
+
+        <Route
+          path="/accounts/add-account"
+          element={<AddAccount />}
         />
 
         <Route

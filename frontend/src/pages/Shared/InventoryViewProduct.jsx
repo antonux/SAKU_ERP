@@ -1,7 +1,7 @@
 
-import Boxes from "../../components/Admin/inventoryBoxes";
+import Boxes from "../../components/Shared/inventoryBoxes";
 import GoBackButton from "../../components/buttons/Backbutton";
-import Input from "../../components/Admin/inventoryAddStockInput";
+import Input from "../../components/Shared/inventoryAddStockInput";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { IoCamera } from "react-icons/io5";
