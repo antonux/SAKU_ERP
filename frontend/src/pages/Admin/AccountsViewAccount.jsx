@@ -1,24 +1,24 @@
 import GoBackButton from "../../components/buttons/Backbutton";
-import SupplierInputs from "../../components/Shared/suppliersAddSupplierInput";
+import AccountInputs from "../../components/Admin/accountsAddAccountInput";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { IoCamera } from "react-icons/io5";
 
-const ViewSupplier = () => {
+const ViewAccount = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [isUpdate, setIsUpdate] = useState(false);
     const [preview, setPreview] = useState(null);
 
     useEffect(() => {
-        if (location.pathname !== "/suppliers") {
-            localStorage.setItem("lastSupplierPath", location.pathname);
+        if (location.pathname !== "/accounts") {
+            localStorage.setItem("lastAccountPath", location.pathname);
         }
     }, []);
 
     const handleGoBack = () => {
-        localStorage.setItem("lastSupplierPath", "/suppliers");
-        const lp = localStorage.getItem("lastSupplierPath")
+        localStorage.setItem("lastAccountPath", "/accounts");
+        const lp = localStorage.getItem("lastAccountPath")
         navigate(lp)
     };
 
@@ -35,7 +35,7 @@ const ViewSupplier = () => {
                 <GoBackButton />
             </button>
             <div className="flex flex-col pt-5 px-7 gap-10 mt-[6rem] w-full h-full shadow-md overflow-auto rounded-lg bg-white text-black scrollbar-thin">
-                <h1 className="text-xl font-semibold text-[#272525]">Motolite Batteries</h1>
+                <h1 className="text-xl font-semibold text-[#272525]">John Otto</h1>
                 <div className="flex gap-5">
                     <div className="relative flex flex-col gap-5">
                         {/* upload picture */}
@@ -81,10 +81,10 @@ const ViewSupplier = () => {
                             </div>
                         </div>
                         <button className="text-red-500 px-16 py-2 underline bottom-9 absolute">
-                            Delete Supplier
+                            Delete Account
                         </button>
                     </div>
-                    <SupplierInputs
+                    <AccountInputs
                         isUpdate={isUpdate}
                         setIsUpdate={setIsUpdate}
                     />
@@ -94,4 +94,4 @@ const ViewSupplier = () => {
     );
 };
 
-export default ViewSupplier;
+export default ViewAccount;

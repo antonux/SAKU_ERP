@@ -16,6 +16,7 @@ import RequestViewMore from "../pages/Shared/RequestViewMore";
 import AddSupplier from "../pages/Shared/SuppliersAddSupplier";
 import AddAccount from "../pages/Admin/AccountsAddAccount";
 import ViewSupplier from "../pages/Shared/SuppliersViewSupplier";
+import ViewAccount from "../pages/Admin/AccountsViewAccount";
 
 const AdminRoutes = () => {
   return (
@@ -69,6 +70,11 @@ const AdminRoutes = () => {
         <Route
           path="/accounts/add-account"
           element={<AddAccount />}
+        />
+
+        <Route
+          path="/accounts/view-account"
+          element={<ViewAccount />}
         />
 
         <Route
