@@ -62,7 +62,7 @@ const FloatingComponent = ({ onClose }) => {
                   </div>
                 ))}
               </div>
-            )}
+            ) }
           </div>
         </div>
 

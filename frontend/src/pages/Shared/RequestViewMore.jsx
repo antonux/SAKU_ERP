@@ -92,12 +92,12 @@ const AddStock = () => {
         </div>
         <div>
           {user !== "store" &&
-            <button className="bg-[#7ad0ac] text-white font-light text-base px-12 py-[0.62rem] rounded-xl hover:bg-[#78cca9] focus:outline-none focus:ring-2 focus:ring-green-50">
+            <button className="bg-[#7fd6b2] text-white font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
               Approve
             </button>
           }
           {user == "store" &&
-            <button className="bg-red-500 text-white font-light text-base px-12 py-[0.62rem] rounded-xl hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-green-50">
+            <button className="bg-red-400 text-white font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-green-50">
               Cancel
             </button>
           }

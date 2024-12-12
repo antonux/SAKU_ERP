@@ -18,7 +18,7 @@ const Overview = () => {
     <div className='flex flex-col gap-4 h-screen pb-5'>
       <div className="flex flex-col gap-5 px-10 py-6 mt-[6rem] w-full h-full shadow-md overflow-auto rounded-lg bg-white text-black scrollbar-thin">
         <Boxes />
-        <div className="rounded-lg flex shrink-0 w-[65rem] h-[25rem] overflow-auto scrollbar-thin">
+        <div className="rounded-lg flex shrink-0 w-full h-[25rem] overflow-auto scrollbar-thin">
           <table className="w-full text-sm text-left text-gray-500">
             <thead className='sticky top-0'>
               <tr>

@@ -4,14 +4,14 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 const Inventory = () => {
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   const lastPath = localStorage.getItem("lastInventoryPath");
-  //   if (lastPath !== "/admin/inventory") {
-  //     navigate(lastPath);
-  //   }
-  // }, []);
+  useEffect(() => {
+    const lastPath = localStorage.getItem("lastRequestPath");
+    if (lastPath !== "/request") {
+      navigate(lastPath);
+    }
+  }, []);
 
 
 
