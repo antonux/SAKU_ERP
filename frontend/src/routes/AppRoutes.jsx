@@ -2,18 +2,18 @@ import { useEffect, React } from "react";
 import {useNavigate, Routes, Route, Navigate } from "react-router-dom";
 // import { useRole } from "../hooks/useRole";
 
+// routes
 import AdminRoutes from "../routes/AdminRoutes";
 import StoreRoutes from "../routes/StoreRoutes";
-// import WarehouseRoutes from "../routes/StoreRoutes";
 
-//components
+// components
 import Navbar from "../components/navbar";
 import Sidebar from "../components/Sidebar";
 
 // login
 import Login from '../pages/Shared/Login'
 
-// context
+// contexts
 import { useRole } from "../contexts/RoleContext";
 
 const AppRoutes = () => {
