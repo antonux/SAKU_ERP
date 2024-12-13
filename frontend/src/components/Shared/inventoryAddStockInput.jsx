@@ -1,9 +1,13 @@
 import { useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
+import TagInput from "./tagInputs";
 
 const AddStockInput = ({ isUpdate, setIsUpdate }) => {
   const location = useLocation();
+  const [selectedSupplier, setSelectedSupplier] = useState([]);
+  const [selectedOption, setSelectedOption] = useState("");
   const [isView, setIsView] = useState(true)
+
   useEffect(() => {
     if (location.pathname == "/inventory/add-stock") {
       setIsView(false);
@@ -15,6 +19,14 @@ const AddStockInput = ({ isUpdate, setIsUpdate }) => {
       setIsView(false);
     }
   }, [isUpdate]);
+
+  const handleSupplierChange = (event) => {
+    const selectedValue = event.target.value;
+    if (selectedValue && !selectedSupplier.includes(selectedValue)) {
+      setSelectedSupplier([...selectedSupplier, selectedValue]); // Add selected supplier to the list
+      setSelectedOption("");
+    }
+  };
 
   return (
     <div className="w-[70rem] relative pb-[10rem] px-5 ">
@@ -84,15 +96,38 @@ const AddStockInput = ({ isUpdate, setIsUpdate }) => {
         </div>
 
         {/* Row 4 */}
-        <div>
-          <label htmlFor="supplier" className="block text-sm font-medium text-gray-700">Supplier</label>
-          <input
-            type="text"
-            id="supplier"
-            placeholder="Enter supplier name"
-            className="mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none"
-          />
-        </div>
+            <div>
+      <label htmlFor="supplier" className="block text-sm font-medium text-gray-700">
+        Suppliers
+      </label>
+
+      {/* Tag Input component */}
+      <TagInput
+        tags={selectedSupplier}
+        setTags={setSelectedSupplier}
+      />
+
+      {/* Supplier Select dropdown */}
+      <select
+        id="supplier"
+        className="mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none"
+        onChange={handleSupplierChange}
+        value={selectedOption}
+      >
+        <option value="">Select a supplier</option>
+        {/* Dynamically disable options that have already been selected */}
+        <option value="John Bravo" disabled={selectedSupplier.includes("John Bravo")}>
+          John Bravo
+        </option>
+        <option value="Sink Delinko" disabled={selectedSupplier.includes("Sink Delinko")}>
+          Sink Delinko
+        </option>
+        <option value="Mainteno" disabled={selectedSupplier.includes("Mainteno")}>
+          Mainteno
+        </option>
+        {/* Add more supplier options here with dynamic values and disable accordingly */}
+      </select>
+    </div>
         <div className="relative">
           <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
           <select
