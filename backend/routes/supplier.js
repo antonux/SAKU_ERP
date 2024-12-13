@@ -8,14 +8,14 @@ const upload = require('../middleware/multerConfig');
 
 // controllers
 const {
-  getProductType,
-  createProduct
-} = require('../controllers/ProductController');
+  getSupplier,
+  createSupplier
+} = require('../controllers/SupplierController');
 
 
 // routes
-router.get('/types', getProductType);
-router.post('/create', upload, createProduct);
+router.get('/', getSupplier);
+router.post('/create', createSupplier);
 
 
 
