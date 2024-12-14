@@ -20,6 +20,10 @@ app.listen(process.env.PORT, ()=>{
 
 client.connect();
 
+// to fetch the uploaded photos
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // using routes
 app.use('/api/product', productRoutes);
 app.use('/api/supplier', supplierRoutes);

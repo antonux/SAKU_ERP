@@ -28,21 +28,44 @@ const AddSupplier = () => {
     const file = event.target.files[0];
     if (file) {
       setPreview(URL.createObjectURL(file));
-    }
+      setSupplierData({
+        ...supplierData,
+        image: file
+      });
+    };
   };
 
   const handleSubmit = async (e) => {
-     e.preventDefault(); 
-    try {
-      // Step 3: Send POST request with the form data
-      const response = await axios.post('http://localhost:4000/api/supplier/create', supplierData);
-      console.log('Supplier Created:', response.data);
-      setIsSubmitted(true);
-      // Optionally, clear the form or handle a successful submission
-    } catch (error) {
-      console.error('Error creating supplier:', error);
+  e.preventDefault();
+
+  try {
+    const formData = new FormData();
+
+    formData.append('company_name', supplierData.company_name);
+    formData.append('address', supplierData.address);
+    formData.append('contact_name', supplierData.contact_name);
+    formData.append('phone', supplierData.phone);
+    formData.append('email', supplierData.email);
+    formData.append('product_types', JSON.stringify(supplierData.product_types));
+
+    if (supplierData.image) {
+      formData.append('image', supplierData.image); 
     }
-  };
+
+    const response = await axios.post('http://localhost:4000/api/supplier/create', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    console.log('Supplier Created:', response.data);
+    setIsSubmitted(true);
+    setPreview(null);
+
+  } catch (error) {
+    console.error('Error creating supplier:', error);
+  }
+};
+
 
   return (
     <div className='flex flex-col gap-4 h-screen pb-5 pt-7'>

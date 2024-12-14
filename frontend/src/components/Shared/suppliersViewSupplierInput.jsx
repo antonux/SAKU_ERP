@@ -1,9 +1,9 @@
 import { useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
+import axios from "axios";
 
-const SupplierInputs = ({ isUpdate, setIsUpdate, supplierInputData, isSubmitted, viewSupplierData }) => {
+const SupplierInputs = ({ isUpdate, setIsUpdate, isSubmitted, viewSupplierData, Preview, newSupplierData, setIsView, isView }) => {
   const location = useLocation();
-  const [isView, setIsView] = useState(false)
   const initSupplierData = {
     company_name: '',
     address: '',
@@ -14,6 +14,7 @@ const SupplierInputs = ({ isUpdate, setIsUpdate, supplierInputData, isSubmitted,
     product_types: [],
   }
   const [supplierData, setSupplierData] = useState(initSupplierData);
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -40,30 +41,13 @@ const SupplierInputs = ({ isUpdate, setIsUpdate, supplierInputData, isSubmitted,
     });
   };
 
-  
+  useEffect(() => {
+    newSupplierData(supplierData);
+  }, [supplierData, newSupplierData]);
 
   useEffect(() => {
-    if (isUpdate) {
-      setIsView(false);
-    }
-  }, [isUpdate]);
-
-  useEffect(() => {
-    if (supplierInputData) {
-      supplierInputData(supplierData);
-    }
-  }, [supplierData, supplierInputData]);
-
-  useEffect(() => {
-    setSupplierData(initSupplierData);
-  }, [isSubmitted]);
-
-  useEffect(() => {
-    if (location.pathname == "/suppliers/view-supplier") {
-      setIsView(true);
-    }
-  }, []);
-
+    setSupplierData(viewSupplierData);
+  }, [viewSupplierData]);
 
   return (
     <div className="w-[70rem] relative pb-[15rem] px-5 ">
@@ -75,8 +59,8 @@ const SupplierInputs = ({ isUpdate, setIsUpdate, supplierInputData, isSubmitted,
             type="text"
             id="companyName"
             name="company_name"
-            value={isView ? viewSupplierData.company_name : supplierData.company_name}
-            disabled={isView ? true : false} 
+            value={supplierData.company_name}
+            disabled={isView ? true : false}
             onChange={handleInputChange}
             placeholder="Enter company name"
             className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
@@ -89,8 +73,8 @@ const SupplierInputs = ({ isUpdate, setIsUpdate, supplierInputData, isSubmitted,
             type="text"
             id="address"
             name="address"
-            value={isView ? viewSupplierData.address : supplierData.address}
-            disabled={isView ? true : false} 
+            value={supplierData.address}
+            disabled={isView ? true : false}
             onChange={handleInputChange}
             placeholder="Enter company address"
             className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
@@ -105,8 +89,8 @@ const SupplierInputs = ({ isUpdate, setIsUpdate, supplierInputData, isSubmitted,
             type="text"
             id="contactName"
             name="contact_name"
-            value={isView ? viewSupplierData.contact_name : supplierData.contact_name}
-            disabled={isView ? true : false} 
+            value={supplierData.contact_name}
+            disabled={isView ? true : false}
             onChange={handleInputChange}
             placeholder="Enter contact name"
             className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
@@ -119,8 +103,8 @@ const SupplierInputs = ({ isUpdate, setIsUpdate, supplierInputData, isSubmitted,
             type="email"
             id="email"
             name="email"
-            value={isView ? viewSupplierData.email : supplierData.email}
-            disabled={isView ? true : false} 
+            value={supplierData.email}
+            disabled={isView ? true : false}
             onChange={handleInputChange}
             placeholder="Enter email"
             className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
@@ -135,8 +119,8 @@ const SupplierInputs = ({ isUpdate, setIsUpdate, supplierInputData, isSubmitted,
             type="tel"
             id="phoneNumber"
             name="phone"
-            value={isView ? viewSupplierData.phone : supplierData.phone}
-            disabled={isView ? true : false} 
+            value={supplierData.phone}
+            disabled={isView ? true : false}
             onChange={handleInputChange}
             placeholder="+63"
             pattern="0?9\d{9}"
@@ -153,13 +137,13 @@ const SupplierInputs = ({ isUpdate, setIsUpdate, supplierInputData, isSubmitted,
                 type="checkbox"
                 name="category"
                 value="tire"
-                checked={supplierData.product_types.includes("tire")} 
-                onChange={handleCheckboxChange} // Handle change event
+                checked={supplierData.product_types.includes("tire")}
+                onChange={handleCheckboxChange}
                 className="form-checkbox h-4 w-4 text-[#7ad0ac]"
                 required={supplierData.product_types.length === 0}
                 onInvalid={(e) => e.target.setCustomValidity('Please select at least 1 product offered')}
-                onInput={(e) => e.target.setCustomValidity('')} 
-                disabled={isView ? true : false} 
+                onInput={(e) => e.target.setCustomValidity('')}
+                disabled={isView ? true : false}
               />
               <span className="text-sm text-gray-700">Tire</span>
             </label>
@@ -169,10 +153,10 @@ const SupplierInputs = ({ isUpdate, setIsUpdate, supplierInputData, isSubmitted,
                 type="checkbox"
                 name="category"
                 value="oil"
-                checked={supplierData.product_types.includes("oil")} 
-                onChange={handleCheckboxChange} // Handle change event
+                checked={supplierData.product_types.includes("oil")}
+                onChange={handleCheckboxChange}
                 className="form-checkbox h-4 w-4 text-[#7ad0ac]"
-                disabled={isView ? true : false} 
+                disabled={isView ? true : false}
               />
               <span className="text-sm text-gray-700">Oil</span>
             </label>
@@ -182,15 +166,37 @@ const SupplierInputs = ({ isUpdate, setIsUpdate, supplierInputData, isSubmitted,
                 type="checkbox"
                 name="category"
                 value="battery"
-                checked={supplierData.product_types.includes("battery")} 
+                checked={supplierData.product_types.includes("battery")}
                 onChange={handleCheckboxChange} // Handle change event
                 className="form-checkbox h-4 w-4 text-[#7ad0ac]"
-                disabled={isView ? true : false} 
+                disabled={isView ? true : false}
               />
               <span className="text-sm text-gray-700">Battery</span>
             </label>
           </div>
         </div>
+      </div>
+      {isView &&
+        <button onClick={() => (setIsUpdate(true), setIsView(false))}
+          className="absolute bottom-10 right-10 bg-[#7ad0ac] text-white px-16 py-3 rounded-xl hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
+          Update
+        </button>
+      }
+      <div className="flex absolute gap-5 bottom-10 right-10">
+        {isUpdate &&
+          <button
+            onClick={() => { setIsUpdate(false); setIsView(true); setSupplierData(viewSupplierData); Preview(viewSupplierData.image ? `http://localhost:4000${viewSupplierData.image}` : `/images/products/user.jpg`) }}
+            className="bottom-10 right-10 bg-red-500 text-white px-16 py-3 rounded-xl hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-green-50">
+            Cancel
+          </button>
+        }
+        {isUpdate &&
+          <button
+            type="submit"
+            className="bottom-10 right-10 bg-[#7ad0ac] text-white px-16 py-3 rounded-xl hover:bg-[#6ab696] focus:outline-none focus:ring-2 focus:ring-green-50">
+            Save
+          </button>
+        }
       </div>
     </div>
   )

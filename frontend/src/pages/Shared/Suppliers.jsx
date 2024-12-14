@@ -1,49 +1,21 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
+import axios from "axios";
 
 const Suppliers = () => {
-  const supplierData = [
-    {
-      id: "01",
-      companyName: "Motorite Batteries",
-      address: "Mandaue City, Cebu",
-      contactPerson: "David Mabahaw",
-      email: "david@gmail.com",
-      phoneNumber: "08180000000",
-      role: "Manager",
-      productOffered: "Battery",
-    },
-    {
-      id: "02",
-      companyName: "Goodyear Auto",
-      address: "Mandaue City",
-      contactPerson: "Max Fernando",
-      email: "max@gmail.com",
-      phoneNumber: "07062000033",
-      role: "Sales Agent",
-      productOffered: "Tire & Oil",
-    },
-    {
-      id: "03",
-      companyName: "Goodride Perf.",
-      address: "Cebu City",
-      contactPerson: "Dindo Go",
-      email: "dindo@gmail.com",
-      phoneNumber: "08130000000",
-      role: "Sales Agent",
-      productOffered: "Tire",
-    },
-    {
-      id: "04",
-      companyName: "Petron Corpor.",
-      address: "Mandaue City",
-      contactPerson: "Neil Naputo",
-      email: "neil@gmail.com",
-      phoneNumber: "07038126632",
-      role: "Manager",
-      productOffered: "Oil",
-    },
-  ];
+  const [supplierData, setSupplierData] = useState([]);
+
+  useEffect(() => {
+    const fetchSupplierData = async () => {
+      try {
+        const response = await axios.get('http://localhost:4000/api/supplier');
+        setSupplierData(response.data);
+      } catch (err) {
+        console.error('Error fetching supplier data:', err);
+      }
+    };
+    fetchSupplierData();
+  }, []);
 
   return (
     <div className='flex flex-col gap-4 h-screen pb-5'>
@@ -91,13 +63,12 @@ const Suppliers = () => {
               </th>
             </tr>
             <tr className="text-xs text-gray-700 uppercase bg-white">
-              <th scope="col" className="px-6 py-3">SN</th>
+              <th scope="col" className="px-6 py-3">Image</th>
               <th scope="col" className="px-6 py-3">Company Name</th>
               <th scope="col" className="px-6 py-3">Address</th>
               <th scope="col" className="px-6 py-3">Contact Person</th>
               <th scope="col" className="px-6 py-3">Email</th>
               <th scope="col" className="px-6 py-3">Phone Number</th>
-              <th scope="col" className="px-6 py-3">Role</th>
               <th scope="col" className="px-6 py-3">Product Offered</th>
               <th scope="col" className="px-6 py-3">Action</th>
             </tr>
@@ -105,19 +76,28 @@ const Suppliers = () => {
           <tbody>
             {supplierData.map((supplier) => (
               <tr
-                key={supplier.id}
+                key={supplier.supplier_id}
                 className="bg-white border-b hover:bg-gray-50"
               >
-                <td className="px-6 py-4">{supplier.id}</td>
-                <td className="px-6 py-4">{supplier.companyName}</td>
+                <td className="px-6 py-3">
+                  <source srcSet={`http://localhost:4000${supplier.image}?quality=50`} type="image/jpeg" />
+                  <img
+                    src={supplier.image? `http://localhost:4000${supplier.image}` : "/images/products/user.jpg"}
+                    alt="images/products/tire.jpg"
+                    className="size-10 object-cover"
+                  />
+                </td>
+                <td className="px-6 py-4">{supplier.company_name}</td>
                 <td className="px-6 py-4">{supplier.address}</td>
-                <td className="px-6 py-4">{supplier.contactPerson}</td>
+                <td className="px-6 py-4">{supplier.contact_name}</td>
                 <td className="px-6 py-4">{supplier.email}</td>
-                <td className="px-6 py-4">{supplier.phoneNumber}</td>
-                <td className="px-6 py-4">{supplier.role}</td>
-                <td className="px-6 py-4">{supplier.productOffered}</td>
+                <td className="px-6 py-4">{supplier.phone}</td>
+                <td className="px-6 py-4">{supplier.product_types.join(', ')}</td>
                 <td className="px-6 py-4">
-                  <Link to="/suppliers/view-supplier">
+                  <Link
+                    to="/suppliers/view-supplier"
+                    state={{ supplier }}
+                  >
                     <button className="text-blue-500 hover:underline">
                       View more
                     </button>
