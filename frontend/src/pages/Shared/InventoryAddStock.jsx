@@ -9,6 +9,8 @@ const AddStock = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [preview, setPreview] = useState(null);
+  const [productData, setProductData] = useState({});
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   useEffect(() => {
     if (location.pathname !== "/inventory") {
@@ -26,8 +28,44 @@ const AddStock = () => {
     const file = event.target.files[0];
     if (file) {
       setPreview(URL.createObjectURL(file));
+      setSupplierData({
+        ...supplierData,
+        image: file
+      });
+    };
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const formData = new FormData();
+
+      formData.append('company_name', supplierData.company_name);
+      formData.append('address', supplierData.address);
+      formData.append('contact_name', supplierData.contact_name);
+      formData.append('phone', supplierData.phone);
+      formData.append('email', supplierData.email);
+      formData.append('product_types', JSON.stringify(supplierData.product_types));
+
+      if (supplierData.image) {
+        formData.append('image', supplierData.image);
+      }
+
+      const response = await axios.post('http://localhost:4000/api/supplier/create', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      console.log('Supplier Created:', response.data);
+      setIsSubmitted(true);
+      setPreview(null);
+
+    } catch (error) {
+      console.error('Error creating supplier:', error);
     }
   };
+
 
   return (
     <div className='flex flex-col gap-4 h-screen pb-5 pt-7'>
@@ -36,7 +74,7 @@ const AddStock = () => {
       </button>
       <div className="flex flex-col pt-5 px-7 gap-10 mt-[6rem] w-full h-full shadow-md overflow-auto rounded-lg bg-white text-black scrollbar-thin">
         <h1 className="text-xl font-semibold text-[#272525]">New Item</h1>
-        <div className="flex gap-5">
+        <div className="flex gap-5" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-5">
             {/* upload picture */}
             <div className="flex flex-col gap-12 items-center border-[2px] w-[19rem] border-[#f9f9f9] pt-10 pb-5 px-20">
@@ -82,12 +120,14 @@ const AddStock = () => {
                 </div>
               </div>
             </div>
-            <button className="bg-[#7ad0ac] text-white px-16 py-3 rounded-xl hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
+            <button
+              type="submit"
+              className="bg-[#7ad0ac] text-white px-16 py-3 rounded-xl hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
               Add item
             </button>
             {/* upload picture */}
           </div>
-          <Input />
+          <Input productInputData={setProductData} isSubmitted={isSubmitted}/>
 
         </div>
 

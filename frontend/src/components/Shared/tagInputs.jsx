@@ -1,18 +1,26 @@
-const TagInput = ({ tags, setTags }) => {
-  // Function to remove a tag
+const TagInput = ({ tags, setTags, productData, setProductData }) => {
   const removeTag = (tagToRemove) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
+    // Remove tag from `tags` state
+    setTags(tags.filter((tag) => tag.supplier_id !== tagToRemove.supplier_id));
+
+    // Remove supplier_id from `productData.product_supplier`
+    setProductData((prevData) => ({
+      ...prevData,
+      product_supplier: prevData.product_supplier.filter(
+        (supplier) => supplier.supplier_id !== tagToRemove.supplier_id
+      ),
+    }));
   };
 
   return (
     <div>
       <div className="flex flex-wrap gap-2">
-        {tags.map((tag, index) => (
+        {tags.map((tag) => (
           <div
-            key={index}
+            key={tag.supplier_id}
             className="flex items-center px-3 bg-gray-200 rounded-full"
           >
-            <span>{tag}</span>
+            <span>{tag.company_name}</span>
             <button
               type="button"
               onClick={() => removeTag(tag)}
@@ -26,5 +34,6 @@ const TagInput = ({ tags, setTags }) => {
     </div>
   );
 };
+
 
 export default TagInput;
