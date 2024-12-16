@@ -147,6 +147,7 @@ const ViewSupplier = () => {
             </div>
             <button 
             onClick={() => {handleDeleteClick(initialData.supplier_id)}}
+            type="button"
             className="text-red-500 px-16 py-2 underline bottom-9 absolute">
               Delete Supplier
             </button>

@@ -178,6 +178,7 @@ const SupplierInputs = ({ isUpdate, setIsUpdate, isSubmitted, viewSupplierData, 
       </div>
       {isView &&
         <button onClick={() => (setIsUpdate(true), setIsView(false))}
+          type="button"
           className="absolute bottom-10 right-10 bg-[#7ad0ac] text-white px-16 py-3 rounded-xl hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
           Update
         </button>
@@ -186,6 +187,7 @@ const SupplierInputs = ({ isUpdate, setIsUpdate, isSubmitted, viewSupplierData, 
         {isUpdate &&
           <button
             onClick={() => { setIsUpdate(false); setIsView(true); setSupplierData(viewSupplierData); Preview(viewSupplierData.image ? `http://localhost:4000${viewSupplierData.image}` : `/images/products/user.jpg`) }}
+            type="button"
             className="bottom-10 right-10 bg-red-500 text-white px-16 py-3 rounded-xl hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-green-50">
             Cancel
           </button>
