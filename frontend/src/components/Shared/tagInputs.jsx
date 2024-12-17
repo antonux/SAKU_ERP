@@ -1,4 +1,4 @@
-const TagInput = ({ tags, setTags, productData, setProductData }) => {
+const TagInput = ({ tags, setTags, productData, setProductData, isView }) => {
   const removeTag = (tagToRemove) => {
     // Remove tag from `tags` state
     setTags(tags.filter((tag) => tag.supplier_id !== tagToRemove.supplier_id));
@@ -18,13 +18,14 @@ const TagInput = ({ tags, setTags, productData, setProductData }) => {
         {tags.map((tag) => (
           <div
             key={tag.supplier_id}
-            className="flex items-center px-3 bg-gray-200 rounded-full"
+            className="flex mt-2 items-center px-3 bg-gray-200 rounded-full"
           >
             <span>{tag.company_name}</span>
             <button
               type="button"
+              hidden={isView}
               onClick={() => removeTag(tag)}
-              className="ml-2 pb-1 text-3xl text-gray-500 hover:text-red-700"
+              className={`ml-2 pb-1 text-3xl text-gray-500 hover:text-red-700`}
             >
               ×
             </button>

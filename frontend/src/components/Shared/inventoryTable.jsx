@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
 import { IoIosSearch } from "react-icons/io";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 // context
 import { useRole } from "../../contexts/RoleContext";
 
 const Table = () => {
-  const [inventoryFilter, setInventoryFilter] = useState("All");
+  const [inventoryFilter, setInventoryFilter] = useState("all");
   const { user } = useRole();
   const role = user;
+  const [productData, setProductData] = useState([]);
+  console.log(productData)
 
   const inventoryFilterClass = (value) =>
     `px-4 font-normal rounded-full text-[#272525] ${inventoryFilter === value
@@ -16,22 +19,19 @@ const Table = () => {
       : "border-[1px] border-transparent"
     } hover:border-gray-400 transition duration-200 ease-in-out`;
 
-  const testData = new Array(10).fill({
-    image: "/images/products/tire.jpg",
-    size_model: "155R12",
-    name: "Product Name",
-    category: "Category",
-    unitPrice: "$100",
-    totalAmount: "$500",
-    quantity: 5,
-    status: "In Stock",
-    action: "View",
-  });
+  useEffect(() => {
+    const fetchSupplierData = async () => {
+      try {
+        const response = await axios.get('http://localhost:4000/api/product');
+        setProductData(response.data);
+      } catch (err) {
+        console.error('Error fetching product data:', err);
+      }
+    };
+    fetchSupplierData();
+  }, []);
 
-
-
-
-
+  console.log(productData)
 
   return (
     <div className="rounded-lg h-full bg-white shadow-md overflow-auto scrollbar-thin">
@@ -57,16 +57,16 @@ const Table = () => {
                   <h1 className="font-normal text-[#272525] cursor-default">
                     Location:
                   </h1>
-                  <h1 className={inventoryFilterClass("All")}
-                    onClick={() => setInventoryFilter("All")}>
+                  <h1 className={inventoryFilterClass("all")}
+                    onClick={() => setInventoryFilter("all")}>
                     All
                   </h1>
-                  <h1 className={inventoryFilterClass("Store")}
-                    onClick={() => setInventoryFilter("Store")}>
+                  <h1 className={inventoryFilterClass("store")}
+                    onClick={() => setInventoryFilter("store")}>
                     Store
                   </h1>
-                  <h1 className={inventoryFilterClass("Warehouse")}
-                    onClick={() => setInventoryFilter("Warehouse")}>
+                  <h1 className={inventoryFilterClass("warehouse")}
+                    onClick={() => setInventoryFilter("warehouse")}>
                     Warehouse
                   </h1>
                 </div>
@@ -86,37 +86,48 @@ const Table = () => {
           </tr>
         </thead>
         <tbody>
-          {testData.map((item, index) => (
-            <tr
-              key={index}
-              className="bg-white border-b hover:bg-gray-50"
-            >
+          {productData.map((item, index) => (
+            <tr key={item.prod_id} className="bg-white border-b hover:bg-gray-50">
               <td className="px-6 py-3">
-                <source srcSet={`${item.image}?quality=50`} type="image/jpeg" />
+                <source srcSet={`http://localhost:4000${item.image}?quality=50`} type="image/jpeg" />
                 <img
-                  src={item.image}
+                  src={`http://localhost:4000${item.image}`}
                   alt="Product"
                   className="size-10 object-cover"
                 />
               </td>
               <td className="px-6 py-3">{item.name}</td>
-              <td className="px-6 py-3">{item.size_model}</td>
-              <td className="px-6 py-3">{item.category}</td>
-              <td className="px-6 py-3">{item.unitPrice}</td>
-              <td className="px-6 py-3">{item.totalAmount}</td>
-              <td className="px-6 py-3">{item.quantity}</td>
-              <td className="px-6 py-3 text-green-500">
-                {item.status}
+              <td className="px-6 py-3">{item.size}</td>
+              <td className="px-6 py-3">{item.type}</td>
+              <td className="px-6 py-3">{item.unit_price}</td>
+              <td className="px-6 py-3">total amount</td>
+              <td className="px-6 py-3">
+                {inventoryFilter === "store"
+                  ? item.location_quantity.find(loc => loc.location === "store")?.quantity || '0'
+                  : inventoryFilter === "all"
+                    ? item.location_quantity.reduce((total, loc) =>
+                      loc.location === "store" || loc.location === "warehouse"
+                        ? total + parseFloat(loc.quantity || 0)
+                        : total, 0)
+                    : inventoryFilter === "warehouse"
+                      ? item.location_quantity.find(loc => loc.location === "warehouse")?.quantity || '0'
+                      : ''
+                }
               </td>
-              <td className={`px-6 py-4 ${role == "store" ? "hidden" : ""}`}>
-                <Link to="/inventory/view-stock">
+              <td className="px-6 py-3 text-green-500">na</td>
+              <td className={`px-6 py-4 ${role === "store" ? "hidden" : ""}`}>
+                <Link
+                  to="/inventory/view-stock"
+                  state={{ item }}
+                >
                   <button className="text-blue-500 hover:underline">
-                    {item.action}
+                    View
                   </button>
                 </Link>
               </td>
             </tr>
           ))}
+
         </tbody>
       </table>
 

@@ -4,6 +4,7 @@ import Input from "../../components/Shared/inventoryAddStockInput";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { IoCamera } from "react-icons/io5";
+import axios from "axios";
 
 const AddStock = () => {
   const navigate = useNavigate();
@@ -28,12 +29,13 @@ const AddStock = () => {
     const file = event.target.files[0];
     if (file) {
       setPreview(URL.createObjectURL(file));
-      setSupplierData({
-        ...supplierData,
+      setProductData({
+        ...productData,
         image: file
       });
     };
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,28 +43,29 @@ const AddStock = () => {
     try {
       const formData = new FormData();
 
-      formData.append('company_name', supplierData.company_name);
-      formData.append('address', supplierData.address);
-      formData.append('contact_name', supplierData.contact_name);
-      formData.append('phone', supplierData.phone);
-      formData.append('email', supplierData.email);
-      formData.append('product_types', JSON.stringify(supplierData.product_types));
+      formData.append('name', productData.name);
+      formData.append('type', productData.type);
+      formData.append('size', productData.size);
+      formData.append('unit_price', productData.unit_price);
+      formData.append('reorder_level', productData.reorder_level);
+      formData.append('product_supplier', JSON.stringify(productData.product_supplier));
+      formData.append('location_quantity', JSON.stringify(productData.location_quantity));
 
-      if (supplierData.image) {
-        formData.append('image', supplierData.image);
+      if (productData.image) {
+        formData.append('image', productData.image);
       }
 
-      const response = await axios.post('http://localhost:4000/api/supplier/create', formData, {
+      const response = await axios.post('http://localhost:4000/api/product/create', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log('Supplier Created:', response.data);
+      console.log('Product Created:', response.data);
       setIsSubmitted(true);
       setPreview(null);
 
     } catch (error) {
-      console.error('Error creating supplier:', error);
+      console.error('Error creating product:', error);
     }
   };
 
@@ -74,7 +77,7 @@ const AddStock = () => {
       </button>
       <div className="flex flex-col pt-5 px-7 gap-10 mt-[6rem] w-full h-full shadow-md overflow-auto rounded-lg bg-white text-black scrollbar-thin">
         <h1 className="text-xl font-semibold text-[#272525]">New Item</h1>
-        <div className="flex gap-5" onSubmit={handleSubmit}>
+        <form className="flex gap-5" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-5">
             {/* upload picture */}
             <div className="flex flex-col gap-12 items-center border-[2px] w-[19rem] border-[#f9f9f9] pt-10 pb-5 px-20">
@@ -102,6 +105,7 @@ const AddStock = () => {
                     <input
                       type="file"
                       accept="image/*"
+                      name="image"
                       className="hidden"
                       onChange={handleFileChange}
                     />
@@ -127,9 +131,9 @@ const AddStock = () => {
             </button>
             {/* upload picture */}
           </div>
-          <Input productInputData={setProductData} isSubmitted={isSubmitted}/>
+          <Input productInputData={setProductData} isSubmitted={isSubmitted} Submitted={setIsSubmitted}/>
 
-        </div>
+        </form>
 
       </div>
     </div>

@@ -7,15 +7,12 @@ import { useEffect, useState } from "react";
 const Inventory = () => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const lastPath = localStorage.getItem("lastInventoryPath");
-    if (lastPath !== "/inventory") {
-      navigate(lastPath);
-    }
-  }, []);
-
-
-
+  // useEffect(() => {
+  //   const lastPath = localStorage.getItem("lastInventoryPath");
+  //   if (lastPath !== "/inventory") {
+  //     navigate(lastPath);
+  //   }
+  // }, []);
 
   return (
     <div className='flex flex-col gap-4 h-screen pb-5'>

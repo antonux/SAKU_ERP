@@ -155,11 +155,11 @@ const ViewSupplier = () => {
           <SupplierInputs
             isUpdate={isUpdate}
             setIsUpdate={setIsUpdate}
+            isView={isView}
+            setIsView={setIsView}
             viewSupplierData={initialData}
             Preview={setPreview}
             newSupplierData={setSupplierData}
-            isView={isView}
-            setIsView={setIsView}
           />
         </form>
       </div>

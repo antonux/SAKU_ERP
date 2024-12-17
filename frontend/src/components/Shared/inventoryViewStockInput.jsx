@@ -1,9 +1,10 @@
+
 import { useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import TagInput from "./tagInputs";
 import axios from "axios";
 
-const AddStockInput = ({ isUpdate, setIsUpdate, productInputData, isSubmitted, Submitted }) => {
+const AddStockInput = ({ isUpdate, setIsUpdate, viewProductData, Preview}) => {
   const location = useLocation();
   const [selectedSupplier, setSelectedSupplier] = useState([]);
   const [initialSupplierData, setInitialSupplierData] = useState([]);
@@ -32,6 +33,11 @@ const AddStockInput = ({ isUpdate, setIsUpdate, productInputData, isSubmitted, S
   const handleInputChange = (e) => {
   let { name, value } = e.target;
 
+  if (name === "type") {
+    setSelectedSupplier([]);
+
+  }
+
   if (name === "reorder_level") {
     const inputValue = value.trim();
     const regex = /^\d+$/; // Only non-negative whole numbers (no decimals)
@@ -51,13 +57,12 @@ const AddStockInput = ({ isUpdate, setIsUpdate, productInputData, isSubmitted, S
       return; // Do nothing if the input is invalid
     }
   }
-
   setProductData((prevData) => ({
     ...prevData,
     [name]: value,
   }));
 };
-   
+ 
 const handleLocationQuantityChange = (e) => {
   const inputValue = e.target.value.trim();
   const regex = /^([1-9][0-9]*|0)$/; 
@@ -131,7 +136,6 @@ const handleLocationQuantityChange = (e) => {
   }, []);
 
   useEffect(() => {
-    setSelectedSupplier([]);
     setProductData((prevData) => ({
       ...prevData,
       product_supplier: []
@@ -155,14 +159,24 @@ const handleLocationQuantityChange = (e) => {
     setTotalAmount(calculatedTotal);
   }, [productData.location_quantity, productData.unit_price])
 
-  useEffect(() => {
-    productInputData(productData);
-  },[productData])
+  // useEffect(() => {
+  //   productInputData(productData);
+  // },[productData])
 
+  const InitSelectedSupplier = () => {
+    setProductData(viewProductData);
+    const supplierIds = viewProductData.product_supplier.map(supplier => supplier.supplier_id);
+    const matchedSuppliers = initialSupplierData.filter(supplier => supplierIds.includes(supplier.supplier_id));
+    setSelectedSupplier(matchedSuppliers);
+  }
+
+  const hasRun = useRef(false);
   useEffect(() => {
-    setProductData(initProductData);
-    Submitted(false);
-  }, [isSubmitted]);
+    if (supplierData.length > 0 && !hasRun.current) {
+      hasRun.current = true;
+      InitSelectedSupplier();
+    }
+  }, [supplierData])
 
   return (
     <div className="w-[70rem] relative pb-[10rem] px-5 ">
@@ -175,9 +189,10 @@ const handleLocationQuantityChange = (e) => {
             id="productName"
             name="name"
             value={productData.name}
+            disabled={isView ? true : false}
             onChange={handleInputChange}
             placeholder="Enter product name"
-            className="mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none"
+            className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
             required
           />
         </div>
@@ -188,9 +203,10 @@ const handleLocationQuantityChange = (e) => {
             id="productSize"
             name="size"
             value={productData.size}
+            disabled={isView ? true : false}
             onChange={handleInputChange}
             placeholder="Enter Size/Model"
-            className="mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none"
+            className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
             required
           />
         </div>
@@ -203,11 +219,12 @@ const handleLocationQuantityChange = (e) => {
             id="quantity"
             name="quantity"
             value={productData.location_quantity.find((entry) => entry.location === "warehouse")?.quantity}
+            disabled={isView ? true : false}
             onChange={handleLocationQuantityChange}
             min="0"
             pattern="/^[1-9][0-9]*$|^0$/"
             placeholder="Enter Quantity"
-            className="mt0 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none"
+            className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
             required
           />
         </div>
@@ -218,10 +235,11 @@ const handleLocationQuantityChange = (e) => {
             id="reorderLevel"
             name="reorder_level"
             value={productData.reorder_level}
+            disabled={isView ? true : false}
             onChange={handleInputChange}
             min="0"
             placeholder="Enter reorder level"
-            className="mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none"
+            className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
             required
           />
         </div>
@@ -234,10 +252,11 @@ const handleLocationQuantityChange = (e) => {
             id="unitPrice"
             name="unit_price"
             value={productData.unit_price}
+            disabled={isView ? true : false}
             onChange={handleInputChange}
             placeholder="Enter amount"
             min="0"
-            className="mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none"
+            className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
             required
           />
         </div>
@@ -247,9 +266,10 @@ const handleLocationQuantityChange = (e) => {
             type="text"
             id="totalAmount"
             value={totalAmount}
+            disabled={isView ? true : false}
             readOnly
             placeholder="Auto-calculated"
-            className="mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none"
+            className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
           />
         </div>
 
@@ -257,9 +277,10 @@ const handleLocationQuantityChange = (e) => {
           <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
           <select
             id="category"
-            className="mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none"
+            className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
             name="type"
             value={productData.type}
+            disabled={isView ? true : false}
             onChange={handleInputChange}
             required
           >
@@ -281,14 +302,15 @@ const handleLocationQuantityChange = (e) => {
             setTags={setSelectedSupplier}
             productData={productData}
             setProductData={setProductData}
+            isView={isView}
           />
 
           <select
             id="supplier"
-            className="mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none"
+            className={`${isView ? "text-gray-400 cursor-default hidden" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
             onChange={handleSupplierChange}
             value={selectedOption}
-            disabled={productData.type ? false : true}
+            disabled={isView ? true : productData.type ? false : true}
             required={selectedSupplier.length === 0}
           >
             <option value="">Select a supplier</option>
@@ -314,13 +336,16 @@ const handleLocationQuantityChange = (e) => {
       }
       <div className="flex absolute gap-5 bottom-10 right-10">
         {isUpdate &&
-          <button onClick={() => { setIsUpdate(false); setIsView(true) }}
+          <button 
+            onClick={() => { setIsUpdate(false); setIsView(true); setProductData(viewProductData); InitSelectedSupplier(); Preview(viewProductData.image ? `http://localhost:4000${viewProductData.image}` : `/images/products/user.jpg`) }}
+            type="button"
             className="bottom-10 right-10 bg-red-500 text-white px-16 py-3 rounded-xl hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-green-50">
             Cancel
           </button>
         }
         {isUpdate &&
           <button onClick={() => console.log(alert("Saved"))}
+            type="submit"
             className="bottom-10 right-10 bg-[#7ad0ac] text-white px-16 py-3 rounded-xl hover:bg-[#6ab696] focus:outline-none focus:ring-2 focus:ring-green-50">
             Save
           </button>

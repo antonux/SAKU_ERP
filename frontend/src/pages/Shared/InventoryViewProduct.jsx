@@ -1,7 +1,7 @@
 
 import Boxes from "../../components/Shared/inventoryBoxes";
 import GoBackButton from "../../components/buttons/Backbutton";
-import Input from "../../components/Shared/inventoryAddStockInput";
+import Input from "../../components/Shared/inventoryViewStockInput";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { IoCamera } from "react-icons/io5";
@@ -10,12 +10,20 @@ const AddStock = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isUpdate, setIsUpdate] = useState(false)
-  const [inventoryFilter, setInventoryFilter] = useState("All");
+  const [isView, setIsView] = useState(true)
+  const [inventoryFilter, setInventoryFilter] = useState("warehouse");
   const [preview, setPreview] = useState("/images/products/tire.jpg");
+  const { item } = location.state;
+  const [initialData, setInitialData] = useState(item);
 
   useEffect(() => {
     if (location.pathname !== "/inventory") {
       localStorage.setItem("lastInventoryPath", location.pathname);
+    }
+    if (item.image !== null) {
+      setPreview(`http://localhost:4000${item.image}`)
+    } else {
+      setPreview(`/images/products/user.jpg`)
     }
   }, []);
 
@@ -31,6 +39,7 @@ const AddStock = () => {
       setPreview(URL.createObjectURL(file));
     }
   };
+
   const inventoryFilterClass = (value) =>
     `px-4 font-normal rounded-full text-[#272525] ${inventoryFilter === value
       ? "border-[1px] border-black"
@@ -38,6 +47,37 @@ const AddStock = () => {
     } hover:border-gray-400 transition duration-200 ease-in-out`;
 
 
+     const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const formData = new FormData();
+
+      formData.append('name', productData.name);
+      formData.append('type', productData.type);
+      formData.append('size', productData.size);
+      formData.append('unit_price', productData.unit_price);
+      formData.append('reorder_level', productData.reorder_level);
+      formData.append('product_supplier', JSON.stringify(productData.product_supplier));
+      formData.append('location_quantity', JSON.stringify(productData.location_quantity));
+
+      if (productData.image) {
+        formData.append('image', productData.image);
+      }
+
+      const response = await axios.post('http://localhost:4000/api/product/create', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      console.log('Product Created:', response.data);
+      setIsSubmitted(true);
+      setPreview(null);
+
+    } catch (error) {
+      console.error('Error creating product:', error);
+    }
+  };
 
   return (
     <div className='flex flex-col gap-4 h-screen pb-5 pt-7'>
@@ -51,16 +91,12 @@ const AddStock = () => {
             <h1 className="font-normal text-[#272525] cursor-default">
               Location:
             </h1>
-            <h1 className={inventoryFilterClass("All")}
-              onClick={() => setInventoryFilter("All")}>
-              All
-            </h1>
-            <h1 className={inventoryFilterClass("Store")}
-              onClick={() => setInventoryFilter("Store")}>
+            <h1 className={inventoryFilterClass("store")}
+              onClick={() => setInventoryFilter("store")}>
               Store
             </h1>
-            <h1 className={inventoryFilterClass("Warehouse")}
-              onClick={() => setInventoryFilter("Warehouse")}>
+            <h1 className={inventoryFilterClass("warehouse")}
+              onClick={() => setInventoryFilter("warehouse")}>
               Warehouse
             </h1>
           </div>
@@ -113,7 +149,14 @@ const AddStock = () => {
             </button>
             {/* upload picture */}
           </div>
-          <Input isUpdate={isUpdate} setIsUpdate={setIsUpdate} />
+          <Input
+            isUpdate={isUpdate}
+            setIsUpdate={setIsUpdate}
+            isView={isView}
+            setIsView={setIsView}
+            viewProductData={initialData}
+            Preview={setPreview}
+          />
         </div>
       </div>
     </div>
