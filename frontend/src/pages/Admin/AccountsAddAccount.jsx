@@ -1,19 +1,22 @@
-import GoBackButton from "../../components/buttons/Backbutton";
-import AccountInputs from "../../components/Admin/accountsAddAccountInput";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { IoCamera } from "react-icons/io5";
+import axios from "axios";
+import GoBackButton from "../../components/buttons/Backbutton";
+import AccountInputs from "../../components/Admin/accountsAddAccountInput";
 
 const AddAccount = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [preview, setPreview] = useState(null);
+    const [accountData, setAccountData] = useState({});
+    const [isSubmitted, setIsSubmitted] = useState(false);
 
     useEffect(() => {
         if (location.pathname !== "/accounts") {
             localStorage.setItem("lastAccountPath", location.pathname);
         }
-    }, []);
+    }, [location]);
 
     const handleGoBack = () => {
         localStorage.setItem("lastAccountPath", "/accounts");
@@ -25,6 +28,43 @@ const AddAccount = () => {
         const file = event.target.files[0];
         if (file) {
             setPreview(URL.createObjectURL(file));
+            setAccountData({
+                ...accountData,
+                image: file
+            });
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+            const formData = new FormData();
+
+            formData.append('username', accountData.username);
+            formData.append('password', accountData.password);
+            formData.append('email', accountData.email);
+            formData.append('fname', accountData.fname);
+            formData.append('lname', accountData.lname);
+            formData.append('phone', accountData.phone);
+            formData.append('gender', accountData.gender);
+            formData.append('role', accountData.role);
+
+            if (accountData.image) {
+                formData.append('image', accountData.image);
+            }
+
+            const response = await axios.post('http://localhost:4000/api/users/create', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            console.log('Account Created:', response.data);
+            setIsSubmitted(true);
+            setPreview(null);
+
+        } catch (error) {
+            console.error('Error creating account:', error);
         }
     };
 
@@ -35,7 +75,7 @@ const AddAccount = () => {
             </button>
             <div className="flex flex-col pt-5 px-7 gap-10 mt-[6rem] w-full h-full shadow-md overflow-auto rounded-lg bg-white text-black scrollbar-thin">
                 <h1 className="text-xl font-semibold text-[#272525]">Add a New Account</h1>
-                <div className="flex gap-5">
+                <form className="flex gap-5" onSubmit={handleSubmit}>
                     <div className="flex flex-col gap-5">
                         {/* upload picture */}
                         <div className="flex flex-col gap-12 items-center border-[2px] w-[19rem] border-[#f9f9f9] pt-10 pb-5 px-20">
@@ -79,13 +119,14 @@ const AddAccount = () => {
                                 </div>
                             </div>
                         </div>
-                        <button className="bg-[#7ad0ac] text-white px-16 py-3 rounded-xl hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
-                            Add Staff
+                        <button
+                            type="submit"
+                            className="bg-[#7ad0ac] text-white px-16 py-3 rounded-xl hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
+                            Add Account
                         </button>
-                        {/* upload picture */}
                     </div>
-                    <AccountInputs />
-                </div>
+                    <AccountInputs accountInputData={setAccountData} isSubmitted={isSubmitted} />
+                </form>
             </div>
         </div>
     );

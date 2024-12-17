@@ -1,35 +1,27 @@
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import axios from "axios";
 
 const Accounts = () => {
-    const staffData = [
-        {
-            id: "01",
-            firstName: "John",
-            lastName: "Otto",
-            gender: "Male",
-            staffId: "024663H",
-            phoneNumber: "08133000000",
-            role: "Store Staff",
-            designation: "Sales Department",
-        },
-        {
-            id: "02",
-            firstName: "Clint",
-            lastName: "Bay",
-            gender: "Male",
-            staffId: "0253JTO",
-            phoneNumber: "07063000053",
-            role: "Warehouse man",
-            designation: "Warehouse Department",
-        },
-    ];
+    const [accountData, setAccountData] = useState([]);
+
+    useEffect(() => {
+        const fetchAccountData = async () => {
+            try {
+                const response = await axios.get('http://localhost:4000/api/users');
+                setAccountData(response.data);
+            } catch (err) {
+                console.error('Error fetching account data:', err);
+            }
+        };
+        fetchAccountData();
+    }, []);
 
     return (
         <div className='flex flex-col gap-4 h-screen pb-5'>
             <div className="px-10 py-6 mt-[6rem] flex flex-col md:flex-row gap-4 flex-shrink-0 w-full shadow-md rounded-lg bg-white text-black">
                 <div className="flex-1 space-y-2">
-                    <h2 className="text-sm font-medium">Quick search a staff</h2>
+                    <h2 className="text-sm font-medium">Quick search an account</h2>
                     <div className="relative">
                         <input
                             type="text"
@@ -46,13 +38,13 @@ const Accounts = () => {
 
                 <div className="flex items-center gap-4">
                     <div className="text-center">
-                        <p className="text-3xl font-semibold">{staffData.length}</p>
-                        <p className="text-sm text-gray-500">Total number of staff</p>
+                        <p className="text-3xl font-semibold">{accountData.length}</p>
+                        <p className="text-sm text-gray-500">Total number of accounts</p>
                     </div>
 
                     <div className="relative">
                         <select className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7ad0ac] appearance-none bg-white pr-8">
-                            <option>All staff</option>
+                            <option>All accounts</option>
                             <option>Store Staff</option>
                             <option>Warehouse Staff</option>
                         </select>
@@ -62,7 +54,7 @@ const Accounts = () => {
                     </div>
                     <Link to="/accounts/add-account">
                         <button className="bg-[#7ad0ac] text-white px-6 py-2 rounded-full hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
-                            Add New Staff
+                            Add New Account
                         </button>
                     </Link>
                 </div>
@@ -72,7 +64,7 @@ const Accounts = () => {
                     <thead className='sticky top-0'>
                         <tr>
                             <th colSpan="9" className="px-6 py-3 bg-white text-lg font-medium text-[#080d1c] text-start">
-                                All Staff
+                                All Accounts
                             </th>
                         </tr>
                         <tr className="text-xs text-gray-700 uppercase bg-white">
@@ -80,29 +72,30 @@ const Accounts = () => {
                             <th scope="col" className="px-6 py-3">First Name</th>
                             <th scope="col" className="px-6 py-3">Last Name</th>
                             <th scope="col" className="px-6 py-3">Gender</th>
-                            <th scope="col" className="px-6 py-3">Staff ID</th>
+                            <th scope="col" className="px-6 py-3">Email</th>
                             <th scope="col" className="px-6 py-3">Phone Number</th>
                             <th scope="col" className="px-6 py-3">Role</th>
-                            <th scope="col" className="px-6 py-3">Designation</th>
                             <th scope="col" className="px-6 py-3">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {staffData.map((staff) => (
+                        {accountData.map((account, index) => (
                             <tr
-                                key={staff.id}
+                                key={account.user_id}
                                 className="bg-white border-b hover:bg-gray-50"
                             >
-                                <td className="px-6 py-4">{staff.id}</td>
-                                <td className="px-6 py-4">{staff.firstName}</td>
-                                <td className="px-6 py-4">{staff.lastName}</td>
-                                <td className="px-6 py-4">{staff.gender}</td>
-                                <td className="px-6 py-4">{staff.staffId}</td>
-                                <td className="px-6 py-4">{staff.phoneNumber}</td>
-                                <td className="px-6 py-4">{staff.role}</td>
-                                <td className="px-6 py-4">{staff.designation}</td>
+                                <td className="px-6 py-4">{index + 1}</td>
+                                <td className="px-6 py-4">{account.fname}</td>
+                                <td className="px-6 py-4">{account.lname}</td>
+                                <td className="px-6 py-4">{account.gender}</td>
+                                <td className="px-6 py-4">{account.email}</td>
+                                <td className="px-6 py-4">{account.phone}</td>
+                                <td className="px-6 py-4">{account.role}</td>
                                 <td className="px-6 py-4">
-                                    <Link to="/accounts/view-account">
+                                    <Link
+                                        to="/accounts/view-account"
+                                        state={{ account }}
+                                    >
                                         <button className="text-blue-500 hover:underline">
                                             View more
                                         </button>
