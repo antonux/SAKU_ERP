@@ -139,9 +139,9 @@ const AccountInputs = ({ isUpdate, setIsUpdate, viewAccountData, Preview, newAcc
                         required
                     >
                         <option value="">Select role</option>
-                        <option value="Store Staff">Store Staff</option>
-                        <option value="Warehouse Staff">Warehouse Staff</option>
-                        <option value="Manager">Manager</option>
+                        <option value="store">Store Staff</option>
+                        <option value="warehouse">Warehouse Staff</option>
+                        <option value="manager">Manager</option>
                     </select>
                 </div>
             </div>

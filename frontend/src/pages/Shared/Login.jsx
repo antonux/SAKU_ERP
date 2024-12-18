@@ -4,38 +4,45 @@ import ForgotPassword from "../../components/Shared/LoginForgotPassword";
 import VerifyEmail from "../../components/Shared/LoginVerifyEmail";
 import ResetPassword from "../../components/Shared/LoginResetPassword";
 import { useRole } from "../../contexts/RoleContext";
+import axios from 'axios';
 
+// Modals
+import InvalidLogin from "../../modals/invalidLogin";
 
 const Login = () => {
   const [view, setView] = useState('login');
-  const [email, setEmail] = useState('');
+  const [usernameEmail, setUsernameEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isInvalidLoginOpen, setIsInvalidLoginOpen] = useState(false);
 
-  const { logUser, user } = useRole();
+  const { logUser, user, setUserID } = useRole();
   console.log(user)
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
 
-      if (response.ok) {
-        console.log('Login successful');
-        // Handle successful login (e.g., redirect or update UI)
+    try {
+      const payload = {
+        usernameOrEmail: usernameEmail,
+        password: password, 
+      };
+
+      const response = await axios.post('http://localhost:4000/api/users/login', payload);
+
+      if (response.data.success) {
+        console.log('Login successful:', response.data);
+
+        logUser(response.data.user.role); 
+        setUserID(response.data.user.user_id); 
       } else {
-        console.error('Login failed');
-        // Handle login error (e.g., show error message)
+        console.error('Invalid credentials:', response.data.message);
+
       }
     } catch (error) {
-      console.error('An error occurred:', error);
-      // Handle any network or other errors
+      console.error('Error logging in:', error.response?.data || error.message);
+      setIsInvalidLoginOpen(true);
+
     }
   };
 
@@ -118,10 +125,18 @@ const Login = () => {
     setView('login') // remove if we start handling backend
   };
 
+  const closeModal = () => {
+    setIsInvalidLoginOpen(false)
+  };
   return (
     <div className="flex w-full min-h-screen justify-center items-center bg-white">
       <div className="flex gap-48 z-50">
         <div className="w-full flex flex-col gap-5">
+          {isInvalidLoginOpen && 
+          (<InvalidLogin 
+            onClose={closeModal}
+          />)
+          }
           {view === 'login' && (
             <>
               <h2 className="text-3xl text-[#272525] font-extrabold mb-6">Please Sign In</h2>
@@ -129,15 +144,15 @@ const Login = () => {
                 <div className='flex flex-col gap-6'>
                   <div className='flex flex-col gap-3'>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                      Email address
+                      Username Or Email
                     </label>
                     <input
                       id="email"
                       type="text" // EMAIL
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
-                      placeholder="Enter email address"
+                      value={usernameEmail}
+                      onChange={(e) => setUsernameEmail(e.target.value)}
+                      className={`${isInvalidLoginOpen ? "border-red-700 text-red-700" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500`}
+                      placeholder="Enter Username or Email"
                       required
                     />
                   </div>
@@ -151,7 +166,7 @@ const Login = () => {
                         type={showPassword ? "text" : "password"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="block w-full px-3 py-4 border text-center text-sm border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                        className={`${isInvalidLoginOpen ? "border-red-700 text-red-700" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500`}
                         placeholder="Password"
                         required
                       />
@@ -190,7 +205,6 @@ const Login = () => {
                 </div>
                 <div>
                   <button
-                    onClick={() => logUser(email)}
                     type="submit"
                     className="w-full flex justify-center py-4 px-4 mt-8 border border-transparent rounded-lg shadow-sm text-sm font-normal text-white bg-[#56cc73] hover:bg-[#48af62] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
                   >

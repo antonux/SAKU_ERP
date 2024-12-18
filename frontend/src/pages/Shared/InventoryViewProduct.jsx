@@ -5,16 +5,18 @@ import Input from "../../components/Shared/inventoryViewStockInput";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { IoCamera } from "react-icons/io5";
+import axios from "axios";
 
 const AddStock = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isUpdate, setIsUpdate] = useState(false)
   const [isView, setIsView] = useState(true)
-  const [inventoryFilter, setInventoryFilter] = useState("warehouse");
+  const [inventoryFilter, setInventoryFilter] = useState("");
   const [preview, setPreview] = useState("/images/products/tire.jpg");
-  const { item } = location.state;
+  const { item, location: inventoryPassedFilter } = location.state;
   const [initialData, setInitialData] = useState(item);
+  const [productData, setProductData] = useState({});
 
   useEffect(() => {
     if (location.pathname !== "/inventory") {
@@ -24,6 +26,9 @@ const AddStock = () => {
       setPreview(`http://localhost:4000${item.image}`)
     } else {
       setPreview(`/images/products/user.jpg`)
+    }
+    if (inventoryPassedFilter !== "all") {
+      setInventoryFilter(inventoryPassedFilter.location);
     }
   }, []);
 
@@ -37,8 +42,14 @@ const AddStock = () => {
     const file = event.target.files[0];
     if (file) {
       setPreview(URL.createObjectURL(file));
-    }
+      setProductData({
+        ...productData,
+        image: file
+      });
+    };
   };
+
+
 
   const inventoryFilterClass = (value) =>
     `px-4 font-normal rounded-full text-[#272525] ${inventoryFilter === value
@@ -47,12 +58,14 @@ const AddStock = () => {
     } hover:border-gray-400 transition duration-200 ease-in-out`;
 
 
-     const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('update data: ', productData)
 
     try {
       const formData = new FormData();
 
+      formData.append('prod_id', productData.prod_id);
       formData.append('name', productData.name);
       formData.append('type', productData.type);
       formData.append('size', productData.size);
@@ -65,17 +78,36 @@ const AddStock = () => {
         formData.append('image', productData.image);
       }
 
-      const response = await axios.post('http://localhost:4000/api/product/create', formData, {
+      const response = await axios.post('http://localhost:4000/api/product/update', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log('Product Created:', response.data);
-      setIsSubmitted(true);
-      setPreview(null);
+      const fetchNewData = await axios.get(`http://localhost:4000/api/product`);
+      const newData = fetchNewData.data.find(product => product.prod_id === productData.prod_id);
+      console.log('Product updated:', response.data);
+      setInitialData(newData)
+      setIsUpdate(false);
+      setIsView(true);
 
     } catch (error) {
-      console.error('Error creating product:', error);
+      console.error('Error updating product:', error);
+    }
+  };
+
+  const deleteSupplier = async (prod_id) => {
+    try {
+      const response = await axios.delete(`http://localhost:4000/api/product/delete/${prod_id}`);
+      console.log('Product deleted:', response.data);
+      navigate("/inventory")
+    } catch (error) {
+      console.error('Error deleting product:', error);
+    }
+  };
+
+  const handleDeleteClick = (prod_id) => {
+    if (window.confirm('Are you sure you want to delete this supplier?')) {
+      deleteSupplier(prod_id);
     }
   };
 
@@ -101,7 +133,7 @@ const AddStock = () => {
             </h1>
           </div>
         </div>
-        <div className="flex gap-5">
+        <form className="flex gap-5" onSubmit={handleSubmit}>
           <div className="relative flex flex-col gap-5">
             {/* upload picture */}
             <div className="flex flex-col gap-12 items-center border-[2px] w-[19rem] border-[#f9f9f9] pt-10 pb-5 px-20">
@@ -144,7 +176,9 @@ const AddStock = () => {
                 </div>
               </div>
             </div>
-            <button className="text-red-500 px-16 py-2 underline bottom-9 absolute">
+            <button
+              onClick={() => { handleDeleteClick(initialData.prod_id) }}
+              className="text-red-500 px-16 py-2 underline bottom-9 absolute">
               Delete product
             </button>
             {/* upload picture */}
@@ -156,8 +190,10 @@ const AddStock = () => {
             setIsView={setIsView}
             viewProductData={initialData}
             Preview={setPreview}
+            inventoryFilter={inventoryFilter}
+            newProductData={setProductData}
           />
-        </div>
+        </form>
       </div>
     </div>
   );

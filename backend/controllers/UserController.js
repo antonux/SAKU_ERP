@@ -65,6 +65,40 @@ const updateUser = async (req, res) => {
     }
 };
 
+const loginUser = async (req, res) => {
+    const { usernameOrEmail, password } = req.body;
+
+    try {
+        // Query the database to find a user by username or email
+        const query = `
+            SELECT * FROM USERS
+            WHERE (username = $1 OR email = $1) AND password = $2;
+        `;
+        const values = [usernameOrEmail, password];
+        const result = await client.query(query, values);
+
+        // Check if any user matches the query
+        if (result.rows.length > 0) {
+            return res.status(200).json({
+                success: true,
+                message: 'Login successful',
+                user: {
+                    user_id: result.rows[0].user_id,
+                    role: result.rows[0].role,
+                },
+            });
+        } else {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid username/email or password',
+            });
+        }
+    } catch (error) {
+        console.error("Error logging in user:", error);
+        return res.status(500).send("Error logging in user");
+    }
+};
+
 const deleteUser = async (req, res) => {
     const { user_id } = req.params;
     try {
@@ -84,6 +118,7 @@ module.exports = {
     getUsers,
     createUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    loginUser
 };
 

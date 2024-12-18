@@ -4,13 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import TagInput from "./tagInputs";
 import axios from "axios";
 
-const AddStockInput = ({ isUpdate, setIsUpdate, viewProductData, Preview}) => {
+const AddStockInput = ({isView, setIsView, isUpdate, setIsUpdate, viewProductData, Preview, inventoryFilter, newProductData}) => {
   const location = useLocation();
   const [selectedSupplier, setSelectedSupplier] = useState([]);
   const [initialSupplierData, setInitialSupplierData] = useState([]);
   const [supplierData, setSupplierData] = useState([]);
   const [selectedOption, setSelectedOption] = useState("");
-  const [isView, setIsView] = useState(true)
   const [totalAmount, setTotalAmount] = useState(0)
   const initProductData = {
     name: '',
@@ -28,7 +27,6 @@ const AddStockInput = ({ isUpdate, setIsUpdate, viewProductData, Preview}) => {
   };
   const [productData, setProductData] = useState(initProductData);
 
-  console.log(productData)
 
   const handleInputChange = (e) => {
   let { name, value } = e.target;
@@ -72,7 +70,7 @@ const handleLocationQuantityChange = (e) => {
     const value = inputValue === '' ? '' : parseInt(inputValue, 10);
     setProductData((prevData) => {
       const updatedLocationQuantity = prevData.location_quantity.map((entry) => {
-        if (entry.location === "warehouse") {
+        if (entry.location === inventoryFilter) {
           return { ...entry, quantity: value };
         }
         return entry;
@@ -89,12 +87,6 @@ const handleLocationQuantityChange = (e) => {
       setIsView(false);
     }
   }, []);
-
-  useEffect(() => {
-    if (isUpdate) {
-      setIsView(false);
-    }
-  }, [isUpdate]);
 
   const handleSupplierChange = (event) => {
     const selectedCompanyName = event.target.value; // Get selected supplier name
@@ -151,17 +143,24 @@ const handleLocationQuantityChange = (e) => {
 
   useEffect(() => {
     const unitPrice = parseFloat(productData.unit_price) || 0;
-    const totalQuantity = productData.location_quantity.reduce(
-      (sum, loc) => sum + (parseInt(loc.quantity, 10) || 0),
-      0
+
+    const filteredQuantity = productData.location_quantity.find(
+      (loc) => loc.location === inventoryFilter
     );
+    const totalQuantity = parseInt(filteredQuantity?.quantity, 10) || 0;
     const calculatedTotal = unitPrice * totalQuantity;
+
     setTotalAmount(calculatedTotal);
-  }, [productData.location_quantity, productData.unit_price])
+  }, [productData.location_quantity, productData.unit_price, inventoryFilter]);
+
 
   // useEffect(() => {
   //   productInputData(productData);
   // },[productData])
+
+  useEffect(() => {
+    setProductData(viewProductData);
+  }, []);
 
   const InitSelectedSupplier = () => {
     setProductData(viewProductData);
@@ -178,6 +177,12 @@ const handleLocationQuantityChange = (e) => {
     }
   }, [supplierData])
 
+  useEffect(() => {
+    newProductData(productData);
+    console.log('current pdata: ', productData)
+  }, [productData])
+
+
   return (
     <div className="w-[70rem] relative pb-[10rem] px-5 ">
       <div className="grid grid-cols-2 gap-7">
@@ -192,7 +197,7 @@ const handleLocationQuantityChange = (e) => {
             disabled={isView ? true : false}
             onChange={handleInputChange}
             placeholder="Enter product name"
-            className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
+            className={`${isView ? "text-gray-600 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
             required
           />
         </div>
@@ -206,7 +211,7 @@ const handleLocationQuantityChange = (e) => {
             disabled={isView ? true : false}
             onChange={handleInputChange}
             placeholder="Enter Size/Model"
-            className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
+            className={`${isView ? "text-gray-600 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
             required
           />
         </div>
@@ -218,14 +223,16 @@ const handleLocationQuantityChange = (e) => {
             type="number"
             id="quantity"
             name="quantity"
-            value={productData.location_quantity.find((entry) => entry.location === "warehouse")?.quantity}
+            value={
+              inventoryFilter === "warehouse" ? productData.location_quantity.find((entry) => entry.location === "warehouse")?.quantity || "" 
+              : inventoryFilter === "store" ? productData.location_quantity.find((entry) => entry.location === "store")?.quantity || "" : ""
+            }
             disabled={isView ? true : false}
             onChange={handleLocationQuantityChange}
             min="0"
             pattern="/^[1-9][0-9]*$|^0$/"
-            placeholder="Enter Quantity"
-            className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
-            required
+            placeholder="0"
+            className={`${isView ? "text-gray-600 cursor-default placeholder-gray-600" : ""} placeholder-black mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
           />
         </div>
         <div>
@@ -239,7 +246,7 @@ const handleLocationQuantityChange = (e) => {
             onChange={handleInputChange}
             min="0"
             placeholder="Enter reorder level"
-            className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
+            className={`${isView ? "text-gray-600 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
             required
           />
         </div>
@@ -256,7 +263,7 @@ const handleLocationQuantityChange = (e) => {
             onChange={handleInputChange}
             placeholder="Enter amount"
             min="0"
-            className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
+            className={`${isView ? "text-gray-600 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
             required
           />
         </div>
@@ -269,7 +276,7 @@ const handleLocationQuantityChange = (e) => {
             disabled={isView ? true : false}
             readOnly
             placeholder="Auto-calculated"
-            className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
+            className={`${isView ? "text-gray-600 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
           />
         </div>
 
@@ -277,7 +284,7 @@ const handleLocationQuantityChange = (e) => {
           <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
           <select
             id="category"
-            className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
+            className={`${isView ? "text-gray-600 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
             name="type"
             value={productData.type}
             disabled={isView ? true : false}
@@ -307,7 +314,7 @@ const handleLocationQuantityChange = (e) => {
 
           <select
             id="supplier"
-            className={`${isView ? "text-gray-400 cursor-default hidden" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
+            className={`${isView ? "text-gray-600 cursor-default hidden" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
             onChange={handleSupplierChange}
             value={selectedOption}
             disabled={isView ? true : productData.type ? false : true}
@@ -329,7 +336,8 @@ const handleLocationQuantityChange = (e) => {
         </div>
       </div>
       {isView &&
-        <button onClick={() => setIsUpdate(true)}
+        <button onClick={() => (setIsUpdate(true), setIsView(false))}
+          type="button"
           className="absolute bottom-10 right-10 bg-[#7ad0ac] text-white px-16 py-3 rounded-xl hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
           Update
         </button>
@@ -344,7 +352,7 @@ const handleLocationQuantityChange = (e) => {
           </button>
         }
         {isUpdate &&
-          <button onClick={() => console.log(alert("Saved"))}
+          <button 
             type="submit"
             className="bottom-10 right-10 bg-[#7ad0ac] text-white px-16 py-3 rounded-xl hover:bg-[#6ab696] focus:outline-none focus:ring-2 focus:ring-green-50">
             Save

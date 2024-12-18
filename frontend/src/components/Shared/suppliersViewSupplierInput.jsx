@@ -63,7 +63,7 @@ const SupplierInputs = ({ isUpdate, setIsUpdate, isSubmitted, viewSupplierData, 
             disabled={isView ? true : false}
             onChange={handleInputChange}
             placeholder="Enter company name"
-            className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
+            className={`${isView ? "text-gray-600 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
             required
           />
         </div>
@@ -77,7 +77,7 @@ const SupplierInputs = ({ isUpdate, setIsUpdate, isSubmitted, viewSupplierData, 
             disabled={isView ? true : false}
             onChange={handleInputChange}
             placeholder="Enter company address"
-            className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
+            className={`${isView ? "text-gray-600 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
             required
           />
         </div>
@@ -93,7 +93,7 @@ const SupplierInputs = ({ isUpdate, setIsUpdate, isSubmitted, viewSupplierData, 
             disabled={isView ? true : false}
             onChange={handleInputChange}
             placeholder="Enter contact name"
-            className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
+            className={`${isView ? "text-gray-600 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
             required
           />
         </div>
@@ -107,7 +107,7 @@ const SupplierInputs = ({ isUpdate, setIsUpdate, isSubmitted, viewSupplierData, 
             disabled={isView ? true : false}
             onChange={handleInputChange}
             placeholder="Enter email"
-            className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
+            className={`${isView ? "text-gray-600 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
             required
           />
         </div>
@@ -124,7 +124,7 @@ const SupplierInputs = ({ isUpdate, setIsUpdate, isSubmitted, viewSupplierData, 
             onChange={handleInputChange}
             placeholder="+63"
             pattern="0?9\d{9}"
-            className={`${isView ? "text-gray-400 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
+            className={`${isView ? "text-gray-600 cursor-default" : ""} mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm  focus:outline-none `}
             required
           />
         </div>

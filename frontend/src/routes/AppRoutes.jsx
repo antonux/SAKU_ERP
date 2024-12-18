@@ -33,7 +33,7 @@ const AppRoutes = () => {
               />
             }
             {user === "admin" && <Route path="/*" element={<AdminRoutes />} />}
-            {user === "store" && <Route path="/*" element={<StoreRoutes />} />}
+            {(user === "store" || user === "manager") && <Route path="/*" element={<StoreRoutes />} />}
             {user === "warehouse" && <Route path="/*" element={<WarehouseRoutes />} />}
             <Route path="" element={<Navigate to="/overview" />} />
           </Routes>

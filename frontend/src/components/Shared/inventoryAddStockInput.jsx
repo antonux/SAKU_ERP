@@ -29,8 +29,15 @@ const AddStockInput = ({ isUpdate, setIsUpdate, productInputData, isSubmitted, S
 
   console.log(productData)
 
+
+
   const handleInputChange = (e) => {
   let { name, value } = e.target;
+
+  if (name === "type") {
+    setSelectedSupplier([]);
+
+  }
 
   if (name === "reorder_level") {
     const inputValue = value.trim();
@@ -41,23 +48,24 @@ const AddStockInput = ({ isUpdate, setIsUpdate, productInputData, isSubmitted, S
       return; // Do nothing if the input is invalid
     }
   }
-
   if (name === "unit_price") {
-    const inputValue = value.trim();
-    const regex = /^\d+(\.\d+)?$/; // Only positive numbers with optional decimal
-    if (inputValue === '' || regex.test(inputValue)) {
-      value = inputValue === '' ? '' : parseFloat(inputValue);
-    } else {
-      return; // Do nothing if the input is invalid
-    }
+  const inputValue = value.trim();
+  const regex = /^\d*(\.\d{0,2})?$/; // Allows numbers with up to 2 decimal places
+  if (inputValue === '' || regex.test(inputValue)) {
+    value = inputValue === '' ? '' : parseFloat(inputValue);
+  } else {
+    return; // Do nothing if the input is invalid
   }
+}
 
   setProductData((prevData) => ({
     ...prevData,
     [name]: value,
   }));
 };
-   
+ 
+  
+     
 const handleLocationQuantityChange = (e) => {
   const inputValue = e.target.value.trim();
   const regex = /^([1-9][0-9]*|0)$/; 
@@ -130,8 +138,8 @@ const handleLocationQuantityChange = (e) => {
     fetchSupplierData();
   }, []);
 
+
   useEffect(() => {
-    setSelectedSupplier([]);
     setProductData((prevData) => ({
       ...prevData,
       product_supplier: []
@@ -144,6 +152,7 @@ const handleLocationQuantityChange = (e) => {
     };
 
   }, [productData.type]);
+
 
   useEffect(() => {
     const unitPrice = parseFloat(productData.unit_price) || 0;
@@ -161,6 +170,7 @@ const handleLocationQuantityChange = (e) => {
 
   useEffect(() => {
     setProductData(initProductData);
+    setSelectedSupplier([]);
     Submitted(false);
   }, [isSubmitted]);
 
@@ -233,6 +243,7 @@ const handleLocationQuantityChange = (e) => {
             type="number"
             id="unitPrice"
             name="unit_price"
+            step="0.01"
             value={productData.unit_price}
             onChange={handleInputChange}
             placeholder="Enter amount"

@@ -120,7 +120,8 @@ const AccountInputs = ({ accountInputData, isSubmitted }) => {
                         id="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
-                        placeholder="Enter phone number"
+                        placeholder="+63"
+                        pattern="0?9\d{9}"
                         className="mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none"
                         required
                     />
@@ -154,9 +155,9 @@ const AccountInputs = ({ accountInputData, isSubmitted }) => {
                         className="mt-1 block w-full px-3 py-4 text-center text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none"
                     >
                         <option value="">Select role</option>
-                        <option value="Store Staff">Store Staff</option>
-                        <option value="Warehouse Staff">Warehouse Staff</option>
-                        <option value="Manager">Manager</option>
+                        <option value="store">Store Staff</option>
+                        <option value="warehouse">Warehouse Staff</option>
+                        <option value="manager">Manager</option>
                     </select>
                 </div>
             </div>
