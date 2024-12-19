@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { IoIosArrowDown, IoIosApps } from 'react-icons/io';
 
-const FloatingComponent = ({ onClose }) => {
+const FloatingComponent = ({ onClose, productData, setSelectedProduct, selectedProduct, products, selected, setSelected }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Categories");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -20,9 +20,13 @@ const FloatingComponent = ({ onClose }) => {
     setShowDropdown(false);
   };
 
+  const isProductAdded = (productId) => {
+    return products.some((product) => product.id === productId);
+  };
+
   return (
-    <div className={`fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-25 transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-      <div className={`bg-white p-8 rounded-lg shadow-lg w-[50rem] h-[35rem] relative transition-transform duration-300 transform ${isVisible ? 'scale-100' : 'scale-90'}`}>
+    <div className={`fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-10 transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`bg-white flex flex-col p-8 pb-4 rounded-lg shadow-lg w-[50rem] h-[35rem] relative transition-transform duration-300 transform ${isVisible ? 'scale-100' : 'scale-90'}`}>
         <button
           className="absolute text-xl top-2 right-5 text-gray-600 hover:text-gray-800 focus:outline-none"
           onClick={handleClose}
@@ -62,24 +66,66 @@ const FloatingComponent = ({ onClose }) => {
                   </div>
                 ))}
               </div>
-            ) }
+            )}
           </div>
         </div>
 
         {/* Grid Content */}
-        <div className="grid grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, index) => (
+        <div className="p-2 grid grid-cols-4 gap-4 overflow-auto h-[24rem] shrink-0 scrollbar-thin">
+          {productData.map((item) => (
             <div
-              key={index}
-              className="relative bg-white cursor-pointer border-[1px] border-[#c0d4cd] w-40 h-44 rounded-lg transform hover:scale-105 transition-transform duration-300"
+              key={item.prod_id}
+              className={`relative bg-white cursor-pointer border-[2px] ${isProductAdded(item.prod_id)
+                ? "pointer-events-none border-orange-400 opacity-85"
+                : "border-[#c0d4cd]"
+                } ${selected?.prod_id === item.prod_id ? "border-green-500 scale-105" : ""} w-40 h-44 rounded-lg transform hover:scale-105 transition-transform duration-300`}
+              onClick={() => {
+                if (!isProductAdded(item.prod_id)) {
+                  setSelected(item);
+                }
+              }}
             >
-              <img className='object-cover size-full rounded-lg' src="/images/products/tire.jpg" alt="" />
-              <div className='absolute text-[#e6ebf7] bottom-0 bg-[#47505f] w-full px-4 py-2 rounded-b-lg'>
-                <h3 className="font-semibold text-sm">Item {index + 1}</h3>
-                <p className="text-sm">Description</p>
+              <img className='object-cover size-full rounded-lg' src={item.image ? `http://localhost:4000${item.image}` : ""} alt="no image" />
+              <div className={`absolute text-[#e6ebf7] bottom-0 bg-[#47505f] w-full px-4 py-2 rounded-b-md ${isProductAdded(item.prod_id) ? "" : ""}`}>
+                <h3 className="font-semibold text-sm">{item.name}</h3>
+                <p className="text-sm">{item.size}</p>
               </div>
+
+              {/* Display "Selected" label if product is already in products */}
+              {selected?.prod_id === item.prod_id && (
+                <div className="absolute top-0 right-0 bg-green-500 text-white px-2 py-1 text-xs rounded-bl-lg transition-all">
+                  Selected
+                </div>
+              )}
+              {isProductAdded(item.prod_id) && (
+                <div className="absolute top-0 right-0 bg-orange-400 text-white px-2 py-1 text-xs rounded-bl-lg">
+                  Added
+                </div>
+              )}
             </div>
           ))}
+        </div>
+        <div className="flex gap-5 justify-center items-center h-full">
+          <button
+            className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-md transition-all text-sm"
+            onClick={() => {
+              handleClose();
+              setSelected(null);
+              setSelectedProduct(null);
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            className="bg-green-400 hover:bg-green-500 disabled:bg-gray-400 text-white poit px-5 py-2 rounded-md transition-all text-sm"
+            disabled={!selected} 
+            onClick={() => {
+              handleClose();
+              setSelectedProduct(selected)
+            }}
+          >
+            Continue
+          </button>
         </div>
       </div>
     </div>

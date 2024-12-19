@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { FaTrash } from "react-icons/fa";
+import { useEffect, useState, useRef } from "react";
+import { FaRegTrashCan } from "react-icons/fa6";
+import axios from "axios";
 
 // Components
 import GoBackButton from "../../components/buttons/Backbutton";
@@ -20,11 +21,12 @@ const AddStock = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState(null);
   const [newQuantity, setNewQuantity] = useState("");
+  const [productData, setProductData] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selected, setSelected] = useState(null);
+  const QuantityInputRef = useRef(null);
 
-  const [products, setProducts] = useState([
-    { id: 1, product: "Item A", size: "Large", category: "Category 1", quantity: 2, amount: 150, total: 300 },
-    { id: 2, product: "Item B", size: "Medium", category: "Category 2", quantity: 1, amount: 200, total: 200 },
-  ]);
+  const [products, setProducts] = useState([]);
 
 
   useEffect(() => {
@@ -75,15 +77,85 @@ const AddStock = () => {
     }
   };
 
+  useEffect(() => {
+    const fetchSupplierData = async () => {
+      try {
+        const response = await axios.get('http://localhost:4000/api/product');
+        setProductData(response.data)
+      } catch (err) {
+        console.error('Error fetching product data:', err);
+      }
+    };
+    fetchSupplierData();
+  }, []);
 
-  return (
+  const getFilteredProductData = (data) => {
+    return data.map((product) => ({
+      ...product,
+      location_quantity: product.location_quantity.filter(
+        (location) => location.location === 'store'
+      ),
+    }));
+  };
+
+  const handleAdd = () => {
+    if (selectedProduct) {
+      setProducts((prevProducts) => [
+        ...prevProducts,
+        {
+          id: selectedProduct.prod_id,
+          product: selectedProduct.name,
+          size: selectedProduct.size,
+          category: selectedProduct.type, 
+          quantity: selectedProduct.quantity,
+          amount: parseFloat(selectedProduct.unit_price),
+          total: parseFloat(selectedProduct.unit_price * selectedProduct.quantity),
+        },
+      ]);
+      setSelectedProduct();
+      setSelected(null);
+    }
+  };
+
+  useEffect(() => {
+    QuantityInputRef.current.focus();
+  },[selectedProduct])
+
+  const handleQuantityChange = (e) => {
+    const quantity = e.target.value;
+    if (quantity === '') {
+      setSelectedProduct((prev) => ({
+        ...prev,
+        quantity: '',
+      }));
+      return;
+    }
+    if (quantity.includes('.') || quantity <= 0 || quantity >= 1000) {
+      e.preventDefault();
+      return;
+    }
+    setSelectedProduct((prev) => ({
+      ...prev,
+      quantity: quantity,
+    }));
+  };
+
+   return (
     <div className='flex flex-col gap-4 h-screen pb-5 pt-7'>
       <button onClick={handleGoBack} className="absolute z-50 translate-y-[3.2rem]">
         <GoBackButton />
       </button>
       <div className="flex flex-col pt-5 px-7 pb-10 gap-10 mt-[6rem] w-full h-full shadow-md overflow-auto rounded-lg bg-white text-black scrollbar-thin">
         {showFloating &&
-          <FloatingComponent onClose={() => setShowFloating(false)} />
+          <FloatingComponent
+            onClose={() => setShowFloating(false)}
+            productData={getFilteredProductData(productData)}
+            selectedProduct={selectedProduct}
+            setSelectedProduct={setSelectedProduct}
+            products={products}
+            selected={selected}
+            setSelected={setSelected}
+          />
         }
         <h1 className="text-xl font-semibold text-[#272525]">Product Request Form</h1>
         <div className="flex gap-5 whitespace-nowrap items-center">
@@ -94,6 +166,7 @@ const AddStock = () => {
               id="product"
               onClick={() => setShowFloating(true)}
               readOnly
+              value={selectedProduct ? `${selectedProduct.name} ${selectedProduct.size}` : ""}
               placeholder="Choose product"
               className="mt-1 block cursor-pointer w-full px-3 py-3 transition hover:shadow-md hover:placeholder-[#383131] hover:border-gray-200 text-center text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none"
             />
@@ -103,19 +176,26 @@ const AddStock = () => {
             <input
               type="number"
               min="1"
+              ref={QuantityInputRef}
+              disabled={!selectedProduct}
+              value={selectedProduct?.quantity || ""}
+              onChange={handleQuantityChange}
               id="quantity"
               placeholder="Enter quantity"
               className="mt-1 block w-full px-3 py-3 text-center text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none"
             />
           </div>
           <div className="w-[15rem] ml-5 mt-5">
-            <button className="bg-[#7ad0ac] text-white text-sm font-normal px-8 py-[0.65rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
+            <button
+              disabled={!selectedProduct || selectedProduct.quantity === undefined || selectedProduct.quantity === ""}
+              onClick={() => {handleAdd();}}
+              className="bg-[#7ad0ac] text-white text-sm font-normal px-8 py-[0.65rem] rounded-lg hover:bg-[#71c2a0] disabled:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-green-50">
               Add Product
             </button>
           </div>
         </div>
         <div className="rounded-lg w-[65rem] mb-10 shrink-0 border-[1px] border-gray-100 overflow-auto scrollbar-thin">
-        <table className="text-sm w-[64rem] text-left text-gray-500">
+          <table className="text-sm w-[64rem] text-left text-gray-500">
             <thead className="sticky top-0 bg-white">
               <tr className="text-xs text-gray-700 uppercase">
                 <th scope="col" className="px-6 py-3">ID</th>
@@ -149,13 +229,13 @@ const AddStock = () => {
                       className="text-red-600 hover:text-red-800"
                       onClick={() => handleDelete(product.id)}
                     >
-                      <FaTrash className="size-4" />
+                      <FaRegTrashCan className="size-[1.1rem] hover:scale-110 transition-all" />
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
-            <tfoot>
+            <tfoot className={`${products.length === 0 ? "hidden" : ""}`}>
               <tr className="bg-white">
                 <td colSpan="6" className="px-6 py-4 font-semibold">TOTAL</td>
                 <td className="px-6 py-5 font-semibold">₱{totalAmount.toLocaleString()}</td>
@@ -163,7 +243,7 @@ const AddStock = () => {
               </tr>
             </tfoot>
           </table>
-        
+
           {isModalOpen && (
             <EditQuantity
               saveNewQuantity={saveNewQuantity}
@@ -180,7 +260,10 @@ const AddStock = () => {
             </button>
           }
           {user == "store" &&
-            <button className="bg-[#7fd6b2] text-white font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
+            <button 
+            className="bg-[#7fd6b2] text-white disabled:bg-gray-400 font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
+            disabled={products.length === 0}
+            >
               Submit
             </button>
           }

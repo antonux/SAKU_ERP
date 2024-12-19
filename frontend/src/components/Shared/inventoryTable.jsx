@@ -11,7 +11,6 @@ const Table = () => {
   const { user } = useRole();
   const role = user;
   const [productData, setProductData] = useState([]);
-  console.log(productData)
 
   const inventoryFilterClass = (value) =>
     `px-4 font-normal rounded-full text-[#272525] ${inventoryFilter === value
@@ -89,6 +88,7 @@ const Table = () => {
           {productData.map((item) => {
             // Filter location_quantity based on inventoryFilter value
             const filteredLocations =
+              role === "store" ? item.location_quantity.filter((location) => location.location === 'store') :
               inventoryFilter === "all"
                 ? item.location_quantity // Show all locations
                 : item.location_quantity.filter(
