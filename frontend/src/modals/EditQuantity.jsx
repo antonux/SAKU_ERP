@@ -62,16 +62,23 @@ const EditQuantity = ({ saveNewQuantity, setNewQuantity, onClose, newQuantity })
                 setZeroQuantity(false);
               }
             }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !zeroQuantity) {
+                handleSave();
+              }
+            }}
           />
         </div>
         <div className="flex justify-end gap-4">
           <button
+            type="button"
             className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-md transition-all text-sm"
             onClick={handleClose}
           >
             Cancel
           </button>
           <button
+            type="button"
             className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 disabled:bg-gray-400 rounded-md transition-all text-sm"
             disabled={zeroQuantity}
             onClick={handleSave}

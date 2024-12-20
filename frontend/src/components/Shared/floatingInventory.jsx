@@ -27,13 +27,6 @@ const FloatingComponent = ({ onClose, productData, setSelectedProduct, selectedP
   return (
     <div className={`fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-10 transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
       <div className={`bg-white flex flex-col p-8 pb-4 rounded-lg shadow-lg w-[50rem] h-[35rem] relative transition-transform duration-300 transform ${isVisible ? 'scale-100' : 'scale-90'}`}>
-        <button
-          className="absolute text-xl top-2 right-5 text-gray-600 hover:text-gray-800 focus:outline-none"
-          onClick={handleClose}
-        >
-          ✖
-        </button>
-
         {/* Header */}
         <div className="flex justify-start items-center mb-6 gap-8">
           {/* Search Bar */}
@@ -107,6 +100,7 @@ const FloatingComponent = ({ onClose, productData, setSelectedProduct, selectedP
         </div>
         <div className="flex gap-5 justify-center items-center h-full">
           <button
+            type='button'
             className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-md transition-all text-sm"
             onClick={() => {
               handleClose();
@@ -117,6 +111,7 @@ const FloatingComponent = ({ onClose, productData, setSelectedProduct, selectedP
             Cancel
           </button>
           <button
+            type='button'
             className="bg-green-400 hover:bg-green-500 disabled:bg-gray-400 text-white poit px-5 py-2 rounded-md transition-all text-sm"
             disabled={!selected} 
             onClick={() => {

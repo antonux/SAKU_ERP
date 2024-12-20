@@ -8,6 +8,7 @@ require('dotenv').config();
 const productRoutes = require('./routes/product');
 const supplierRoutes = require('./routes/supplier');
 const userRoutes = require('./routes/userRoutes');
+const requestRoutes = require('./routes/requestRoutes');
 
 // middleware
 app.use(cors()); // apply cors globally
@@ -29,3 +30,4 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/product', productRoutes);
 app.use('/api/supplier', supplierRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/request', requestRoutes);
