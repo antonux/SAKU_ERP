@@ -1,11 +1,18 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { IoIosSearch } from "react-icons/io";
 import { Link } from "react-router-dom";
 
 import axios from "axios";
 
-const Table = () => {
+// Modals
+import DeleteRequestSuccessful from "../../modals/DeleteRequestSuccessful";
 
+const Table = () => {
+  const location = useLocation();
+  const { isSuccess: isDeleted, rf_id } = location.state || false;
+  console.log(isDeleted)
+  const [isRequestDeleted, setIsRequestDeleted] = useState(false);
   const [inventoryFilter, setInventoryFilter] = useState("All");
   const inventoryFilterClass = (value) =>
     `px-4 font-normal rounded-full text-[#272525] ${inventoryFilter === value
@@ -73,8 +80,25 @@ const Table = () => {
     };
   });
 
+  useEffect(() => {
+    if (isDeleted) {
+      setIsRequestDeleted(true)
+    }
+  },[isDeleted])
+
+  const closeRequestDeletedModal = () => {
+    setIsRequestDeleted(false);
+  };
+
+
   return (
     <div className="rounded-lg h-full bg-white shadow-md overflow-auto scrollbar-thin">
+      {isRequestDeleted &&
+        <DeleteRequestSuccessful
+          onClose={closeRequestDeletedModal}
+          rf_id={rf_id}
+        />
+      }
       <table className="w-full text-sm text-left text-gray-500">
         <thead className="sticky top-0">
           <tr className="text-xs text-gray-700 bg-white">

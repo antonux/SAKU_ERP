@@ -6,12 +6,12 @@ import { useEffect, useState } from "react";
 const Inventory = () => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const lastPath = localStorage.getItem("lastRequestPath");
-    if (lastPath !== "/request") {
-      navigate(lastPath);
-    }
-  }, []);
+  // useEffect(() => {
+  //   const lastPath = localStorage.getItem("lastRequestPath");
+  //   if (lastPath !== "/request") {
+  //     navigate(lastPath);
+  //   }
+  // }, []);
 
 
 

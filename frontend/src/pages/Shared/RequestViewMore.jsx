@@ -7,12 +7,17 @@ import GoBackButton from "../../components/buttons/Backbutton";
 // Context
 import { useRole } from "../../contexts/RoleContext";
 
+// Modals
+import DeleteRequest from "../../modals/DeleteRequest";
+
+// axios
 import axios from "axios";
 
 const AddStock = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useRole();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { item: requestFormData, restockData } = location.state;
 
 
@@ -25,7 +30,7 @@ const AddStock = () => {
   const handleGoBack = () => {
     localStorage.setItem("lastRequestPath", "/request");
     const lp = localStorage.getItem("lastRequestPath")
-    navigate(lp)
+    navigate(lp);
   };
 
 
@@ -46,6 +51,21 @@ const AddStock = () => {
 
   const totalAmount = products.reduce((sum, product) => sum + product.total, 0);
       
+  const deleteRequest = async (rf_id) => {
+    try {
+      const response = await axios.delete(`http://localhost:4000/api/request/delete/${rf_id}`);
+      console.log('Request deleted:', response.data);
+      navigate('/request', { state: { isSuccess: true, rf_id: requestFormData.rf_id } });
+    } catch (error) {
+      console.error('Error deleting product:', error);
+    }
+  };
+
+  const handleDeleteClick = (rf_id) => {
+      deleteRequest(rf_id);
+  };
+
+
   return (
     <div className='flex flex-col gap-4 h-screen pb-5 pt-7'>
       <button onClick={handleGoBack} className="absolute z-50 translate-y-[3.2rem]">
@@ -88,7 +108,7 @@ const AddStock = () => {
             </thead>
             <tbody>
               {products.map((product) => (
-                <tr key={product.id} className="bg-white border-b hover:bg-gray-50">
+                <tr key={product.id} className="bg-white border-b hover:bg-gray-50 capitalize">
                   <td className="px-6 py-5">{product.id}</td>
                   <td className="px-6 py-5">{product.product}</td>
                   <td className="px-6 py-5">{product.size}</td>
@@ -108,6 +128,12 @@ const AddStock = () => {
           </table>
         </div>
         <div>
+          {showDeleteModal &&
+            <DeleteRequest
+              onConfirm={() => handleDeleteClick(requestFormData.rf_id)}
+              onClose={() => setShowDeleteModal(false)}
+            />
+          }
           {user === "admin" &&
             <button className="bg-[#7fd6b2] text-white font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
               Approve
@@ -115,9 +141,10 @@ const AddStock = () => {
           }
           {user === "store" &&
             <button
-              className="bg-red-400 text-white font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-green-50"
+              className="bg-red-400 text-white font-normal text-sm px-14 py-[.72rem] rounded-lg hover:bg-[#eb6b6b] transition-all focus:outline-none focus:ring-2 focus:ring-green-50"
+              onClick={() => setShowDeleteModal(true)}
             >
-              Cancel
+              Delete request
             </button>
           }
         </div>

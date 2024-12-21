@@ -6,14 +6,15 @@ const upload = require('../middleware/multerConfig');
 
 const {
   createRestockRequest,
-  getRestockRequest
+  getRestockRequest,
+  deleteRequest
 } = require('../controllers/RequestController');
 
 router.get('/restock', getRestockRequest);
 router.post('/create/restock', createRestockRequest);
+router.delete('/delete/:rf_id', deleteRequest);
 // router.post('/update', upload, updateUser);
 // router.post('/login', loginUser);
-// router.delete('/delete/:user_id', deleteUser);
 
 module.exports = router;
 

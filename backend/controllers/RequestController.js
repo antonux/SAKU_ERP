@@ -114,8 +114,26 @@ const createRestockRequest = async (req, res) => {
 };
 
 
+const deleteRequest = async (req, res) => {
+  const { rf_id } = req.params; 
+  try {
+    const query = `
+      DELETE FROM request_form WHERE rf_id = $1
+    `;
+    const values = [rf_id]; 
+    await client.query(query, values);
+
+    res.status(200).json({ message: 'Request deleted successfully' });
+  } catch (error) {
+    console.error("Error deleting request:", error);
+    res.status(500).send("Error deleting request");
+  }
+};
+
+
 
 module.exports = {
   createRestockRequest,
-  getRestockRequest
+  getRestockRequest,
+  deleteRequest
 }
