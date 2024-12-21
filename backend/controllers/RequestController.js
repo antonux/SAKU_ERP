@@ -1,6 +1,36 @@
 const client = require('../connection');
 
 
+const getRestockRequest = async (req, res) => {
+  try {
+    // Query data from all required tables
+    const requestFormQuery = `SELECT * FROM request_form;`;
+    const requestDetailsQuery = `SELECT * FROM request_details;`;
+    const productQuery = `SELECT * FROM product;`;
+    const usersQuery = `SELECT user_id, username, email, fname, lname, phone, gender, role FROM users;`;
+
+    // Execute all queries concurrently
+    const [requestFormResult, requestDetailsResult, productResult, usersResult] = await Promise.all([
+      client.query(requestFormQuery),
+      client.query(requestDetailsQuery),
+      client.query(productQuery),
+      client.query(usersQuery),
+    ]);
+
+    // Return results as arrays
+    res.json({
+      request_form: requestFormResult.rows,
+      request_details: requestDetailsResult.rows,
+      product: productResult.rows,
+      users: usersResult.rows,
+    });
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    res.status(500).send("Error fetching data");
+  }
+};
+
+
 const createRestockRequest = async (req, res) => {
   const { requestedBy, totalAmount, products, productData } = req.body;
 
@@ -86,5 +116,6 @@ const createRestockRequest = async (req, res) => {
 
 
 module.exports = {
-  createRestockRequest
+  createRestockRequest,
+  getRestockRequest
 }

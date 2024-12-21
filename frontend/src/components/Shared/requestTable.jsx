@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { IoIosSearch } from "react-icons/io";
 import { Link } from "react-router-dom";
 
+import axios from "axios";
+
 const Table = () => {
+
   const [inventoryFilter, setInventoryFilter] = useState("All");
   const inventoryFilterClass = (value) =>
     `px-4 font-normal rounded-full text-[#272525] ${inventoryFilter === value
@@ -10,14 +13,64 @@ const Table = () => {
       : "border-[1px] border-transparent"
     } hover:border-gray-400 transition duration-200 ease-in-out`;
 
-  const testData = new Array(5).fill({
-    category: "Category Name",
-    totalQty: 50,
-    requestedBy: "User A",
-    approvedBy: "Manager B",
-    date: "2024-12-08",
-    status: "Pending",
-    action: "View More",
+  const [restockData, setRestockData] = useState({
+    request_form: [],
+    request_details: [],
+    product: [],
+    users: [],
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get("http://localhost:4000/api/request/restock");
+        setRestockData(response.data);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError(err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const mappedData = restockData.request_form.map((form) => {
+    // Total quantity for this request
+    const totalQty = restockData.request_details
+      .filter((detail) => detail.rf_id === form.rf_id)
+      .reduce((sum, detail) => sum + detail.quantity, 0);
+
+    // Product category for this request
+    const productCategory = restockData.request_details
+      .filter((detail) => detail.rf_id === form.rf_id)
+      .map((detail) => {
+        const product = restockData.product.find((prod) => prod.prod_id === detail.product_id);
+        return product ? product.type : "Unknown"; 
+      })
+      .join(", "); // Join categories
+
+    // Requested by user
+    const requestedByUser = restockData.users.find((user) => user.user_id === form.requested_by);
+    const requestedBy = requestedByUser
+      ? `${requestedByUser.fname} ${requestedByUser.lname}`
+      : "Unknown";
+
+    // Approved by user
+    const approvedByUser = restockData.users.find((user) => user.user_id === form.approved_by);
+    const approvedBy = approvedByUser
+      ? `${approvedByUser.fname} ${approvedByUser.lname}`
+      : "";
+
+    return {
+      rf_id: form.rf_id,
+      category: productCategory,
+      totalQty,
+      requestedBy,
+      approvedBy,
+      date: new Date(form.created_at).toLocaleDateString(),
+      status: form.status,
+      action: "View More",
+    };
   });
 
   return (
@@ -56,23 +109,21 @@ const Table = () => {
           </tr>
         </thead>
         <tbody>
-          {testData.map((item, index) => (
-            <tr key={index} className="bg-white border-b hover:bg-gray-50">
-              <td className="px-6 py-5">{index + 1}</td>
-              <td className="px-6 py-5">{item.category}</td>
-              <td className="px-6 py-5">{item.totalQty}</td>
-              <td className="px-6 py-5">{item.requestedBy}</td>
-              <td className="px-6 py-5">{item.approvedBy}</td>
-              <td className="px-6 py-5">{item.date}</td>
-              <td className="px-6 py-5 text-orange-400">{item.status}</td>
-              <td className="px-6 py-5">
-                <Link to="/request/view-more">
-                  <button className="text-blue-500 hover:underline">
-                    {item.action}
-                  </button>
-                </Link>
-              </td>
-            </tr>
+          {mappedData.map((item, index) => (
+          <tr key={index} className="bg-white border-b hover:bg-gray-50 capitalize">
+            <td className="px-6 py-5">{index + 1}</td>
+            <td className="px-6 py-5">{item.category}</td>
+            <td className="px-6 py-5">{item.totalQty}</td>
+            <td className="px-6 py-5">{item.requestedBy}</td>
+            <td className="px-6 py-5">{item.approvedBy}</td>
+            <td className="px-6 py-5">{item.date}</td>
+            <td className="px-6 py-5 text-orange-400">{item.status}</td>
+            <td className="px-6 py-5">
+              <Link to="/request/view-more" state={{ item, restockData }}>
+                <button className="text-blue-500 hover:underline">{item.action}</button>
+              </Link>
+            </td>
+          </tr>
           ))}
         </tbody>
       </table>

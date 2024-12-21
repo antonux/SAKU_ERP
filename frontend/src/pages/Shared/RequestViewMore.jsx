@@ -7,10 +7,14 @@ import GoBackButton from "../../components/buttons/Backbutton";
 // Context
 import { useRole } from "../../contexts/RoleContext";
 
+import axios from "axios";
+
 const AddStock = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useRole();
+  const { item: requestFormData, restockData } = location.state;
+
 
   useEffect(() => {
     if (location.pathname !== "/request") {
@@ -24,13 +28,24 @@ const AddStock = () => {
     navigate(lp)
   };
 
-  const products = [
-    { id: 1, product: "Engine Oil", size: "1L", category: "Oil", quantity: 5, amount: 300, total: 1500 },
-    { id: 2, product: "Car Tire", size: "R15", category: "Tire", quantity: 2, amount: 3500, total: 7000 },
-    { id: 3, product: "Car Battery", size: "12V", category: "Battery", quantity: 1, amount: 5500, total: 5500 },
-  ];
-  const totalAmount = products.reduce((sum, product) => sum + product.total, 0);
 
+  const products = restockData.request_details
+    .filter((detail) => detail.rf_id === requestFormData.rf_id) 
+    .map((detail) => {
+      const product = restockData.product.find((prod) => prod.prod_id === detail.product_id); 
+      return {
+        id: product ? product.prod_id : "N/A",
+        product: product ? product.name : "Unknown Product", 
+        size: product ? product.size : "Unknown Size", 
+        category: product ? product.type : "Unknown Category", 
+        quantity: detail.quantity || 0,
+        amount: product ? product.unit_price : 0, 
+        total: product && detail.quantity ? product.unit_price * detail.quantity : 0, 
+      };
+    });
+
+  const totalAmount = products.reduce((sum, product) => sum + product.total, 0);
+      
   return (
     <div className='flex flex-col gap-4 h-screen pb-5 pt-7'>
       <button onClick={handleGoBack} className="absolute z-50 translate-y-[3.2rem]">
@@ -41,15 +56,17 @@ const AddStock = () => {
         <div className="flex gap-5 whitespace-nowrap">
           <div className="flex gap-1">
             <h1>Requested By:</h1>
-            <h1 className="font-semibold">John Otto</h1>
+            <h1 className="font-semibold capitalize">{requestFormData.requestedBy}</h1>
           </div>
           <div className="flex gap-1">
             <h1>Date Created:</h1>
-            <h1 className="font-semibold">11/22/2024</h1>
+            <h1 className="font-semibold">{requestFormData.date}</h1>
           </div>
           <div className="flex gap-1">
             <h1>Status:</h1>
-            <h1 className="font-semibold text-[#f29425]">Pending</h1>
+            <h1 className={`capitalize font-semibold ${requestFormData.status === "pending" ? "text-[#f29425]" : ""}`}>
+              {requestFormData.status}
+            </h1>
           </div>
           <div className="gap-1 hidden">
             <h1>Requested By:</h1>
@@ -91,13 +108,15 @@ const AddStock = () => {
           </table>
         </div>
         <div>
-          {user !== "store" &&
+          {user === "admin" &&
             <button className="bg-[#7fd6b2] text-white font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
               Approve
             </button>
           }
-          {user == "store" &&
-            <button className="bg-red-400 text-white font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-green-50">
+          {user === "store" &&
+            <button
+              className="bg-red-400 text-white font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-green-50"
+            >
               Cancel
             </button>
           }
