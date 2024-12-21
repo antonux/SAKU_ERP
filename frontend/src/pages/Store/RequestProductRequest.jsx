@@ -313,20 +313,13 @@ const AddStock = () => {
           )}
         </div>
         <div>
-          {user !== "store" &&
-            <button className="bg-[#7fd6b2] text-white font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
-              Approve
-            </button>
-          }
-          {user == "store" &&
-            <button
-              type="submit"
-              className="bg-[#7fd6b2] text-white disabled:bg-gray-400 font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
-              disabled={products.length === 0}
-            >
-              Submit
-            </button>
-          }
+          <button
+            type="submit"
+            className="bg-[#7fd6b2] text-white disabled:bg-gray-400 font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
+            disabled={products.length === 0}
+          >
+            Submit
+          </button>
         </div>
       </div>
     </form>

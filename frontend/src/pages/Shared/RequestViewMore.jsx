@@ -16,7 +16,7 @@ import axios from "axios";
 const AddStock = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useRole();
+  const { user, userID } = useRole();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { item: requestFormData, restockData } = location.state;
 
@@ -35,22 +35,22 @@ const AddStock = () => {
 
 
   const products = restockData.request_details
-    .filter((detail) => detail.rf_id === requestFormData.rf_id) 
+    .filter((detail) => detail.rf_id === requestFormData.rf_id)
     .map((detail) => {
-      const product = restockData.product.find((prod) => prod.prod_id === detail.product_id); 
+      const product = restockData.product.find((prod) => prod.prod_id === detail.product_id);
       return {
         id: product ? product.prod_id : "N/A",
-        product: product ? product.name : "Unknown Product", 
-        size: product ? product.size : "Unknown Size", 
-        category: product ? product.type : "Unknown Category", 
+        product: product ? product.name : "Unknown Product",
+        size: product ? product.size : "Unknown Size",
+        category: product ? product.type : "Unknown Category",
         quantity: detail.quantity || 0,
-        amount: product ? product.unit_price : 0, 
-        total: product && detail.quantity ? product.unit_price * detail.quantity : 0, 
+        amount: product ? product.unit_price : 0,
+        total: product && detail.quantity ? product.unit_price * detail.quantity : 0,
       };
     });
 
   const totalAmount = products.reduce((sum, product) => sum + product.total, 0);
-      
+
   const deleteRequest = async (rf_id) => {
     try {
       const response = await axios.delete(`http://localhost:4000/api/request/delete/${rf_id}`);
@@ -60,11 +60,63 @@ const AddStock = () => {
       console.error('Error deleting product:', error);
     }
   };
-
   const handleDeleteClick = (rf_id) => {
-      deleteRequest(rf_id);
+    deleteRequest(rf_id);
   };
 
+  const approveRequest = async () => {
+    try {
+      const requestData = {
+        rf_id: requestFormData.rf_id,
+        user_id: userID,
+        status: "approved"
+      };
+
+      const response = await axios.post('http://localhost:4000/api/request/update', requestData);
+      console.log('Request approved:', response.data);
+      // navigate('/request', { state: { isSuccess: true, rf_id: requestFormData.rf_id } });
+    } catch (error) {
+      console.error('Error approving request:', error);
+    }
+  };
+
+  const handleApproveClick = () => {
+    approveRequest();
+  };
+
+  const cancelRequest = async () => {
+    try {
+      const requestData = {
+        rf_id: requestFormData.rf_id,
+        user_id: userID,
+        status: "cancelled"
+      };
+
+      const response = await axios.post('http://localhost:4000/api/request/update', requestData);
+      console.log('Request cancelled:', response.data);
+      // navigate('/request', { state: { isSuccess: true, rf_id: requestFormData.rf_id } });
+    } catch (error) {
+      console.error('Error cancelling request:', error);
+    }
+  };
+
+  const handleCancelClick = () => {
+    cancelRequest();
+  };
+
+  const canDeleteRequest =
+    (user === "store" || (user === "manager" && requestFormData.requestedByRole === "manager")) &&
+    requestFormData.status !== "approved";
+
+  const canCancelRequest =
+    (user === "admin" || (user === "manager" && requestFormData.requestedByRole !== "manager")) &&
+    requestFormData.status !== "approved" &&
+    requestFormData.status !== "cancelled";
+
+  const canApproveRequest =
+    (user === "admin" || user === "manager") &&
+    requestFormData.status !== "approved" &&
+    requestFormData.status !== "cancelled";
 
   return (
     <div className='flex flex-col gap-4 h-screen pb-5 pt-7'>
@@ -80,18 +132,26 @@ const AddStock = () => {
           </div>
           <div className="flex gap-1">
             <h1>Date Created:</h1>
-            <h1 className="font-semibold">{requestFormData.date}</h1>
+            <h1 className="font-semibold">{requestFormData.date.toLocaleDateString()}</h1>
+          </div>
+          <div className="flex gap-1">
+            <h1>Updated By:</h1>
+            <h1 className="font-semibold capitalize">{requestFormData.requestedBy}</h1>
           </div>
           <div className="flex gap-1">
             <h1>Status:</h1>
-            <h1 className={`capitalize font-semibold ${requestFormData.status === "pending" ? "text-[#f29425]" : ""}`}>
+            <h1 className={`capitalize font-semibold 
+              ${requestFormData.status === "pending" ? "text-[#f29425]" :
+                requestFormData.status === "approved" ? "text-green-400" :
+                  requestFormData.status === "cancelled" ? "text-red-500" : ""}`
+            }>
               {requestFormData.status}
             </h1>
           </div>
-          <div className="gap-1 hidden">
-            <h1>Requested By:</h1>
-            <h1 className="font-semibold">John Otto</h1>
-          </div>
+          {/* <div className="flex gap-1">
+            <h1>Date Approved:</h1>
+            <h1 className="font-semibold">{requestFormData.updatedAt}</h1>
+          </div> */}
         </div>
         <div className="rounded-lg w-[56rem] mb-10 shrink-0 border-[1px] border-gray-100 overflow-auto scrollbar-thin">
           <table className="text-sm w-[55rem] text-left text-gray-500">
@@ -127,26 +187,39 @@ const AddStock = () => {
             </tfoot>
           </table>
         </div>
-        <div>
+        <div className="flex gap-7">
           {showDeleteModal &&
             <DeleteRequest
               onConfirm={() => handleDeleteClick(requestFormData.rf_id)}
               onClose={() => setShowDeleteModal(false)}
             />
           }
-          {user === "admin" &&
-            <button className="bg-[#7fd6b2] text-white font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
-              Approve
-            </button>
-          }
-          {user === "store" &&
+          {canDeleteRequest && (
             <button
               className="bg-red-400 text-white font-normal text-sm px-14 py-[.72rem] rounded-lg hover:bg-[#eb6b6b] transition-all focus:outline-none focus:ring-2 focus:ring-green-50"
               onClick={() => setShowDeleteModal(true)}
             >
-              Delete request
+              Delete Request
             </button>
-          }
+          )}
+
+          {canCancelRequest && (
+            <button
+              className="bg-red-400 text-white font-normal text-sm px-14 py-[.72rem] rounded-lg hover:bg-[#eb6b6b] transition-all focus:outline-none focus:ring-2 focus:ring-green-50"
+              onClick={handleCancelClick}
+            >
+              Cancel Request
+            </button>
+          )}
+
+          {canApproveRequest && (
+            <button
+              onClick={handleApproveClick}
+              className="bg-[#7fd6b2] text-white font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
+            >
+              Approve
+            </button>
+          )}
         </div>
       </div>
     </div>

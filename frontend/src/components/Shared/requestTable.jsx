@@ -42,53 +42,67 @@ const Table = () => {
   }, []);
 
   const mappedData = restockData.request_form.map((form) => {
-    // Total quantity for this request
-    const totalQty = restockData.request_details
-      .filter((detail) => detail.rf_id === form.rf_id)
-      .reduce((sum, detail) => sum + detail.quantity, 0);
+  // Total quantity for this request
+  const totalQty = restockData.request_details
+    .filter((detail) => detail.rf_id === form.rf_id)
+    .reduce((sum, detail) => sum + detail.quantity, 0);
 
-    // Product category for this request
-    const productCategory = restockData.request_details
-      .filter((detail) => detail.rf_id === form.rf_id)
-      .map((detail) => {
-        const product = restockData.product.find((prod) => prod.prod_id === detail.product_id);
-        return product ? product.type : "Unknown"; 
-      })
-      .join(", "); // Join categories
+  // Product category for this request
+  const productCategory = restockData.request_details
+    .filter((detail) => detail.rf_id === form.rf_id)
+    .map((detail) => {
+      const product = restockData.product.find((prod) => prod.prod_id === detail.product_id);
+      return product ? product.type : "Unknown";
+    })
+    .join(", ");
 
-    // Requested by user
-    const requestedByUser = restockData.users.find((user) => user.user_id === form.requested_by);
-    const requestedBy = requestedByUser
-      ? `${requestedByUser.fname} ${requestedByUser.lname}`
-      : "Unknown";
+  // Requested by user
+  const requestedByUser = restockData.users.find((user) => user.user_id === form.requested_by);
+  const requestedBy = requestedByUser
+    ? `${requestedByUser.fname} ${requestedByUser.lname}`
+    : "Unknown";
 
-    // Approved by user
-    const approvedByUser = restockData.users.find((user) => user.user_id === form.approved_by);
-    const approvedBy = approvedByUser
-      ? `${approvedByUser.fname} ${approvedByUser.lname}`
-      : "";
+  // Approved by user
+  const approvedByUser = restockData.users.find((user) => user.user_id === form.approved_by);
+  const approvedBy = approvedByUser
+    ? `${approvedByUser.fname} ${approvedByUser.lname}`
+    : "";
 
-    return {
-      rf_id: form.rf_id,
-      category: productCategory,
-      totalQty,
-      requestedBy,
-      approvedBy,
-      date: new Date(form.created_at).toLocaleDateString(),
-      status: form.status,
-      action: "View More",
-    };
-  });
+  return {
+    rf_id: form.rf_id,
+    category: productCategory,
+    totalQty,
+    requestedBy,
+    requestedByRole: requestedByUser.role,
+    approvedBy,
+    date: new Date(form.created_at), // Keep as Date object for sorting
+    updatedAt: form.updated_at ? new Date(form.updated_at) : null, // Keep as Date object for sorting
+    status: form.status,
+    action: "View More",
+  };
+});
+
+// Sort mappedData by updatedAt (if available) or fallback to date
+const sortedData = mappedData.sort((a, b) => {
+  const dateA = a.updatedAt || a.date; // Use updatedAt if available, otherwise date
+  const dateB = b.updatedAt || b.date;
+
+  return dateB - dateA; // Most recent first
+});
+  
 
   useEffect(() => {
     if (isDeleted) {
       setIsRequestDeleted(true)
     }
-  },[isDeleted])
+  }, [isDeleted])
 
   const closeRequestDeletedModal = () => {
     setIsRequestDeleted(false);
   };
+
+  
+
 
 
   return (
@@ -126,30 +140,43 @@ const Table = () => {
             <th scope="col" className="px-6 py-3">Category</th>
             <th scope="col" className="px-6 py-3">Total Qty</th>
             <th scope="col" className="px-6 py-3">Requested By</th>
-            <th scope="col" className="px-6 py-3">Approved By</th>
+            <th scope="col" className="px-6 py-3">Updated By</th>
             <th scope="col" className="px-6 py-3">Date</th>
             <th scope="col" className="px-6 py-3">Status</th>
             <th scope="col" className="px-6 py-3">Action</th>
           </tr>
         </thead>
         <tbody>
-          {mappedData.map((item, index) => (
-          <tr key={index} className="bg-white border-b hover:bg-gray-50 capitalize">
-            <td className="px-6 py-5">{index + 1}</td>
-            <td className="px-6 py-5">{item.category}</td>
-            <td className="px-6 py-5">{item.totalQty}</td>
-            <td className="px-6 py-5">{item.requestedBy}</td>
-            <td className="px-6 py-5">{item.approvedBy}</td>
-            <td className="px-6 py-5">{item.date}</td>
-            <td className="px-6 py-5 text-orange-400">{item.status}</td>
-            <td className="px-6 py-5">
-              <Link to="/request/view-more" state={{ item, restockData }}>
-                <button className="text-blue-500 hover:underline">{item.action}</button>
-              </Link>
-            </td>
-          </tr>
+          {sortedData.map((item, index) => (
+            <tr key={index} className="bg-white border-b hover:bg-gray-50 capitalize">
+              <td className="px-6 py-5">{index + 1}</td>
+              <td className="px-6 py-5">{item.category}</td>
+              <td className="px-6 py-5">{item.totalQty}</td>
+              <td className="px-6 py-5">{item.requestedBy}</td>
+              <td className="px-6 py-5">{item.approvedBy || "—"}</td>
+              <td className="px-6 py-5">
+                {item.updatedAt ? item.updatedAt.toLocaleDateString() : item.date.toLocaleDateString()}
+              </td>
+              <td
+                className={`px-6 py-5 ${item.status === "pending"
+                    ? "text-orange-400"
+                    : item.status === "approved"
+                      ? "text-green-400"
+                      : item.status === "cancelled"
+                      ? "text-red-500" : ""
+                  }`}
+              >
+                {item.status}
+              </td>
+              <td className="px-6 py-5">
+                <Link to="/request/view-more" state={{ item, restockData }}>
+                  <button className="text-blue-500 hover:underline">{item.action}</button>
+                </Link>
+              </td>
+            </tr>
           ))}
         </tbody>
+
       </table>
     </div>
   );

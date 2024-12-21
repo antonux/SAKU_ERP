@@ -26,6 +26,15 @@ const roleConfig = {
       { name: "Settings", path: "/settings", icon: BiIcons.BiCog },
     ],
   },
+  manager: {
+    sidebarLinks: [
+      { name: "Overview", path: "/overview", icon: Icons.MdOutlineDashboard },
+      { name: "Inventory", path: "/inventory", icon: Icons.MdOutlineInventory2 },
+      { name: "Request", path: "/request", icon: VscIcons.VscGitPullRequest },
+      { name: "Notification", path: "/notifications", icon: IoIcons.IoMdNotifications },
+      { name: "Settings", path: "/settings", icon: BiIcons.BiCog },
+    ],
+  },
   warehouse: {
     sidebarLinks: [
       { name: "Overview", path: "/overview", icon: Icons.MdOutlineDashboard },

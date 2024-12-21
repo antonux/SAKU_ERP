@@ -130,10 +130,32 @@ const deleteRequest = async (req, res) => {
   }
 };
 
+const updateRequest = async (req, res) => {
+  const { rf_id, user_id, status } = req.body; 
+
+  try {
+    const query = `
+      UPDATE request_form
+      SET status = $1, approved_by = $2, updated_at = CURRENT_TIMESTAMP
+      WHERE rf_id = $3
+    `;
+    const values = [status, user_id, rf_id]; 
+
+    await client.query(query, values);
+
+    res.status(200).json({ message: 'Request updated successfully' });
+  } catch (error) {
+    console.error("Error approving request:", error);
+    res.status(500).json({ message: "Error updating request" });
+  }
+};
+
+
 
 
 module.exports = {
   createRestockRequest,
   getRestockRequest,
+  updateRequest,
   deleteRequest
 }

@@ -50,7 +50,7 @@ const Table = () => {
                     />
                   </div>
                 </div>
-                <div className={`flex text-sm space-x-2 gap-2 text-center pr-12 cursor-pointer ${role == "store" ? "hidden" : ""}`}>
+                <div className={`flex text-sm space-x-2 gap-2 text-center pr-12 cursor-pointer ${(role == "store" || role == "manager") ? "hidden" : ""}`}>
                   <h1 className="font-normal text-[#272525] cursor-default">
                     Location:
                   </h1>
@@ -80,7 +80,7 @@ const Table = () => {
             <th scope="col" className="px-6 py-3">Location</th>
             <th scope="col" className="px-6 py-3">Quantity</th>
             <th scope="col" className="px-6 py-3">Status</th>
-            <th scope="col" className={`px-6 py-3 ${role == "store" ? "hidden" : ""}`}>Action</th>
+            <th scope="col" className={`px-6 py-3 ${(role == "store" || role == "manager") ? "hidden" : ""}`}>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -88,7 +88,7 @@ const Table = () => {
           {productData.map((item) => {
             // Filter location_quantity based on inventoryFilter value
             const filteredLocations =
-              role === "store" ? item.location_quantity.filter((location) => location.location === 'store') :
+              (role === "store" || role === "manager" ) ? item.location_quantity.filter((location) => location.location === 'store') :
               inventoryFilter === "all"
                 ? item.location_quantity // Show all locations
                 : item.location_quantity.filter(
@@ -132,7 +132,7 @@ const Table = () => {
                   <td className="px-6 py-3">{location.location}</td>
                   <td className="px-6 py-3">{location.quantity || "0"}</td>
                   <td className={`px-6 py-3 ${statusColor}`}>{status}</td>
-                  <td className={`px-6 py-4 ${role === "store" ? "hidden" : ""}`}>
+                  <td className={`px-6 py-4 ${(role === "store" || role === "manager") ? "hidden" : ""}`}>
                     <Link to="/inventory/view-stock" state={{ item, location }}>
                       <button className="text-blue-500 hover:underline">View</button>
                     </Link>
