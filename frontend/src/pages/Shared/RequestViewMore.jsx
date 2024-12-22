@@ -9,16 +9,27 @@ import { useRole } from "../../contexts/RoleContext";
 
 // Modals
 import DeleteRequest from "../../modals/DeleteRequest";
+import ApproveRequest from "../../modals/approveRequest";
+import CancelRequest from "../../modals/cancelRequest";
+
+// Hooks
+import useRestockData from '../../hooks/useRestockData';
 
 // axios
 import axios from "axios";
 
 const AddStock = () => {
+  const [refreshKey, setRefreshKey] = useState(0);
+  const { mappedData, error } = useRestockData(refreshKey);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, userID } = useRole();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const { item: requestFormData, restockData } = location.state;
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const { item, restockData} = location.state;
+  const [requestFormData, setRequestFormData] = useState(item)
+
 
 
   useEffect(() => {
@@ -74,7 +85,11 @@ const AddStock = () => {
 
       const response = await axios.post('http://localhost:4000/api/request/update', requestData);
       console.log('Request approved:', response.data);
-      // navigate('/request', { state: { isSuccess: true, rf_id: requestFormData.rf_id } });
+      setRefreshKey(prevKey => prevKey + 1);
+      setTimeout(() => {
+        setShowApproveModal(true);  // Show the modal after delay
+      }, 150); 
+
     } catch (error) {
       console.error('Error approving request:', error);
     }
@@ -94,7 +109,12 @@ const AddStock = () => {
 
       const response = await axios.post('http://localhost:4000/api/request/update', requestData);
       console.log('Request cancelled:', response.data);
-      // navigate('/request', { state: { isSuccess: true, rf_id: requestFormData.rf_id } });
+
+      setRefreshKey(prevKey => prevKey + 1);
+      setTimeout(() => {
+        setShowCancelModal(true);  // Show the modal after delay
+      }, 150);
+
     } catch (error) {
       console.error('Error cancelling request:', error);
     }
@@ -103,6 +123,21 @@ const AddStock = () => {
   const handleCancelClick = () => {
     cancelRequest();
   };
+
+  const sortedData = mappedData.sort((a, b) => {
+    const dateA = a.updatedAt || a.date; // Use updatedAt if available, otherwise date
+    const dateB = b.updatedAt || b.date;
+
+    return dateB - dateA; // Most recent first
+  });
+
+  useEffect(() => {
+    const itemToNavigate = sortedData.find(item => item.rf_id === requestFormData.rf_id);
+    if (itemToNavigate) {
+      setRequestFormData(itemToNavigate);
+      console.log('updated rf data: ', requestFormData)
+    }
+  }, [showApproveModal, showCancelModal])
 
   const canDeleteRequest =
     (user === "store" || (user === "manager" && requestFormData.requestedByRole === "manager")) &&
@@ -120,6 +155,16 @@ const AddStock = () => {
 
   return (
     <div className='flex flex-col gap-4 h-screen pb-5 pt-7'>
+      {showApproveModal &&
+        <ApproveRequest
+          onClose={() => setShowApproveModal(false)}
+        />
+      }
+      {showCancelModal &&
+        <CancelRequest
+          onClose={() => setShowCancelModal(false)}
+        />
+      }
       <button onClick={handleGoBack} className="absolute z-50 translate-y-[3.2rem]">
         <GoBackButton />
       </button>
@@ -136,7 +181,7 @@ const AddStock = () => {
           </div>
           <div className="flex gap-1">
             <h1>Updated By:</h1>
-            <h1 className="font-semibold capitalize">{requestFormData.requestedBy}</h1>
+            <h1 className="font-semibold capitalize">{requestFormData.approvedBy || "—"}</h1>
           </div>
           <div className="flex gap-1">
             <h1>Status:</h1>
@@ -191,7 +236,9 @@ const AddStock = () => {
           {showDeleteModal &&
             <DeleteRequest
               onConfirm={() => handleDeleteClick(requestFormData.rf_id)}
-              onClose={() => setShowDeleteModal(false)}
+              onClose={() => {
+                setShowDeleteModal(false);
+              }}
             />
           }
           {canDeleteRequest && (
@@ -206,7 +253,7 @@ const AddStock = () => {
           {canCancelRequest && (
             <button
               className="bg-red-400 text-white font-normal text-sm px-14 py-[.72rem] rounded-lg hover:bg-[#eb6b6b] transition-all focus:outline-none focus:ring-2 focus:ring-green-50"
-              onClick={handleCancelClick}
+              onClick={() => handleCancelClick()}
             >
               Cancel Request
             </button>
@@ -214,7 +261,7 @@ const AddStock = () => {
 
           {canApproveRequest && (
             <button
-              onClick={handleApproveClick}
+              onClick={() => handleApproveClick()}
               className="bg-[#7fd6b2] text-white font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
             >
               Approve

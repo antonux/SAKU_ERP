@@ -5,6 +5,12 @@ const SuccessfullyDeletedModal = ({ onClose, rf_id }) => {
 
   useEffect(() => {
     setTimeout(() => setIsVisible(true), 100); // Slight delay for animation
+
+    const autoCloseTimeout = setTimeout(() => {
+      handleClose();
+    }, 3000);
+
+    return () => clearTimeout(autoCloseTimeout);
   }, []);
 
   const handleClose = () => {
