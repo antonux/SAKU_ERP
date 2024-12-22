@@ -95,7 +95,7 @@ const AddStock = () => {
     }
   };
 
-  const deleteSupplier = async (prod_id) => {
+  const deleteProduct = async (prod_id) => {
     try {
       const response = await axios.delete(`http://localhost:4000/api/product/delete/${prod_id}`);
       console.log('Product deleted:', response.data);
@@ -106,8 +106,8 @@ const AddStock = () => {
   };
 
   const handleDeleteClick = (prod_id) => {
-    if (window.confirm('Are you sure you want to delete this supplier?')) {
-      deleteSupplier(prod_id);
+    if (window.confirm('Are you sure you want to delete this product?')) {
+      deleteProduct(prod_id);
     }
   };
 
@@ -178,6 +178,7 @@ const AddStock = () => {
             </div>
             <button
               onClick={() => { handleDeleteClick(initialData.prod_id) }}
+              type="button"
               className="text-red-500 px-16 py-2 underline bottom-9 absolute">
               Delete product
             </button>

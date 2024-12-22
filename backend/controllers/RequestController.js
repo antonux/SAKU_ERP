@@ -75,7 +75,15 @@ const createRestockRequest = async (req, res) => {
           throw new Error(`Warehouse quantity not found for product ID ${product.id}.`);
         }
 
-        const productStatus = warehouseQuantity >= product.quantity ? "available" : "unavailable";
+        const requestedQuantity = Number(product.quantity);
+        const availableQuantity = Number(warehouseQuantity);
+
+        if (isNaN(requestedQuantity) || isNaN(availableQuantity)) {
+          throw new Error(`Invalid quantity value for product ID ${product.id}.`);
+        }
+
+        let productStatus = availableQuantity >= requestedQuantity ? "available" : "unavailable";
+
 
         // Build the query dynamically
         requestDetailsQuery += `($${insertedCount * 4 + 1}, $${insertedCount * 4 + 2}, $${insertedCount * 4 + 3}, $${insertedCount * 4 + 4}), `;

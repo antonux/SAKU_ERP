@@ -5,6 +5,7 @@ import {useNavigate, Routes, Route, Navigate } from "react-router-dom";
 // routes
 import AdminRoutes from "../routes/AdminRoutes";
 import StoreRoutes from "../routes/StoreRoutes";
+import WarehouseRoutes from "../routes/WarehouseRoutes";
 
 // components
 import Navbar from "../components/navbar";

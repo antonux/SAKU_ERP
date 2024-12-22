@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import TagInput from "./tagInputs";
 import axios from "axios";
 
-const AddStockInput = ({isView, setIsView, isUpdate, setIsUpdate, viewProductData, Preview, inventoryFilter, newProductData}) => {
+const AddStockInput = ({ isView, setIsView, isUpdate, setIsUpdate, viewProductData, Preview, inventoryFilter, newProductData }) => {
   const location = useLocation();
   const [selectedSupplier, setSelectedSupplier] = useState([]);
   const [initialSupplierData, setInitialSupplierData] = useState([]);
@@ -29,57 +29,58 @@ const AddStockInput = ({isView, setIsView, isUpdate, setIsUpdate, viewProductDat
 
 
   const handleInputChange = (e) => {
-  let { name, value } = e.target;
+    let { name, value } = e.target;
 
-  if (name === "type") {
-    setSelectedSupplier([]);
+    if (name === "type") {
+      setSelectedSupplier([]);
 
-  }
-
-  if (name === "reorder_level") {
-    const inputValue = value.trim();
-    const regex = /^\d+$/; // Only non-negative whole numbers (no decimals)
-    if (inputValue === '' || regex.test(inputValue)) {
-      value = inputValue === '' ? '' : parseInt(inputValue, 10);
-    } else {
-      return; // Do nothing if the input is invalid
     }
-  }
 
-  if (name === "unit_price") {
-    const inputValue = value.trim();
-    const regex = /^\d+(\.\d+)?$/; // Only positive numbers with optional decimal
-    if (inputValue === '' || regex.test(inputValue)) {
-      value = inputValue === '' ? '' : parseFloat(inputValue);
-    } else {
-      return; // Do nothing if the input is invalid
+    if (name === "reorder_level") {
+      const inputValue = value.trim();
+      const regex = /^\d+$/; // Only non-negative whole numbers (no decimals)
+      if (inputValue === '' || regex.test(inputValue)) {
+        value = inputValue === '' ? '' : parseInt(inputValue, 10);
+      } else {
+        return; // Do nothing if the input is invalid
+      }
     }
-  }
-  setProductData((prevData) => ({
-    ...prevData,
-    [name]: value,
-  }));
-};
- 
-const handleLocationQuantityChange = (e) => {
-  const inputValue = e.target.value.trim();
-  const regex = /^([1-9][0-9]*|0)$/; 
 
-  if (inputValue === '' || regex.test(inputValue)) {
-    // If valid, convert the value to an integer (empty string stays empty)
-    const value = inputValue === '' ? '' : parseInt(inputValue, 10);
-    setProductData((prevData) => {
-      const updatedLocationQuantity = prevData.location_quantity.map((entry) => {
-        if (entry.location === inventoryFilter) {
-          return { ...entry, quantity: value };
-        }
-        return entry;
+    if (name === "unit_price") {
+      const inputValue = value.trim();
+      const regex = /^\d*(\.\d{0,2})?$/; // Allows numbers with up to 2 decimal places
+      if (inputValue === '' || regex.test(inputValue)) {
+        value = inputValue === '' ? '' : parseFloat(inputValue);
+      } else {
+        return; // Do nothing if the input is invalid
+      }
+    }
+
+    setProductData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+  const handleLocationQuantityChange = (e) => {
+    const inputValue = e.target.value.trim();
+    const regex = /^([1-9][0-9]*|0)$/;
+
+    if (inputValue === '' || regex.test(inputValue)) {
+      // If valid, convert the value to an integer (empty string stays empty)
+      const value = inputValue === '' ? '' : parseInt(inputValue, 10);
+      setProductData((prevData) => {
+        const updatedLocationQuantity = prevData.location_quantity.map((entry) => {
+          if (entry.location === inventoryFilter) {
+            return { ...entry, quantity: value };
+          }
+          return entry;
+        });
+
+        return { ...prevData, location_quantity: updatedLocationQuantity };
       });
-
-      return { ...prevData, location_quantity: updatedLocationQuantity };
-    });
-  }
-};
+    }
+  };
 
 
   useEffect(() => {
@@ -224,8 +225,8 @@ const handleLocationQuantityChange = (e) => {
             id="quantity"
             name="quantity"
             value={
-              inventoryFilter === "warehouse" ? productData.location_quantity.find((entry) => entry.location === "warehouse")?.quantity || "" 
-              : inventoryFilter === "store" ? productData.location_quantity.find((entry) => entry.location === "store")?.quantity || "" : ""
+              inventoryFilter === "warehouse" ? productData.location_quantity.find((entry) => entry.location === "warehouse")?.quantity || ""
+                : inventoryFilter === "store" ? productData.location_quantity.find((entry) => entry.location === "store")?.quantity || "" : ""
             }
             disabled={isView ? true : false}
             onChange={handleLocationQuantityChange}
@@ -258,6 +259,7 @@ const handleLocationQuantityChange = (e) => {
             type="number"
             id="unitPrice"
             name="unit_price"
+            step="0.01"
             value={productData.unit_price}
             disabled={isView ? true : false}
             onChange={handleInputChange}
@@ -344,7 +346,7 @@ const handleLocationQuantityChange = (e) => {
       }
       <div className="flex absolute gap-5 bottom-10 right-10">
         {isUpdate &&
-          <button 
+          <button
             onClick={() => { setIsUpdate(false); setIsView(true); setProductData(viewProductData); InitSelectedSupplier(); Preview(viewProductData.image ? `http://localhost:4000${viewProductData.image}` : `/images/products/user.jpg`) }}
             type="button"
             className="bottom-10 right-10 bg-red-500 text-white px-16 py-3 rounded-xl hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-green-50">
@@ -352,7 +354,7 @@ const handleLocationQuantityChange = (e) => {
           </button>
         }
         {isUpdate &&
-          <button 
+          <button
             type="submit"
             className="bottom-10 right-10 bg-[#7ad0ac] text-white px-16 py-3 rounded-xl hover:bg-[#6ab696] focus:outline-none focus:ring-2 focus:ring-green-50">
             Save
