@@ -144,7 +144,7 @@ const updateRequest = async (req, res) => {
   try {
     const query = `
       UPDATE request_form
-      SET status = $1, approved_by = $2, updated_at = CURRENT_TIMESTAMP
+      SET status = $1, updated_by = $2, updated_at = CURRENT_TIMESTAMP
       WHERE rf_id = $3
     `;
     const values = [status, user_id, rf_id]; 

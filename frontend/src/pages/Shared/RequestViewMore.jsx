@@ -181,7 +181,7 @@ const AddStock = () => {
           </div>
           <div className="flex gap-1">
             <h1>Updated By:</h1>
-            <h1 className="font-semibold capitalize">{requestFormData.approvedBy || "—"}</h1>
+            <h1 className="font-semibold capitalize">{requestFormData.updatedBy || "—"}</h1>
           </div>
           <div className="flex gap-1">
             <h1>Status:</h1>

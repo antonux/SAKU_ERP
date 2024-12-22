@@ -47,9 +47,9 @@ const useRestockData = (refreshKey) => {
       : "Unknown";
 
     // Approved by user
-    const approvedByUser = restockData.users.find((user) => user.user_id === form.approved_by);
-    const approvedBy = approvedByUser
-      ? `${approvedByUser.fname} ${approvedByUser.lname}`
+    const updatedByUser = restockData.users.find((user) => user.user_id === form.updated_by);
+    const updatedBy = updatedByUser
+      ? `${updatedByUser.fname} ${updatedByUser.lname}`
       : "";
 
     return {
@@ -58,7 +58,7 @@ const useRestockData = (refreshKey) => {
       totalQty,
       requestedBy,
       requestedByRole: requestedByUser.role,
-      approvedBy,
+      updatedBy,
       date: new Date(form.created_at), // Keep as Date object for sorting
       updatedAt: form.updated_at ? new Date(form.updated_at) : null, // Keep as Date object for sorting
       status: form.status,

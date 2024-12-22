@@ -93,7 +93,7 @@ const Table = () => {
               <td className="px-6 py-5">{item.category}</td>
               <td className="px-6 py-5">{item.totalQty}</td>
               <td className="px-6 py-5">{item.requestedBy}</td>
-              <td className="px-6 py-5">{item.approvedBy || "—"}</td>
+              <td className="px-6 py-5">{item.updatedBy || "—"}</td>
               <td className="px-6 py-5">
                 {item.updatedAt ? item.updatedAt.toLocaleDateString() : item.date.toLocaleDateString()}
               </td>
