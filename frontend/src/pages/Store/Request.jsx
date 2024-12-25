@@ -1,4 +1,4 @@
-import Boxes from "../../components/Admin/requestBoxes";
+import Boxes from "../../components/Shared/requestBoxes";
 import Table from "../../components/Shared/requestTable";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -12,9 +12,6 @@ const Inventory = () => {
   //     navigate(lastPath);
   //   }
   // }, []);
-
-
-
 
   return (
     <div className='flex flex-col gap-4 h-screen pb-5'>

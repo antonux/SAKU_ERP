@@ -12,7 +12,7 @@ import Notifications from "../pages/Shared/Notifications";
 import Suppliers from "../pages/Shared/Suppliers";
 import AddStock from "../pages/Shared/InventoryAddStock";
 import ViewStock from "../pages/Shared/InventoryViewProduct";
-import RequestViewMore from "../pages/Shared/RequestViewMore";
+import RequestViewMore from "../pages/Warehouse/RequestViewMore";
 import AddSupplier from "../pages/Shared/SuppliersAddSupplier";
 import AddAccount from "../pages/Admin/AccountsAddAccount";
 import ViewSupplier from "../pages/Shared/SuppliersViewSupplier";

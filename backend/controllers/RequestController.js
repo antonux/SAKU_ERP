@@ -7,13 +7,15 @@ const getRestockRequest = async (req, res) => {
     const requestFormQuery = `SELECT * FROM request_form;`;
     const requestDetailsQuery = `SELECT * FROM request_details;`;
     const productQuery = `SELECT * FROM product;`;
+    const inventoryQuery = `SELECT * FROM inventory;`;
     const usersQuery = `SELECT user_id, username, email, fname, lname, phone, gender, role FROM users;`;
 
     // Execute all queries concurrently
-    const [requestFormResult, requestDetailsResult, productResult, usersResult] = await Promise.all([
+    const [requestFormResult, requestDetailsResult, productResult, inventoryResult, usersResult] = await Promise.all([
       client.query(requestFormQuery),
       client.query(requestDetailsQuery),
       client.query(productQuery),
+      client.query(inventoryQuery),
       client.query(usersQuery),
     ]);
 
@@ -22,6 +24,7 @@ const getRestockRequest = async (req, res) => {
       request_form: requestFormResult.rows,
       request_details: requestDetailsResult.rows,
       product: productResult.rows,
+      inventory: inventoryResult.rows,
       users: usersResult.rows,
     });
   } catch (error) {

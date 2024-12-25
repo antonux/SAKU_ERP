@@ -27,7 +27,7 @@ const Sidebar = () => {
             <NavLink
               to={link.path}
               className={({ isActive }) =>
-                `flex items-center gap-2 font-medium px-[5.9rem] py-[.9rem] relative
+                `flex items-center gap-2 font-medium px-[5.9rem] py-[.9rem] relative transition-all
           ${isActive ? "text-green-500" : "text-[#666973] hover:scale-105 hover:text-[#858891]"}`}
             >
               {({ isActive }) => (

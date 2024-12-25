@@ -5,6 +5,7 @@ import { useSidebar } from "../contexts/SideBarContext";
 import { useRole } from "../contexts/RoleContext";
 import { useNavigate } from "react-router-dom";
 
+import { RiLogoutBoxRLine } from "react-icons/ri";
 
 const Navbar = () => {
   const { user } = useRole();
@@ -26,11 +27,12 @@ const Navbar = () => {
           </button>
           <h1 className="text-based font-medium">{user}</h1>
         </div>
-        <div className={`${isSidebarOpen ? "mr-[18rem]" : "mr-[2rem]"}`}>
+        <div className={`flex items-center gap-2 hover:scale-105 transition-all ${isSidebarOpen ? "mr-[18rem]" : "mr-[2rem]"}`}>
+          <RiLogoutBoxRLine className="size-5" />
           <button
             onClick={() => handleLogout()}
-            className="underline">
-          log out
+            className="text-[#666973]  font-medium transition-all">
+          Logout
         </button>
       </div>
     </div>

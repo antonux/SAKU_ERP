@@ -6,6 +6,7 @@ const useRestockData = (refreshKey) => {
     request_form: [],
     request_details: [],
     product: [],
+    inventory: [],
     users: [],
   });
   const [error, setError] = useState(null);
