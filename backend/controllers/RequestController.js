@@ -161,6 +161,36 @@ const updateRequest = async (req, res) => {
   }
 };
 
+const deliverRequest = async (req, res) => {
+  const { rf_id, user_id, status } = req.body;
+
+  try {
+    // Update request_form
+    const updateRequestFormQuery = `
+      UPDATE request_form
+      SET status = $1, updated_by = $2, updated_at = CURRENT_TIMESTAMP
+      WHERE rf_id = $3
+    `;
+    const requestFormValues = [status, user_id, rf_id];
+    await client.query(updateRequestFormQuery, requestFormValues);
+
+    // Update request_details where status is "available"
+    const updateRequestDetailsQuery = `
+      UPDATE request_details
+      SET status = $1
+      WHERE rf_id = $2 AND status = 'available'
+    `;
+    const requestDetailsValues = [status, rf_id];
+    await client.query(updateRequestDetailsQuery, requestDetailsValues);
+
+    res.status(200).json({ message: "Request updated successfully" });
+  } catch (error) {
+    console.error("Error updating request and details:", error);
+    res.status(500).json({ message: "Error updating request and details" });
+  }
+};
+
+
 
 
 
@@ -168,5 +198,6 @@ module.exports = {
   createRestockRequest,
   getRestockRequest,
   updateRequest,
-  deleteRequest
+  deleteRequest,
+  deliverRequest
 }

@@ -11,6 +11,7 @@ import { useRole } from "../../contexts/RoleContext";
 import DeleteRequest from "../../modals/DeleteRequest";
 import ApproveRequest from "../../modals/approveRequest";
 import CancelRequest from "../../modals/cancelRequest";
+import DeliverRequest from "../../modals/deliverRequest";
 
 // Hooks
 import useRestockData from '../../hooks/useRestockData';
@@ -27,6 +28,7 @@ const AddStock = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showDeliverModal, setShowDeliverModal] = useState(false);
   const { item } = location.state;
   const [requestFormData, setRequestFormData] = useState(item)
 
@@ -162,6 +164,32 @@ const AddStock = () => {
     cancelRequest();
   };
 
+  const deliverRequest = async () => {
+    try {
+      const requestData = {
+        rf_id: requestFormData.rf_id,
+        user_id: userID,
+        status: "to be received"
+      };
+
+      const response = await axios.post('http://localhost:4000/api/request/restock/deliver', requestData);
+      console.log('Request cancelled:', response.data);
+
+      setRefreshKey(prevKey => prevKey + 1);
+      setTimeout(() => {
+        setShowDeliverModal(true);  // Show the modal after delay
+      }, 150);
+
+    } catch (error) {
+      console.error('Error cancelling request:', error);
+    }
+  };
+
+  const handleDeliverClick = () => {
+    deliverRequest();
+  };
+
+
   const sortedData = mappedData.sort((a, b) => {
     const dateA = a.updatedAt || a.date; // Use updatedAt if available, otherwise date
     const dateB = b.updatedAt || b.date;
@@ -175,7 +203,7 @@ const AddStock = () => {
       setRequestFormData(itemToNavigate);
       console.log('updated rf data: ', requestFormData)
     }
-  }, [showApproveModal, showCancelModal])
+  }, [showApproveModal, showCancelModal, showDeliverModal])
 
   const canDeleteRequest =
     (user === "store" || (user === "manager" && requestFormData.requestedByRole === "manager")) &&
@@ -191,21 +219,21 @@ const AddStock = () => {
     requestFormData.status !== "approved" &&
     requestFormData.status !== "cancelled";
 
-  const canDeliverRequest =
-    user === "warehouse" &&
-    requestFormData.status === "approved";
 
   const hasAvailable = products.some((product) => product.status === "available");
   const hasUnavailable = products.some((product) => product.status === "unavailable");
 
   const DeliverText = hasAvailable && hasUnavailable
-    ? "Partial Deliver"
-    : hasUnavailable && !hasAvailable
-      ? "Unavailable"
-      : "Deliver";
+    ? "partial deliver"
+    : !hasUnavailable && hasAvailable
+      ? "deliver"
+      : "unavailable";
+
+  const canDeliverRequest =
+    user === "warehouse" && (requestFormData.status !== "cancelled" && requestFormData.status !== "pending") ;
 
   const canRequestPurchase =
-    user === "warehouse" && requestFormData.status === "approved";
+    user === "warehouse" && (requestFormData.status !== "cancelled" && requestFormData.status !== "pending") ;
 
   return (
     <div className='flex flex-col gap-4 h-screen pb-5 pt-7'>
@@ -217,6 +245,11 @@ const AddStock = () => {
       {showCancelModal &&
         <CancelRequest
           onClose={() => setShowCancelModal(false)}
+        />
+      }
+      {showDeliverModal &&
+        <DeliverRequest
+          onClose={() => setShowDeliverModal(false)}
         />
       }
       <button onClick={handleGoBack} className="absolute z-50 translate-y-[3.2rem]">
@@ -242,7 +275,9 @@ const AddStock = () => {
             <h1 className={`capitalize font-semibold 
               ${requestFormData.status === "pending" ? "text-[#f29425]" :
                 requestFormData.status === "approved" ? "text-green-400" :
-                  requestFormData.status === "cancelled" ? "text-red-500" : ""}`
+                  requestFormData.status === "cancelled" ? "text-red-500" : 
+                  requestFormData.status === "to be received" ? "text-blue-500" : ""
+                }`
             }>
               {requestFormData.status}
             </h1>
@@ -276,7 +311,10 @@ const AddStock = () => {
                   <td className="px-6 py-5">{product.size}</td>
                   <td className="px-6 py-5">{product.category}</td>
                   <td className="px-6 py-5">{product.quantity}</td>
-                  <td className={`px-6 py-5 font-semibold ${product.status === "available" ? "text-green-500" : "text-red-500"}`}>
+                  <td className={`px-6 py-5 font-semibold 
+                    ${product.status === "available" ? "text-green-500" 
+                    : product.status === "unavailable" ? "text-red-500" 
+                    : product.status === "to be received" ? "text-blue-500" : ""}`}>
                     {product.status}
                   </td>
                   <td className="px-6 py-5">₱{product.amount.toLocaleString()}</td>
@@ -336,8 +374,8 @@ const AddStock = () => {
 
           {canDeliverRequest && (
             <button
-              // onClick={() => }
-              className={`${DeliverText === "Unavailable" ? "bg-gray-400 pointer-events-none" : "bg-blue-400 hover:bg-blue-500"}  transition-all text-white font-normal text-sm px-14 py-[.72rem] rounded-lg focus:outline-none focus:ring-2 focus:ring-green-50`}
+              onClick={() => handleDeliverClick()}
+              className={`${DeliverText === "unavailable" ? "bg-gray-400 pointer-events-none" : "bg-blue-400 hover:bg-blue-500"} capitalize transition-all text-white font-normal text-sm px-14 py-[.72rem] rounded-lg focus:outline-none focus:ring-2 focus:ring-green-50`}
             >
               {DeliverText}
             </button>

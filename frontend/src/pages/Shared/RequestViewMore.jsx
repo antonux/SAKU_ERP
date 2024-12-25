@@ -57,6 +57,7 @@ const AddStock = () => {
         quantity: detail.quantity || 0,
         amount: product ? product.unit_price : 0,
         total: product && detail.quantity ? product.unit_price * detail.quantity : 0,
+        status: detail.status || "Unknown",
       };
     });
 
@@ -141,17 +142,20 @@ const AddStock = () => {
 
   const canDeleteRequest =
     (user === "store" || (user === "manager" && requestFormData.requestedByRole === "manager")) &&
-    requestFormData.status !== "approved";
+    (requestFormData.status === "pending" || requestFormData.status === "cancelled");
 
   const canCancelRequest =
     (user === "admin" || (user === "manager" && requestFormData.requestedByRole !== "manager")) &&
-    requestFormData.status !== "approved" &&
-    requestFormData.status !== "cancelled";
+    requestFormData.status === "pending";
 
   const canApproveRequest =
     (user === "admin" || user === "manager") &&
-    requestFormData.status !== "approved" &&
-    requestFormData.status !== "cancelled";
+    requestFormData.status === "pending";
+
+  // const hasAvailable = products.some((product) => product.status === "available");
+  // const hasUnavailable = products.some((product) => product.status === "unavailable");
+
+  const showStatus = requestFormData.status === "pending" || requestFormData.status === "approved" || requestFormData.status === "cancelled";
 
   return (
     <div className='flex flex-col gap-4 h-screen pb-5 pt-7'>
@@ -188,7 +192,9 @@ const AddStock = () => {
             <h1 className={`capitalize font-semibold 
               ${requestFormData.status === "pending" ? "text-[#f29425]" :
                 requestFormData.status === "approved" ? "text-green-400" :
-                  requestFormData.status === "cancelled" ? "text-red-500" : ""}`
+                  requestFormData.status === "cancelled" ? "text-red-500" : 
+                  requestFormData.status === "to be received" ? "text-blue-500" : ""
+                }`
             }>
               {requestFormData.status}
             </h1>
@@ -209,6 +215,7 @@ const AddStock = () => {
                 <th scope="col" className="px-6 py-3">Quantity</th>
                 <th scope="col" className="px-6 py-3">Amount</th>
                 <th scope="col" className="px-6 py-3">Total Amount</th>
+                <th scope="col" className={`px-6 py-3 ${showStatus ? "hidden" : ""}`}>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -221,6 +228,12 @@ const AddStock = () => {
                   <td className="px-6 py-5">{product.quantity}</td>
                   <td className="px-6 py-5">₱{product.amount.toLocaleString()}</td>
                   <td className="px-6 py-5">₱{product.total.toLocaleString()}</td>
+                  <td className={`${showStatus ? "hidden" : ""} px-6 py-5 font-semibold 
+                    ${product.status === "available" ? "text-green-500" 
+                    : product.status === "unavailable" ? "text-red-500" 
+                    : product.status === "to be received" ? "text-blue-500" : ""}`}>
+                    {product.status}
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -98,7 +98,7 @@ const getProduct = async (req, res) => {
 
 const createProduct = async (req, res) => {
   const { name, type, size, unit_price, reorder_level } = req.body;
-  
+
   // Parse location_quantity from the body (ensure it's an array)
   let location_quantity = req.body.location_quantity ? JSON.parse(req.body.location_quantity) : [];
 
@@ -187,7 +187,7 @@ const updateProduct = async (req, res) => {
   // Parse location_quantity and product_supplier from the body
   let location_quantity = req.body.location_quantity ? JSON.parse(req.body.location_quantity) : [];
   let product_supplier = req.body.product_supplier ? JSON.parse(req.body.product_supplier) : [];
-  
+
   // Handle the image file upload (if provided)
   const image = req.file ? `/uploads/${req.file.filename}` : null; // Optional new image
 
@@ -255,6 +255,45 @@ const updateProduct = async (req, res) => {
       await client.query(supplierQuery, supplierValues);
     }
 
+    // === Update request_details.status Dynamically ===
+    const warehouseQuery = `
+      SELECT quantity 
+      FROM inventory 
+      WHERE product_id = $1 AND location = 'warehouse'
+    `;
+    const warehouseResult = await client.query(warehouseQuery, [prod_id]);
+    const warehouseQuantity = warehouseResult.rows[0]?.quantity || 0;
+
+    // Retrieve all relevant request_details for the product
+    const requestDetailsQuery = `
+      SELECT rd_id, quantity, status 
+      FROM request_details 
+      WHERE product_id = $1 AND (status = 'available' OR status = 'unavailable')
+    `;
+    const requestDetailsResult = await client.query(requestDetailsQuery, [prod_id]);
+
+    for (const detail of requestDetailsResult.rows) {
+      const requestedQuantity = Number(detail.quantity);
+      const currentStatus = detail.status;
+
+      if (isNaN(requestedQuantity) || isNaN(warehouseQuantity)) {
+        throw new Error(`Invalid quantity value for request detail ID ${detail.rd_id}.`);
+      }
+
+      // Determine the new status
+      const newStatus = warehouseQuantity >= requestedQuantity ? 'available' : 'unavailable';
+
+      // Only update if the status has changed
+      if (currentStatus !== newStatus) {
+        const updateStatusQuery = `
+          UPDATE request_details
+          SET status = $1
+          WHERE rd_id = $2
+        `;
+        await client.query(updateStatusQuery, [newStatus, detail.rd_id]);
+      }
+    }
+
     await client.query('COMMIT'); // Commit the transaction
     res.status(200).json({
       message: 'Product updated successfully',
@@ -267,13 +306,14 @@ const updateProduct = async (req, res) => {
   }
 };
 
+
 const deleteProduct = async (req, res) => {
-  const { prod_id } = req.params; 
+  const { prod_id } = req.params;
   try {
     const query = `
       DELETE FROM product WHERE prod_id = $1
     `;
-    const values = [prod_id]; 
+    const values = [prod_id];
     await client.query(query, values);
 
     res.status(200).json({ message: 'Product deleted successfully' });

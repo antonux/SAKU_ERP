@@ -98,12 +98,14 @@ const Table = () => {
                 {item.updatedAt ? item.updatedAt.toLocaleDateString() : item.date.toLocaleDateString()}
               </td>
               <td
-                className={`px-6 py-5 ${item.status === "pending"
+                className={`px-6 py-5 font-semibold ${item.status === "pending"
                   ? "text-orange-400"
                   : item.status === "approved"
                     ? "text-green-400"
                     : item.status === "cancelled"
-                      ? "text-red-500" : ""
+                      ? "text-red-500"
+                      : item.status === "to be received"
+                        ? "text-blue-500" : ""
                   }`}
               >
                 {item.status}
