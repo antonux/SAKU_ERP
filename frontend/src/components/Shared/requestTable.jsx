@@ -105,7 +105,11 @@ const Table = () => {
                     : item.status === "cancelled"
                       ? "text-red-500"
                       : item.status === "to be received"
-                        ? "text-blue-500" : ""
+                        ? "text-blue-500" :
+                        item.status === "partially delivered"
+                          ? "text-blue-600" :
+                          item.status === "completed"
+                            ? "text-green-500" : ""
                   }`}
               >
                 {item.status}

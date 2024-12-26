@@ -67,7 +67,7 @@ const useRestockData = (refreshKey) => {
     };
   });
 
-  return { mappedData, error, restockData };
+  return { mappedData, restockData };
 };
 
 export default useRestockData;

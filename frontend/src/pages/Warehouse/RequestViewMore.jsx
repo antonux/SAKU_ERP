@@ -173,7 +173,7 @@ const AddStock = () => {
       };
 
       const response = await axios.post('http://localhost:4000/api/request/restock/deliver', requestData);
-      console.log('Request cancelled:', response.data);
+      console.log('Request delivered:', response.data);
 
       setRefreshKey(prevKey => prevKey + 1);
       setTimeout(() => {
@@ -181,7 +181,7 @@ const AddStock = () => {
       }, 150);
 
     } catch (error) {
-      console.error('Error cancelling request:', error);
+      console.error('Error delivering request:', error);
     }
   };
 
@@ -330,7 +330,7 @@ const AddStock = () => {
             </tbody>
             <tfoot>
               <tr className="bg-white">
-                <td colSpan="6" className="px-6 py-4 font-semibold">TOTAL</td>
+                <td colSpan="7" className="px-6 py-4 font-semibold">TOTAL</td>
                 <td className="px-6 py-5 font-semibold">₱{totalAmount.toLocaleString()}</td>
               </tr>
             </tfoot>

@@ -11,6 +11,7 @@ import { useRole } from "../../contexts/RoleContext";
 import DeleteRequest from "../../modals/DeleteRequest";
 import ApproveRequest from "../../modals/approveRequest";
 import CancelRequest from "../../modals/cancelRequest";
+import AcknowledgeRequest from "../../modals/acknowledgeRestock";
 
 // Hooks
 import useRestockData from '../../hooks/useRestockData';
@@ -20,13 +21,14 @@ import axios from "axios";
 
 const AddStock = () => {
   const [refreshKey, setRefreshKey] = useState(0);
-  const { mappedData, error } = useRestockData(refreshKey);
+  const { mappedData } = useRestockData(refreshKey);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, userID } = useRole();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showAcknowledeModal, setShowAcknowledeModal] = useState(false);
   const { item, restockData} = location.state;
   const [requestFormData, setRequestFormData] = useState(item)
 
@@ -125,6 +127,31 @@ const AddStock = () => {
     cancelRequest();
   };
 
+  const acknowledgeRequestFunc = async () => {
+    try {
+      const requestData = {
+        rf_id: requestFormData.rf_id,
+        user_id: userID,
+      };
+
+      const response = await axios.post('http://localhost:4000/api/request/restock/acknowledge', requestData);
+      console.log('Request acknowledged:', response.data);
+
+      setRefreshKey(prevKey => prevKey + 1);
+      setTimeout(() => {
+        setShowAcknowledeModal(true); 
+      }, 150);
+
+    } catch (error) {
+      console.error('Error acknowledging request:', error);
+    }
+  };
+
+  const handleAcknowledgeClick = () => {
+    acknowledgeRequestFunc();
+  };
+
+
   const sortedData = mappedData.sort((a, b) => {
     const dateA = a.updatedAt || a.date; // Use updatedAt if available, otherwise date
     const dateB = b.updatedAt || b.date;
@@ -138,7 +165,7 @@ const AddStock = () => {
       setRequestFormData(itemToNavigate);
       console.log('updated rf data: ', requestFormData)
     }
-  }, [showApproveModal, showCancelModal])
+  }, [showApproveModal, showCancelModal, showAcknowledeModal])
 
   const canDeleteRequest =
     (user === "store" || (user === "manager" && requestFormData.requestedByRole === "manager")) &&
@@ -152,11 +179,16 @@ const AddStock = () => {
     (user === "admin" || user === "manager") &&
     requestFormData.status === "pending";
 
+  const canAcknowledgeRequest =
+    (user === "store" || user === "manager") &&
+    (requestFormData.status === "to be received");
+
   // const hasAvailable = products.some((product) => product.status === "available");
   // const hasUnavailable = products.some((product) => product.status === "unavailable");
 
   const showStatus = requestFormData.status === "pending" || requestFormData.status === "approved" || requestFormData.status === "cancelled";
 
+  
   return (
     <div className='flex flex-col gap-4 h-screen pb-5 pt-7'>
       {showApproveModal &&
@@ -167,6 +199,11 @@ const AddStock = () => {
       {showCancelModal &&
         <CancelRequest
           onClose={() => setShowCancelModal(false)}
+        />
+      }
+      {showAcknowledeModal &&
+        <AcknowledgeRequest
+          onClose={() => setShowAcknowledeModal(false)}
         />
       }
       <button onClick={handleGoBack} className="absolute z-50 translate-y-[3.2rem]">
@@ -278,6 +315,14 @@ const AddStock = () => {
               className="bg-[#7fd6b2] text-white font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
             >
               Approve
+            </button>
+          )}
+          {canAcknowledgeRequest && (
+            <button
+              onClick={() => handleAcknowledgeClick()}
+              className="bg-[#7fd6b2] text-white font-normal text-sm px-12 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
+            >
+              Acknowledge
             </button>
           )}
         </div>
