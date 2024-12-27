@@ -161,34 +161,127 @@ const updateRequest = async (req, res) => {
   }
 };
 
+
+
 const deliverRequest = async (req, res) => {
   const { rf_id, user_id, status } = req.body;
 
   try {
-    // Update request_form
-    const updateRequestFormQuery = `
-      UPDATE request_form
-      SET status = $1, updated_by = $2, updated_at = CURRENT_TIMESTAMP
-      WHERE rf_id = $3
-    `;
-    const requestFormValues = [status, user_id, rf_id];
-    await client.query(updateRequestFormQuery, requestFormValues);
+    // Begin transaction
+    await client.query("BEGIN");
 
-    // Update request_details where status is "available"
+    // Step 1: Update request_details where status is "available"
     const updateRequestDetailsQuery = `
       UPDATE request_details
       SET status = $1
       WHERE rf_id = $2 AND status = 'available'
     `;
-    const requestDetailsValues = [status, rf_id];
-    await client.query(updateRequestDetailsQuery, requestDetailsValues);
+    await client.query(updateRequestDetailsQuery, [status, rf_id]);
 
-    res.status(200).json({ message: "Request updated successfully" });
+    // Step 2: Fetch all request_details for the given rf_id where status is 'to be received'
+    const { rows: requestDetails } = await client.query(
+      `
+      SELECT product_id, quantity, status
+      FROM request_details
+      WHERE rf_id = $1 AND status = 'to be received'
+      `,
+      [rf_id]
+    );
+
+    // Step 3: Deduct quantities from warehouse inventory and update statuses
+    for (const { product_id, quantity } of requestDetails) {
+      // Fetch current warehouse inventory
+      const { rows: warehouseInventory } = await client.query(
+        `
+        SELECT quantity
+        FROM inventory
+        WHERE product_id = $1 AND location = 'warehouse'
+        `,
+        [product_id]
+      );
+
+      let warehouseQuantity = warehouseInventory[0]?.quantity || 0;
+
+      // Deduct requested quantity from warehouse inventory
+      const updatedWarehouseQuantity = Math.max(warehouseQuantity - quantity, 0);
+
+      // Update warehouse inventory
+      await client.query(
+        `
+        UPDATE inventory
+        SET quantity = $1
+        WHERE product_id = $2 AND location = 'warehouse'
+        `,
+        [updatedWarehouseQuantity, product_id]
+      );
+
+      // Step 4: Reevaluate and update `request_details` statuses
+      const reevaluateRequestDetailsQuery = `
+        SELECT rd_id, quantity, status
+        FROM request_details
+        WHERE product_id = $1 AND (status = 'available' OR status = 'unavailable')
+      `;
+      const { rows: detailsToUpdate } = await client.query(
+        reevaluateRequestDetailsQuery,
+        [product_id]
+      );
+
+      for (const detail of detailsToUpdate) {
+        const { rd_id, quantity: requestedQuantity, status: currentStatus } = detail;
+
+        // Determine new status based on updated warehouse inventory
+        let newStatus = currentStatus;
+        if (updatedWarehouseQuantity >= requestedQuantity) {
+          newStatus = "available";
+        } else {
+          newStatus = "unavailable";
+        }
+
+        // Update the status if it has changed
+        if (newStatus !== currentStatus) {
+          await client.query(
+            `
+            UPDATE request_details
+            SET status = $1
+            WHERE rd_id = $2
+            `,
+            [newStatus, rd_id]
+          );
+        }
+      }
+    }
+
+    // Step 5: Update request_form status
+    const updateRequestFormQuery = `
+      UPDATE request_form
+      SET status = $1, updated_by = $2, updated_at = CURRENT_TIMESTAMP
+      WHERE rf_id = $3
+    `;
+    await client.query(updateRequestFormQuery, [status, user_id, rf_id]);
+
+    // Commit transaction
+    await client.query("COMMIT");
+
+    res.status(200).json({
+      message: "Request delivered, inventory deducted, and statuses updated successfully.",
+    });
   } catch (error) {
-    console.error("Error updating request and details:", error);
-    res.status(500).json({ message: "Error updating request and details" });
+    console.error("Error delivering request:", error);
+
+    try {
+      // Rollback transaction on error
+      await client.query("ROLLBACK");
+    } catch (rollbackError) {
+      console.error("Error rolling back transaction:", rollbackError);
+    }
+
+    res.status(500).json({
+      message: "Error delivering request and updating inventory.",
+      error: error.message,
+    });
   }
 };
+
 
 
 const acknowledgeRequest = async (req, res) => {
@@ -235,7 +328,7 @@ const acknowledgeRequest = async (req, res) => {
       [requestFormStatus, user_id, rf_id]
     );
 
-    // Step 4: Adjust `inventory` and dynamically update `request_details.status`
+    // Step 4: Adjust `inventory` (store location only)
     const { rows: requestDetails } = await client.query(
       `
       SELECT product_id, quantity
@@ -246,63 +339,6 @@ const acknowledgeRequest = async (req, res) => {
     );
 
     for (const { product_id, quantity } of requestDetails) {
-      // Fetch current warehouse inventory quantity
-      const { rows: warehouseInventory } = await client.query(
-        `
-        SELECT quantity
-        FROM inventory
-        WHERE product_id = $1 AND location = 'warehouse'
-        `,
-        [product_id]
-      );
-
-      let warehouseQuantity = warehouseInventory[0]?.quantity || 0;
-
-      // Calculate new warehouse quantity after subtracting
-      const updatedWarehouseQuantity = Math.max(warehouseQuantity - quantity, 0);
-
-      // Update warehouse inventory
-      await client.query(
-        `
-        UPDATE inventory
-        SET quantity = $1
-        WHERE product_id = $2 AND location = 'warehouse'
-        `,
-        [updatedWarehouseQuantity, product_id]
-      );
-
-      // Reflect changes in `request_details.status` based on updated warehouse quantity
-      const requestDetailsQuery = `
-        SELECT rd_id, quantity, status 
-        FROM request_details 
-        WHERE product_id = $1 AND (status = 'available' OR status = 'unavailable' OR status = 'to be received')
-      `;
-      const { rows: requestDetailsToUpdate } = await client.query(requestDetailsQuery, [product_id]);
-
-      for (const detail of requestDetailsToUpdate) {
-        const requestedQuantity = Number(detail.quantity);
-        const currentStatus = detail.status;
-
-        // Determine the new status
-        let newStatus = currentStatus; // Default to the current status
-
-        if (updatedWarehouseQuantity >= requestedQuantity) {
-          newStatus = 'available';
-        } else if (updatedWarehouseQuantity < requestedQuantity) {
-          newStatus = 'unavailable';
-        }
-
-        // Only update if the status has changed
-        if (currentStatus !== newStatus) {
-          const updateStatusQuery = `
-            UPDATE request_details
-            SET status = $1
-            WHERE rd_id = $2
-          `;
-          await client.query(updateStatusQuery, [newStatus, detail.rd_id]);
-        }
-      }
-
       // Fetch current store inventory quantity
       const { rows: storeInventory } = await client.query(
         `
@@ -329,7 +365,7 @@ const acknowledgeRequest = async (req, res) => {
           [updatedStoreQuantity, product_id]
         );
       } else {
-        // Insert new row for store inventory
+        // Insert new row for store inventory if it doesn't exist
         await client.query(
           `
           INSERT INTO inventory (location, product_id, quantity)
@@ -345,7 +381,7 @@ const acknowledgeRequest = async (req, res) => {
 
     res
       .status(200)
-      .json({ message: 'Request acknowledged, inventory, and statuses updated successfully.' });
+      .json({ message: 'Request acknowledged, inventory updated successfully.' });
   } catch (error) {
     console.error('Error processing request:', error);
 
@@ -359,6 +395,9 @@ const acknowledgeRequest = async (req, res) => {
     res.status(500).json({ message: 'Error processing request.', error: error.message });
   }
 };
+
+
+
 
 
 

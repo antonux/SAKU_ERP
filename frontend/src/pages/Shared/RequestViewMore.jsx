@@ -21,7 +21,7 @@ import axios from "axios";
 
 const AddStock = () => {
   const [refreshKey, setRefreshKey] = useState(0);
-  const { mappedData } = useRestockData(refreshKey);
+  const { mappedData, restockData } = useRestockData(refreshKey);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, userID } = useRole();
@@ -29,7 +29,7 @@ const AddStock = () => {
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showAcknowledeModal, setShowAcknowledeModal] = useState(false);
-  const { item, restockData} = location.state;
+  const { item } = location.state;
   const [requestFormData, setRequestFormData] = useState(item)
 
 
@@ -183,7 +183,10 @@ const AddStock = () => {
     (user === "store" || user === "manager") &&
     (requestFormData.status === "to be received");
 
-  // const hasAvailable = products.some((product) => product.status === "available");
+  const hasDelivered = products.some((product) => product.status === "delivered");
+
+  const canViewAR = hasDelivered;
+
   // const hasUnavailable = products.some((product) => product.status === "unavailable");
 
   const showStatus = requestFormData.status === "pending" || requestFormData.status === "approved" || requestFormData.status === "cancelled";
@@ -229,9 +232,11 @@ const AddStock = () => {
             <h1 className={`capitalize font-semibold 
               ${requestFormData.status === "pending" ? "text-[#f29425]" :
                 requestFormData.status === "approved" ? "text-green-400" :
-                  requestFormData.status === "cancelled" ? "text-red-500" : 
-                  requestFormData.status === "to be received" ? "text-blue-500" : ""
-                }`
+                  requestFormData.status === "cancelled" ? "text-red-500" :
+                    requestFormData.status === "to be received" ? "text-blue-500" :
+                      requestFormData.status === "partially delivered" ? "text-blue-500" :
+                      requestFormData.status === "completed" ? "text-green-500" : ""
+              }`
             }>
               {requestFormData.status}
             </h1>
@@ -266,9 +271,11 @@ const AddStock = () => {
                   <td className="px-6 py-5">₱{product.amount.toLocaleString()}</td>
                   <td className="px-6 py-5">₱{product.total.toLocaleString()}</td>
                   <td className={`${showStatus ? "hidden" : ""} px-6 py-5 font-semibold 
-                    ${product.status === "available" ? "text-green-500" 
-                    : product.status === "unavailable" ? "text-red-500" 
-                    : product.status === "to be received" ? "text-blue-500" : ""}`}>
+                    ${product.status === "available" ? "text-green-500"
+                      : product.status === "unavailable" ? "text-red-500"
+                        : product.status === "to be received" ? "text-blue-600"
+                          : product.status === "delivered" ? "text-blue-600" : ""
+                    }`}>
                     {product.status}
                   </td>
                 </tr>
@@ -323,6 +330,14 @@ const AddStock = () => {
               className="bg-[#7fd6b2] text-white font-normal text-sm px-12 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
             >
               Acknowledge
+            </button>
+          )}
+          {canViewAR && (
+            <button
+              // onClick={() => handleAcknowledgeClick()}
+              className="bg-[#7fd6b2] text-white font-normal text-sm px-12 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
+            >
+              View AR
             </button>
           )}
         </div>
