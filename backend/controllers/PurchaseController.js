@@ -8,14 +8,16 @@ const getPurchaseRequest = async (req, res) => {
         const requestDetailsQuery = `SELECT * FROM request_details;`;
         const productQuery = `SELECT * FROM product;`;
         const usersQuery = `SELECT user_id, username, email, fname, lname, phone, gender, role FROM users;`;
+        const supplierQuery = `SELECT * FROM supplier;`;
 
         // Execute all queries concurrently
-        const [purchaseFormResult, requestFormResult, requestDetailsResult, productResult, usersResult] = await Promise.all([
+        const [purchaseFormResult, requestFormResult, requestDetailsResult, productResult, usersResult, supplierResult] = await Promise.all([
             client.query(purchaseFormQuery),
             client.query(requestFormQuery),
             client.query(requestDetailsQuery),
             client.query(productQuery),
             client.query(usersQuery),
+            client.query(supplierQuery),
         ]);
 
         // Return results as arrays
@@ -25,6 +27,7 @@ const getPurchaseRequest = async (req, res) => {
             request_details: requestDetailsResult.rows,
             product: productResult.rows,
             users: usersResult.rows,
+            suppliers: supplierResult.rows,
         });
     } catch (error) {
         console.error("Error fetching data:", error);
