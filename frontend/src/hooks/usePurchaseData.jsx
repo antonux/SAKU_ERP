@@ -8,6 +8,8 @@ const usepurchaseData = (refreshKey) => {
         request_details: [], // Request Details table
         product: [], // Product table
         users: [], // Users table
+        suppliers: [], // Suppliers table
+
     });
     const [error, setError] = useState(null);
 
@@ -43,7 +45,7 @@ const usepurchaseData = (refreshKey) => {
             .filter((detail) => detail.rf_id === po.rf_id)
             .reduce((sum, detail) => {
                 const product = purchaseData.product.find((prod) => prod.prod_id === detail.product_id);
-                const price = product ? product.price || 0 : 0; // Ensure price is not undefined
+                const price = product ? product.unit_price || 0 : 0; // Ensure price is not undefined
                 return sum + detail.quantity * price;
             }, 0);
 
@@ -52,13 +54,13 @@ const usepurchaseData = (refreshKey) => {
             .filter((detail) => detail.rf_id === po.rf_id)
             .map((detail) => {
                 const product = purchaseData.product.find((prod) => prod.prod_id === detail.product_id);
-                return product ? product.type : "Unknown";
+                return product ? product.type : "—";
             })
             .join(", ");
 
         // Supplier
-        const supplier = purchaseData.users.find((user) => user.user_id === po.supplier);
-        const supplierName = supplier ? `${supplier.fname} ${supplier.lname}` : "Unknown";
+        const supplier = purchaseData.suppliers.find((supplier) => supplier.supplier_id === po.supplier);
+        const supplierName = supplier ? supplier.company_name : "—";
 
         // Approved by user
         const approvedByUser = purchaseData.users.find((user) => user.user_id === po.approved_by);
@@ -70,7 +72,7 @@ const usepurchaseData = (refreshKey) => {
         const requestedByUser = purchaseData.users.find(
             (user) => user.user_id === requestForm?.requested_by
         );
-        const requestedBy = requestedByUser ? requestedByUser.role : "Unknown"; // Requested by role
+        const requestedBy = requestedByUser ? requestedByUser.role : "—"; // Requested by role
 
         return {
             po_id: po.po_id, // Purchase Order ID
@@ -81,7 +83,6 @@ const usepurchaseData = (refreshKey) => {
             approvedBy, // Approved by
             requestedBy, // Requested by role
             rf_id: po.rf_id,
-            requestFormStatus: requestForm?.status || "Unknown",
             totalQty, // Total quantity
             totalAmount, // Total amount
             productCategory, // Product categories

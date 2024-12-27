@@ -24,7 +24,7 @@ const Inventory = () => {
         <h1 className='text-2xl font-semibold'>
           Create a request
         </h1>
-        <Link to="/request/product-request">
+        <Link to="/request/purchase-request">
           <button className="bg-[#7ad0ac] text-white px-10 py-3 rounded-xl hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
             Create a Purchase Request
           </button>
