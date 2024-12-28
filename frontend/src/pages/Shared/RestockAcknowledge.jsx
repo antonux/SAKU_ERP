@@ -1,4 +1,4 @@
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 // Components
@@ -29,7 +29,7 @@ const AddStock = () => {
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showAcknowledeModal, setShowAcknowledeModal] = useState(false);
-  const { item } = location.state;
+  const { requestFormData: item } = location.state;
   const [requestFormData, setRequestFormData] = useState(item)
 
 
@@ -41,9 +41,9 @@ const AddStock = () => {
   }, []);
 
   const handleGoBack = () => {
-    localStorage.setItem("lastRequestPath", "/request");
+    localStorage.setItem("lastRequestPath", "/request/view-more");
     const lp = localStorage.getItem("lastRequestPath")
-    navigate(lp);
+    navigate(lp,{ state: { item: item }});
   };
 
 
@@ -65,91 +65,6 @@ const AddStock = () => {
 
   const totalAmount = products.reduce((sum, product) => sum + product.total, 0);
 
-  const deleteRequest = async (rf_id) => {
-    try {
-      const response = await axios.delete(`http://localhost:4000/api/request/delete/${rf_id}`);
-      console.log('Request deleted:', response.data);
-      navigate('/request', { state: { isSuccess: true, rf_id: requestFormData.rf_id } });
-    } catch (error) {
-      console.error('Error deleting product:', error);
-    }
-  };
-  const handleDeleteClick = (rf_id) => {
-    deleteRequest(rf_id);
-  };
-
-  const approveRequest = async () => {
-    try {
-      const requestData = {
-        rf_id: requestFormData.rf_id,
-        user_id: userID,
-        status: "approved"
-      };
-
-      const response = await axios.post('http://localhost:4000/api/request/update', requestData);
-      console.log('Request approved:', response.data);
-      setRefreshKey(prevKey => prevKey + 1);
-      setTimeout(() => {
-        setShowApproveModal(true);  // Show the modal after delay
-      }, 150);
-
-    } catch (error) {
-      console.error('Error approving request:', error);
-    }
-  };
-
-  const handleApproveClick = () => {
-    approveRequest();
-  };
-
-  const cancelRequest = async () => {
-    try {
-      const requestData = {
-        rf_id: requestFormData.rf_id,
-        user_id: userID,
-        status: "cancelled"
-      };
-
-      const response = await axios.post('http://localhost:4000/api/request/update', requestData);
-      console.log('Request cancelled:', response.data);
-
-      setRefreshKey(prevKey => prevKey + 1);
-      setTimeout(() => {
-        setShowCancelModal(true);  // Show the modal after delay
-      }, 150);
-
-    } catch (error) {
-      console.error('Error cancelling request:', error);
-    }
-  };
-
-  const handleCancelClick = () => {
-    cancelRequest();
-  };
-
-  const acknowledgeRequestFunc = async () => {
-    try {
-      const requestData = {
-        rf_id: requestFormData.rf_id,
-        user_id: userID,
-      };
-
-      const response = await axios.post('http://localhost:4000/api/request/restock/acknowledge', requestData);
-      console.log('Request acknowledged:', response.data);
-
-      setRefreshKey(prevKey => prevKey + 1);
-      setTimeout(() => {
-        setShowAcknowledeModal(true);
-      }, 150);
-
-    } catch (error) {
-      console.error('Error acknowledging request:', error);
-    }
-  };
-
-  const handleAcknowledgeClick = () => {
-    acknowledgeRequestFunc();
-  };
 
 
   const sortedData = mappedData.sort((a, b) => {
@@ -159,29 +74,6 @@ const AddStock = () => {
     return dateB - dateA; // Most recent first
   });
 
-  useEffect(() => {
-    const itemToNavigate = sortedData.find(item => item.rf_id === requestFormData.rf_id);
-    if (itemToNavigate) {
-      setRequestFormData(itemToNavigate);
-      console.log('updated rf data: ', requestFormData)
-    }
-  }, [showApproveModal, showCancelModal, showAcknowledeModal])
-
-  const canDeleteRequest =
-    (user === "store" || (user === "manager" && requestFormData.requestedByRole === "manager")) &&
-    (requestFormData.status === "pending" || requestFormData.status === "cancelled");
-
-  const canCancelRequest =
-    (user === "admin" || (user === "manager" && requestFormData.requestedByRole !== "manager")) &&
-    requestFormData.status === "pending";
-
-  const canApproveRequest =
-    (user === "admin" || user === "manager") &&
-    requestFormData.status === "pending";
-
-  const canAcknowledgeRequest =
-    (user === "store" || user === "manager") &&
-    (requestFormData.status === "to be received");
 
   const hasDelivered = products.some((product) => product.status === "delivered");
 
@@ -191,29 +83,16 @@ const AddStock = () => {
 
   const showStatus = requestFormData.status === "pending" || requestFormData.status === "approved" || requestFormData.status === "cancelled";
 
+  const update_received = requestFormData.status === "partially delivered" || requestFormData.status === "completed" ? "Received By:" : "Updated By:" 
+
 
   return (
     <div className='flex flex-col gap-4 h-screen pb-5 pt-7'>
-      {showApproveModal &&
-        <ApproveRequest
-          onClose={() => setShowApproveModal(false)}
-        />
-      }
-      {showCancelModal &&
-        <CancelRequest
-          onClose={() => setShowCancelModal(false)}
-        />
-      }
-      {showAcknowledeModal &&
-        <AcknowledgeRequest
-          onClose={() => setShowAcknowledeModal(false)}
-        />
-      }
       <button onClick={handleGoBack} className="absolute z-50 translate-y-[3.2rem]">
         <GoBackButton />
       </button>
       <div className="flex flex-col pt-5 px-7 pb-10 gap-10 mt-[6rem] w-full h-full shadow-md overflow-auto rounded-lg bg-white text-black scrollbar-thin">
-        <h1 className="text-xl font-semibold text-[#272525]">Product Request</h1>
+        <h1 className="text-xl font-semibold text-[#272525]">Acknowledgement Receipt</h1>
         <div className="flex gap-5 whitespace-nowrap">
           <div className="flex gap-1">
             <h1>Requested By:</h1>
@@ -224,7 +103,8 @@ const AddStock = () => {
             <h1 className="font-semibold">{requestFormData.date.toLocaleDateString()}</h1>
           </div>
           <div className="flex gap-1">
-            <h1>Updated By:</h1>
+            {/* <h1>Received By:</h1> */}
+            {update_received}
             <h1 className="font-semibold capitalize">{requestFormData.updatedBy || "—"}</h1>
           </div>
           <div className="flex gap-1">
@@ -288,60 +168,6 @@ const AddStock = () => {
               </tr>
             </tfoot>
           </table>
-        </div>
-        <div className="flex gap-7">
-          {showDeleteModal &&
-            <DeleteRequest
-              onConfirm={() => handleDeleteClick(requestFormData.rf_id)}
-              onClose={() => {
-                setShowDeleteModal(false);
-              }}
-            />
-          }
-          {canDeleteRequest && (
-            <button
-              className="bg-red-400 text-white font-normal text-sm px-14 py-[.72rem] rounded-lg hover:bg-[#eb6b6b] transition-all focus:outline-none focus:ring-2 focus:ring-green-50"
-              onClick={() => setShowDeleteModal(true)}
-            >
-              Delete Request
-            </button>
-          )}
-
-          {canCancelRequest && (
-            <button
-              className="bg-red-400 text-white font-normal text-sm px-14 py-[.72rem] rounded-lg hover:bg-[#eb6b6b] transition-all focus:outline-none focus:ring-2 focus:ring-green-50"
-              onClick={() => handleCancelClick()}
-            >
-              Cancel Request
-            </button>
-          )}
-
-          {canApproveRequest && (
-            <button
-              onClick={() => handleApproveClick()}
-              className="bg-[#7fd6b2] text-white font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
-            >
-              Approve
-            </button>
-          )}
-          {canAcknowledgeRequest && (
-            <button
-              onClick={() => handleAcknowledgeClick()}
-              className="bg-[#7fd6b2] text-white font-normal text-sm px-12 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
-            >
-              Acknowledge
-            </button>
-          )}
-          {canViewAR && (
-            <Link to="/request/acknowledge-receipt" state={{ requestFormData }}>
-              <button
-                // onClick={() => handleAcknowledgeClick()}
-                className="bg-[#7fd6b2] text-white font-normal text-sm px-12 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
-              >
-                View AR
-              </button>
-            </Link>
-          )}
         </div>
       </div>
     </div>

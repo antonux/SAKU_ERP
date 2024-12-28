@@ -86,7 +86,7 @@ const usepurchaseData = (refreshKey) => {
             totalQty, // Total quantity
             totalAmount, // Total amount
             productCategory, // Product categories
-            action: "View Details", // Action column for your UI
+            action: "View More", // Action column for your UI
         };
     });
 

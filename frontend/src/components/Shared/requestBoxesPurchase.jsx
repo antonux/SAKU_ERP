@@ -1,24 +1,31 @@
+
 import useRestockData from '../../hooks/useRestockData';
+import { useEffect, useState } from 'react';
 
 const Boxes = () => {
-  const { restockData, error } = useRestockData();
+  const { restockData:data , error } = useRestockData();
 
   if (error) {
     return <p>Error fetching data: {error.message}</p>;
   }
 
+   // Filter data to include only "restock" type
+  const restockData = data.request_form.filter(
+    (form) => form.type === "purchase"
+  );
+
   // Calculate values
-  const totalRequests = restockData.request_form.length;
+  const totalRequests = restockData.length;
   
-  const totalCost = restockData.request_form.reduce((sum, form) => {
+  const totalCost = restockData.reduce((sum, form) => {
     return sum + parseFloat(form.total_amount || 0); // Ensure numeric value
   }, 0);
 
-  const approvedRequests = restockData.request_form.filter(
+  const approvedRequests = restockData.filter(
     (form) => form.status === "approved"
   ).length;
 
-  const pendingRequests = restockData.request_form.filter(
+  const pendingRequests = restockData.filter(
     (form) => form.status === "pending"
   ).length;
 

@@ -8,6 +8,7 @@ import Request from "../pages/Store/Request";
 import Inventory from "../pages/Store/Inventory";
 import Notifications from "../pages/Shared/Notifications";
 import RequestViewMore from "../pages/Shared/RequestViewMore";
+import AcknowledgeReceipt from "../pages/Shared/RestockAcknowledge";
 import ProductRequest from "../pages/Store/RequestProductRequest";
 
 const AdminRoutes = () => {
@@ -48,6 +49,11 @@ const AdminRoutes = () => {
         <Route
           path="/request/view-more"
           element={<RequestViewMore />}
+        />
+
+        <Route
+          path="/request/acknowledge-receipt"
+          element={<AcknowledgeReceipt />}
         />
         
         <Route

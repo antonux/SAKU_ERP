@@ -1,5 +1,5 @@
 import GoBackButton from "../../components/buttons/Backbutton";
-import Boxes from "../../components/Shared/requestBoxes";
+import Boxes from "../../components/Shared/requestBoxesRestock";
 import Table from "../../components/Shared/requestTable";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";

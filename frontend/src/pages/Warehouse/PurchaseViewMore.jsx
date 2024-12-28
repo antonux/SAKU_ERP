@@ -1,3 +1,4 @@
+
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -11,7 +12,7 @@ import { useRole } from "../../contexts/RoleContext";
 import DeleteRequest from "../../modals/DeleteRequest";
 import ApproveRequest from "../../modals/approveRequest";
 import CancelRequest from "../../modals/cancelRequest";
-import DeliverRequest from "../../modals/deliverRequest";
+import AcknowledgeRequest from "../../modals/acknowledgeRestock";
 
 // Hooks
 import useRestockData from '../../hooks/useRestockData';
@@ -19,88 +20,51 @@ import useRestockData from '../../hooks/useRestockData';
 // axios
 import axios from "axios";
 
-const AddStock = () => {
+const PurchaseViewMore = () => {
   const [refreshKey, setRefreshKey] = useState(0);
-  const { mappedData, error, restockData } = useRestockData(refreshKey);
+  const { mappedData, restockData } = useRestockData(refreshKey);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, userID } = useRole();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [showDeliverModal, setShowDeliverModal] = useState(false);
+  const [showAcknowledeModal, setShowAcknowledeModal] = useState(false);
   const { item } = location.state;
   const [requestFormData, setRequestFormData] = useState(item)
 
 
 
   useEffect(() => {
-    if (location.pathname !== "/request") {
+    if (location.pathname !== "/purchase") {
       localStorage.setItem("lastRequestPath", location.pathname);
     }
   }, []);
 
   const handleGoBack = () => {
-    localStorage.setItem("lastRequestPath", "/request");
-    const lp = localStorage.getItem("lastRequestPath")
+    localStorage.setItem("lastPurchasePath", "/purchase");
+    const lp = localStorage.getItem("lastPurchasePath")
     navigate(lp);
   };
 
 
-  // const products = restockData.request_details
-  //   .filter((detail) => detail.rf_id === requestFormData.rf_id)
-  //   .map((detail) => {
-  //     const product = restockData.product.find((prod) => prod.prod_id === detail.product_id);
-  //     return {
-  //       id: product ? product.prod_id : "N/A",
-  //       product: product ? product.name : "Unknown Product",
-  //       size: product ? product.size : "Unknown Size",
-  //       category: product ? product.type : "Unknown Category",
-  //       quantity: detail.quantity || 0,
-  //       amount: product ? product.unit_price : 0,
-  //       total: product && detail.quantity ? product.unit_price * detail.quantity : 0,
-  //     };
-  //   });
-
   const products = restockData.request_details
-  .filter((detail) => detail.rf_id === requestFormData.rf_id)
-  .map((detail) => {
-    const product = restockData.product.find((prod) => prod.prod_id === detail.product_id);
-    const inventory = restockData.inventory.find(
-      (inv) => inv.product_id === detail.product_id && inv.location === "warehouse"
-    );
-
-    const currentWarehouseStock = inventory ? inventory.quantity : 0;
-    const reorderLevel = product ? product.reorder_level : 0;
-    const expectedStock = currentWarehouseStock - detail.quantity;
-
-    let stockStatus = "unknown";
-    if (expectedStock > reorderLevel + 5) {
-      stockStatus = "in stock";
-    } else if (expectedStock <= reorderLevel + 5 && expectedStock > 0) {
-      stockStatus = "low stock";
-    } else if (expectedStock <= 0) {
-      stockStatus = "out of stock";
-    }
-
-    return {
-      id: product ? product.prod_id : "N/A",
-      product: product ? product.name : "Unknown Product",
-      size: product ? product.size : "Unknown Size",
-      category: product ? product.type : "Unknown Category",
-      quantity: detail.quantity || 0,
-      amount: product ? product.unit_price : 0,
-      total: product && detail.quantity ? product.unit_price * detail.quantity : 0,
-      currentWarehouseStock,
-      expectedStock,
-      stockStatus,
-      status: detail.status || "Unknown",
-    };
-  });
+    .filter((detail) => detail.rf_id === requestFormData.rf_id)
+    .map((detail) => {
+      const product = restockData.product.find((prod) => prod.prod_id === detail.product_id);
+      return {
+        id: product ? product.prod_id : "N/A",
+        product: product ? product.name : "Unknown Product",
+        size: product ? product.size : "Unknown Size",
+        category: product ? product.type : "Unknown Category",
+        quantity: detail.quantity || 0,
+        amount: product ? product.unit_price : 0,
+        total: product && detail.quantity ? product.unit_price * detail.quantity : 0,
+        status: detail.status || "Unknown",
+      };
+    });
 
   const totalAmount = products.reduce((sum, product) => sum + product.total, 0);
-
-
 
   const deleteRequest = async (rf_id) => {
     try {
@@ -164,29 +128,28 @@ const AddStock = () => {
     cancelRequest();
   };
 
-  const deliverRequest = async () => {
+  const acknowledgeRequestFunc = async () => {
     try {
       const requestData = {
         rf_id: requestFormData.rf_id,
         user_id: userID,
-        status: "to be received"
       };
 
-      const response = await axios.post('http://localhost:4000/api/request/restock/deliver', requestData);
-      console.log('Request delivered:', response.data);
+      const response = await axios.post('http://localhost:4000/api/request/restock/acknowledge', requestData);
+      console.log('Request acknowledged:', response.data);
 
       setRefreshKey(prevKey => prevKey + 1);
       setTimeout(() => {
-        setShowDeliverModal(true);  // Show the modal after delay
+        setShowAcknowledeModal(true);
       }, 150);
 
     } catch (error) {
-      console.error('Error delivering request:', error);
+      console.error('Error acknowledging request:', error);
     }
   };
 
-  const handleDeliverClick = () => {
-    deliverRequest();
+  const handleAcknowledgeClick = () => {
+    acknowledgeRequestFunc();
   };
 
 
@@ -203,41 +166,32 @@ const AddStock = () => {
       setRequestFormData(itemToNavigate);
       console.log('updated rf data: ', requestFormData)
     }
-  }, [showApproveModal, showCancelModal, showDeliverModal])
+  }, [showApproveModal, showCancelModal, showAcknowledeModal])
 
   const canDeleteRequest =
     (user === "store" || (user === "manager" && requestFormData.requestedByRole === "manager")) &&
-    requestFormData.status !== "approved";
+    (requestFormData.status === "pending" || requestFormData.status === "cancelled");
 
   const canCancelRequest =
     (user === "admin" || (user === "manager" && requestFormData.requestedByRole !== "manager")) &&
-    requestFormData.status !== "approved" &&
-    requestFormData.status !== "cancelled";
+    requestFormData.status === "pending";
 
   const canApproveRequest =
     (user === "admin" || user === "manager") &&
-    requestFormData.status !== "approved" &&
-    requestFormData.status !== "cancelled";
+    requestFormData.status === "pending";
 
-
-  const hasAvailable = products.some((product) => product.status === "available");
-  const hasUnavailable = products.some((product) => product.status === "unavailable");
-
-  const DeliverText = hasAvailable && hasUnavailable
-    ? "partial deliver"
-    : !hasUnavailable && hasAvailable
-      ? "deliver"
-      : "unavailable";
-
-  const canDeliverRequest =
-    user === "warehouse" && (requestFormData.status !== "cancelled" && requestFormData.status !== "pending") ;
-
-  const canRequestPurchase =
-    user === "warehouse" && (requestFormData.status !== "cancelled" && requestFormData.status !== "pending") ;
+  const canAcknowledgeRequest =
+    (user === "store" || user === "manager") &&
+    (requestFormData.status === "to be received");
 
   const hasDelivered = products.some((product) => product.status === "delivered");
 
   const canViewAR = hasDelivered;
+
+  // const hasUnavailable = products.some((product) => product.status === "unavailable");
+
+  const showStatus = requestFormData.status === "pending" || requestFormData.status === "approved" || requestFormData.status === "cancelled";
+
 
   return (
     <div className='flex flex-col gap-4 h-screen pb-5 pt-7'>
@@ -251,9 +205,9 @@ const AddStock = () => {
           onClose={() => setShowCancelModal(false)}
         />
       }
-      {showDeliverModal &&
-        <DeliverRequest
-          onClose={() => setShowDeliverModal(false)}
+      {showAcknowledeModal &&
+        <AcknowledgeRequest
+          onClose={() => setShowAcknowledeModal(false)}
         />
       }
       <button onClick={handleGoBack} className="absolute z-50 translate-y-[3.2rem]">
@@ -263,12 +217,16 @@ const AddStock = () => {
         <h1 className="text-xl font-semibold text-[#272525]">Product Request</h1>
         <div className="flex gap-5 whitespace-nowrap">
           <div className="flex gap-1">
+            <h1>Request Form No.:</h1>
+            <h1 className="font-semibold capitalize">{requestFormData.rf_id}</h1>
+          </div>
+          <div className="flex gap-1">
             <h1>Requested By:</h1>
             <h1 className="font-semibold capitalize">{requestFormData.requestedBy}</h1>
           </div>
           <div className="flex gap-1">
             <h1>Date Created:</h1>
-            <h1 className="font-semibold">{requestFormData.date.toLocaleDateString()}</h1>
+            <h1 className="font-semibold">{requestFormData.createdAt.toLocaleDateString()}</h1>
           </div>
           <div className="flex gap-1">
             <h1>Updated By:</h1>
@@ -293,8 +251,14 @@ const AddStock = () => {
             <h1 className="font-semibold">{requestFormData.updatedAt}</h1>
           </div> */}
         </div>
-        <div className="rounded-lg w-[70rem] mb-10 shrink-0 border-[1px] border-gray-100 overflow-auto scrollbar-thin">
-          <table className="text-sm w-[69rem] text-left text-gray-500">
+        <div>
+          <div className="flex gap-1">
+            <h1>Supplier:</h1>
+            <h1 className="font-semibold capitalize">{requestFormData.supplier}</h1>
+          </div>
+        </div>
+        <div className="rounded-lg w-[56rem] mb-10 shrink-0 border-[1px] border-gray-100 overflow-auto scrollbar-thin">
+          <table className="text-sm w-[55rem] text-left text-gray-500">
             <thead className="sticky top-0 bg-white">
               <tr className="text-xs text-gray-700 uppercase">
                 <th scope="col" className="px-6 py-3">ID</th>
@@ -302,11 +266,9 @@ const AddStock = () => {
                 <th scope="col" className="px-6 py-3">Size/Model</th>
                 <th scope="col" className="px-6 py-3">Category</th>
                 <th scope="col" className="px-6 py-3">Quantity</th>
-                <th scope="col" className="px-6 py-3">Status</th>
                 <th scope="col" className="px-6 py-3">Amount</th>
                 <th scope="col" className="px-6 py-3">Total Amount</th>
-                <th scope="col" className="px-6 py-3">Current Stock</th>
-                <th scope="col" className="px-6 py-3">Expected Stock Status</th>
+                <th scope="col" className={`px-6 py-3 ${showStatus ? "hidden" : ""}`}>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -317,7 +279,9 @@ const AddStock = () => {
                   <td className="px-6 py-5">{product.size}</td>
                   <td className="px-6 py-5">{product.category}</td>
                   <td className="px-6 py-5">{product.quantity}</td>
-                  <td className={`px-6 py-5 font-semibold 
+                  <td className="px-6 py-5">₱{product.amount.toLocaleString()}</td>
+                  <td className="px-6 py-5">₱{product.total.toLocaleString()}</td>
+                  <td className={`${showStatus ? "hidden" : ""} px-6 py-5 font-semibold 
                     ${product.status === "available" ? "text-green-500"
                       : product.status === "unavailable" ? "text-red-500"
                         : product.status === "to be received" ? "text-blue-600"
@@ -325,20 +289,12 @@ const AddStock = () => {
                     }`}>
                     {product.status}
                   </td>
-                  <td className="px-6 py-5">₱{product.amount.toLocaleString()}</td>
-                  <td className="px-6 py-5">₱{product.total.toLocaleString()}</td>
-                  <td className="px-6 py-5">{product.currentWarehouseStock}</td>
-                  <td className={`px-6 py-5 font-semibold ${product.stockStatus === "in stock" ? "text-green-500" :
-                    product.stockStatus === "low stock" ? "text-orange-500" :
-                      "text-red-500"}`}>
-                    {product.stockStatus}
-                  </td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr className="bg-white">
-                <td colSpan="7" className="px-6 py-4 font-semibold">TOTAL</td>
+                <td colSpan="6" className="px-6 py-4 font-semibold">TOTAL</td>
                 <td className="px-6 py-5 font-semibold">₱{totalAmount.toLocaleString()}</td>
               </tr>
             </tfoot>
@@ -379,21 +335,12 @@ const AddStock = () => {
               Approve
             </button>
           )}
-
-          {canDeliverRequest && (
+          {canAcknowledgeRequest && (
             <button
-              onClick={() => handleDeliverClick()}
-              className={`${DeliverText === "unavailable" ? "bg-gray-400 pointer-events-none" : "bg-blue-400 hover:bg-blue-500"} capitalize transition-all text-white font-normal text-sm px-14 py-[.72rem] rounded-lg focus:outline-none focus:ring-2 focus:ring-green-50`}
+              onClick={() => handleAcknowledgeClick()}
+              className="bg-[#7fd6b2] text-white font-normal text-sm px-12 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
             >
-              {DeliverText}
-            </button>
-          )}
-          {canRequestPurchase && (
-            <button
-              // onClick={() => }
-              className={`bg-[#7ad0ac] text-white font-normal text-sm px-10 py-[.72rem] transition-all rounded-lg hover:bg-[#73c5a3] focus:outline-none focus:ring-2 focus:ring-green-50`}
-            >
-              Request for Purchase
+              Acknowledge
             </button>
           )}
           {canViewAR && (
@@ -406,11 +353,10 @@ const AddStock = () => {
               </button>
             </Link>
           )}
-
         </div>
       </div>
     </div>
   );
 };
 
-export default AddStock;
+export default PurchaseViewMore;

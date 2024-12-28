@@ -13,6 +13,7 @@ import Suppliers from "../pages/Shared/Suppliers";
 import AddStock from "../pages/Shared/InventoryAddStock";
 import ViewStock from "../pages/Shared/InventoryViewProduct";
 import RequestViewMore from "../pages/Shared/RequestViewMore";
+import AcknowledgeReceipt from "../pages/Shared/RestockAcknowledge";
 import AddSupplier from "../pages/Shared/SuppliersAddSupplier";
 import AddAccount from "../pages/Admin/AccountsAddAccount";
 import ViewSupplier from "../pages/Shared/SuppliersViewSupplier";
@@ -100,6 +101,11 @@ const AdminRoutes = () => {
         <Route
           path="/request/view-more"
           element={<RequestViewMore />}
+        />
+
+        <Route
+          path="/request/acknowledge-receipt"
+          element={<AcknowledgeReceipt />}
         />
 
       </Routes>

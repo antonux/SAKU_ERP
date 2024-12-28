@@ -26,7 +26,7 @@ const useRestockData = (refreshKey) => {
   }, [refreshKey]);
 
   // Mapping logic can be encapsulated here
-  const mappedData = restockData.request_form.map((form) => {
+  const mappedData = restockData.request_form.filter((form) => form.type === "restock").map((form) => {
     // Total quantity for this request
     const totalQty = restockData.request_details
       .filter((detail) => detail.rf_id === form.rf_id)
