@@ -1,4 +1,3 @@
-
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -13,20 +12,16 @@ import DeleteRequest from "../../modals/DeleteRequest";
 import ApproveRequest from "../../modals/approveRequest";
 import CancelRequest from "../../modals/cancelRequest";
 import AcknowledgeRequest from "../../modals/acknowledgeRestock";
-import ViewDrModal from "../../components/Warehouse/viewDrModal";
 
 // Hooks
 import usePurchaseData from '../../hooks/usePurchaseData';
-import useStatusColor from '../../hooks/useStatusColor';
 
 // axios
 import axios from "axios";
 
 const PurchaseViewMore = () => {
   const [refreshKey, setRefreshKey] = useState(0);
-  const { mappedData, purchaseData } = usePurchaseData(refreshKey);
-  const [showFloating, setShowFloating] = useState(false)
-  const { getStatusColor } = useStatusColor();
+  const { mappedData, purchaseData} = usePurchaseData(refreshKey);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, userID } = useRole();
@@ -34,7 +29,6 @@ const PurchaseViewMore = () => {
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showAcknowledeModal, setShowAcknowledeModal] = useState(false);
-  const [receivedDelivery, setReceivedDelivery] = useState(false);
   const { item } = location.state;
   const [requestFormData, setRequestFormData] = useState(item)
 
@@ -53,10 +47,12 @@ const PurchaseViewMore = () => {
   };
 
 
-  const products = purchaseData.request_details
+  const products = purchaseData
+    .request_details
     .filter((detail) => detail.rf_id === requestFormData.rf_id)
     .map((detail) => {
-      const product = purchaseData.product.find((prod) => prod.prod_id === detail.product_id);
+      const product = purchaseData
+        .product.find((prod) => prod.prod_id === detail.product_id);
       return {
         id: product ? product.prod_id : "N/A",
         product: product ? product.name : "Unknown Product",
@@ -157,32 +153,6 @@ const PurchaseViewMore = () => {
     acknowledgeRequestFunc();
   };
 
-  const receivePurchaseFunc = async () => {
-    try {
-      const requestData = {
-        rf_id: requestFormData.rf_id,
-        user_id: userID,
-        status: "received"
-      };
-
-      const response = await axios.post('http://localhost:4000/api/request/update', requestData);
-      console.log('Purchase received:', response.data);
-
-      setRefreshKey(prevKey => prevKey + 1);
-      setTimeout(() => {
-        setReceivedDelivery(true);  // Show the modal after delay
-      }, 150);
-
-    } catch (error) {
-      console.error('Error receiving purchase:', error);
-    }
-  };
-
-  const handleReceiveClick = () => {
-    receivePurchaseFunc();
-  };
-
-
 
   const sortedData = mappedData.sort((a, b) => {
     const dateA = a.updatedAt || a.date; // Use updatedAt if available, otherwise date
@@ -197,7 +167,7 @@ const PurchaseViewMore = () => {
       setRequestFormData(itemToNavigate);
       console.log('updated rf data: ', requestFormData)
     }
-  }, [showApproveModal, showCancelModal, showAcknowledeModal, receivedDelivery])
+  }, [showApproveModal, showCancelModal, showAcknowledeModal])
 
   const canDeleteRequest =
     user === "warehouse" && (requestFormData.status === "pending" || requestFormData.status === "cancelled");
@@ -205,10 +175,6 @@ const PurchaseViewMore = () => {
   const canCancelRequest =
     user === "admin" &&
     requestFormData.status === "pending";
-
-  const canMarkReceived =
-    user === "warehouse" &&
-    requestFormData.status === "approved";
 
   const canApproveRequest =
     (user === "admin" || user === "manager") &&
@@ -218,17 +184,13 @@ const PurchaseViewMore = () => {
     (user === "store" || user === "manager") &&
     (requestFormData.status === "to be received");
 
-  const canViewDR =
-    user === "warehouse" && (requestFormData.status !== "pending" && requestFormData.status !== "cancelled" && requestFormData.status !== "approved");
-
   const hasDelivered = products.some((product) => product.status === "delivered");
 
   const canViewAR = hasDelivered;
 
-  const hasUnavailable = products.some((product) => product.status === "unavailable");
-  const hasAvailable = products.some((product) => product.status === "available");
+  // const hasUnavailable = products.some((product) => product.status === "unavailable");
 
-  const showStatus = requestFormData.status === "pending" || requestFormData.status === "approved" || requestFormData.status === "cancelled" || hasAvailable || hasUnavailable;
+  const showStatus = requestFormData.status === "pending" || requestFormData.status === "approved" || requestFormData.status === "cancelled";
 
 
   return (
@@ -248,11 +210,6 @@ const PurchaseViewMore = () => {
           onClose={() => setShowAcknowledeModal(false)}
         />
       }
-      {showFloating && (
-        <ViewDrModal
-          onClose={() => setShowFloating(false)}
-        />
-      )}
       <button onClick={handleGoBack} className="absolute z-50 translate-y-[3.2rem]">
         <GoBackButton />
       </button>
@@ -277,7 +234,14 @@ const PurchaseViewMore = () => {
           </div>
           <div className="flex gap-1">
             <h1>Status:</h1>
-            <h1 className={`capitalize font-semibold ${getStatusColor(requestFormData.status)}`
+            <h1 className={`capitalize font-semibold 
+              ${requestFormData.status === "pending" ? "text-[#f29425]" :
+                requestFormData.status === "approved" ? "text-green-400" :
+                  requestFormData.status === "cancelled" ? "text-red-500" :
+                    requestFormData.status === "to be received" ? "text-blue-500" :
+                      requestFormData.status === "partially delivered" ? "text-blue-500" :
+                        requestFormData.status === "completed" ? "text-green-500" : ""
+              }`
             }>
               {requestFormData.status}
             </h1>
@@ -379,14 +343,6 @@ const PurchaseViewMore = () => {
               Acknowledge
             </button>
           )}
-          {canMarkReceived && (
-            <button
-              onClick={() => handleReceiveClick()}
-              className="bg-[#7fd6b2] text-white font-normal text-sm px-12 py-[.72rem] rounded-lg hover:bg-[#79ceaa] focus:outline-none focus:ring-2 focus:ring-green-50"
-            >
-              Receive Delivery
-            </button>
-          )}
           {canViewAR && (
             <Link to="/request/acknowledge-receipt" state={{ requestFormData }}>
               <button
@@ -396,14 +352,6 @@ const PurchaseViewMore = () => {
                 View AR
               </button>
             </Link>
-          )}
-          {canViewDR && (
-            <button
-              onClick={() => setShowFloating(true)}
-              className="bg-blue-500 text-white font-normal text-sm px-12 py-[.72rem] rounded-lg hover:bg-blue-500/90 focus:outline-none focus:ring-2 focus:ring-green-50"
-            >
-              View DR
-            </button>
           )}
         </div>
       </div>

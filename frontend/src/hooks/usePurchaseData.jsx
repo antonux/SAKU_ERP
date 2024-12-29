@@ -31,7 +31,6 @@ const usepurchaseData = (refreshKey) => {
 
     // Mapping logic for purchase order data
     const mappedData = purchaseData.purchase_order.map((po) => {
-        console.log("Number of purchase orders:", purchaseData.purchase_order.length);
         // Find the associated request form
         const requestForm = purchaseData.request_form.find((form) => form.rf_id === po.rf_id);
 
@@ -68,6 +67,11 @@ const usepurchaseData = (refreshKey) => {
             ? `${approvedByUser.fname} ${approvedByUser.lname}`
             : "—";
 
+        const updatedByUser = purchaseData.users.find((user) => user.user_id === requestForm.updated_by);
+        const updatedBy = updatedByUser
+            ? `${updatedByUser.fname} ${updatedByUser.lname}`
+            : "";
+
         // Requested by user
         const requestedByUser = purchaseData.users.find(
             (user) => user.user_id === requestForm?.requested_by
@@ -76,13 +80,15 @@ const usepurchaseData = (refreshKey) => {
 
         return {
             po_id: po.po_id, // Purchase Order ID
-            status: po.status, // Status of the purchase order
+            po_status: po.status, // Status of the purchase order
             createdAt: new Date(po.created_at), // Created date
             updatedAt: po.updated_at ? new Date(po.updated_at) : null, // Updated date
             supplier: supplierName, // Supplier name
             approvedBy, // Approved by
+            updatedBy,
             requestedBy, // Requested by role
             rf_id: po.rf_id,
+            status: requestForm.status,
             totalQty, // Total quantity
             totalAmount, // Total amount
             productCategory, // Product categories

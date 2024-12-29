@@ -10,9 +10,11 @@ import DeleteRequestSuccessful from "../../modals/DeleteRequestSuccessful";
 
 // Hooks
 import useRestockData from '../../hooks/useRestockData';
+import useStatusColor from '../../hooks/useStatusColor';
 
 const Table = () => {
   const { mappedData, error, restockData } = useRestockData();
+  const { getStatusColor } = useStatusColor();
   const navigate = useNavigate();
   const location = useLocation();
   const { isSuccess: isDeleted, rf_id } = location.state || false;
@@ -98,19 +100,7 @@ const Table = () => {
                 {item.updatedAt ? item.updatedAt.toLocaleDateString() : item.date.toLocaleDateString()}
               </td>
               <td
-                className={`px-6 py-5 font-semibold ${item.status === "pending"
-                  ? "text-orange-400"
-                  : item.status === "approved"
-                    ? "text-green-400"
-                    : item.status === "cancelled"
-                      ? "text-red-500"
-                      : item.status === "to be received"
-                        ? "text-blue-500" :
-                        item.status === "partially delivered"
-                          ? "text-blue-600" :
-                          item.status === "completed"
-                            ? "text-green-500" : ""
-                  }`}
+                className={`px-6 py-5 font-semibold ${getStatusColor(item.status)}`}
               >
                 {item.status}
               </td>

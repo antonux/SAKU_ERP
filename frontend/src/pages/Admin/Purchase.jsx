@@ -1,5 +1,5 @@
 
-import Boxes from "../../components/Shared/requestBoxesRestock";
+import Boxes from "../../components/Shared/requestBoxesPurchase";
 import Table from "../../components/Admin/purchaseTable";
 
 const Inventory = () => {

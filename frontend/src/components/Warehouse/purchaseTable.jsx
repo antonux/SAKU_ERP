@@ -6,12 +6,14 @@ import DeleteRequestSuccessful from "../../modals/DeleteRequestSuccessful";
 
 // Hooks
 import usePurchaseData from '../../hooks/usePurchaseData';
+import useStatusColor from '../../hooks/useStatusColor';
 
 const Table = () => {
   const { mappedData, error, purchaseData, loading } = usePurchaseData();
+  const { getStatusColor } = useStatusColor();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isSuccess: isDeleted, po_id } = location.state || {};
+  const { isSuccess: isDeleted, rf_id } = location.state || false;
   const [isRequestDeleted, setIsRequestDeleted] = useState(false);
   const [inventoryFilter, setInventoryFilter] = useState("All");
 
@@ -33,9 +35,6 @@ const Table = () => {
     return <div>Error: {error.message}</div>;
   }
 
-  if (!mappedData || mappedData.length === 0) {
-    return <div>No data available</div>;
-  }
 
   // Sort mappedData by updatedAt (if available) or fallback to date
   const sortedData = [...mappedData].sort((a, b) => {
@@ -49,7 +48,7 @@ const Table = () => {
       {isRequestDeleted && (
         <DeleteRequestSuccessful
           onClose={closeRequestDeletedModal}
-          po_id={po_id}
+          rf_id={rf_id}
         />
       )}
       <table className="w-full text-sm text-left text-gray-500">
@@ -96,12 +95,9 @@ const Table = () => {
               <td className="px-6 py-5">{item.totalAmount.toFixed(2)}</td>
               <td className="px-6 py-5">{item.supplier}</td>
               <td className="px-6 py-5">{item.requestedBy}</td>
-              <td className="px-6 py-5">{item.approvedBy || "—"}</td>
+              <td className="px-6 py-5">{item.updatedBy || "—"}</td>
               <td className="px-6 py-5">{item.updatedAt ? item.updatedAt.toLocaleDateString() : item.createdAt.toLocaleDateString()}</td>
-              <td className={`px-6 py-5 ${item.status === "pending" ? "text-orange-400" :
-                item.status === "approved" ? "text-green-400" :
-                  item.status === "cancelled" ? "text-red-500" : ""
-                }`}>
+              <td className={`px-6 py-5 ${getStatusColor(item.status)}`}>
                 {item.status}
               </td>
               <td className="px-6 py-5">

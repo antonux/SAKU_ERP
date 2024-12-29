@@ -6,6 +6,7 @@ import Settings from "../pages/Shared/Settings";
 import Overview from "../pages/Shared/Overview";
 import Request from "../pages/Admin/Request";
 import Purchase from "../pages/Admin/Purchase";
+import PurchaseViewMore from "../pages/Admin/PurchaseViewMore";
 import Inventory from "../pages/Shared/Inventory";
 import Accounts from "../pages/Admin/Accounts";
 import Notifications from "../pages/Shared/Notifications";
@@ -41,6 +42,11 @@ const AdminRoutes = () => {
         <Route
           path="/purchase"
           element={<Purchase />}
+        />
+
+        <Route
+          path="/purchase/view-more"
+          element={<PurchaseViewMore />}
         />
 
         <Route
