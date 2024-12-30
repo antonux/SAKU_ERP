@@ -101,7 +101,7 @@ const ViewSupplier = () => {
         <GoBackButton />
       </button>
       <div className="flex flex-col pt-5 px-7 gap-10 mt-[6rem] w-full h-full shadow-md overflow-auto rounded-lg bg-white text-black scrollbar-thin">
-        <h1 className="text-xl font-semibold text-[#272525]">Motolite Batteries</h1>
+        <h1 className="text-xl font-semibold text-[#272525]">{supplier.company_name}</h1>
         <form className="flex gap-5" onSubmit={handleSubmit}>
           <div className="relative flex flex-col gap-5">
             {/* upload picture */}

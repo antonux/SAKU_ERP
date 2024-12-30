@@ -81,8 +81,8 @@ const usepurchaseData = (refreshKey) => {
         return {
             po_id: po.po_id, // Purchase Order ID
             po_status: po.status, // Status of the purchase order
-            createdAt: new Date(po.created_at), // Created date
-            updatedAt: po.updated_at ? new Date(po.updated_at) : null, // Updated date
+            createdAt: new Date(requestForm.created_at), // Created date
+            updatedAt: requestForm.updated_at ? new Date(requestForm.updated_at) : null, // Updated date
             supplier: supplierName, // Supplier name
             approvedBy, // Approved by
             updatedBy,

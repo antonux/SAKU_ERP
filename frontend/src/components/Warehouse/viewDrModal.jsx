@@ -1,25 +1,42 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
 
-const ViewDrModal = ({ onClose }) => {
+//hooks
+import useStatusColor from '../../hooks/useStatusColor';
+
+const ViewDrModal = ({ onClose, po_id, item }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [allReceipts, setAllReceipts] = useState([]); // All fetched receipts
+  const [filteredReceipts, setFilteredReceipts] = useState([]); // Receipts filtered by po_id
   const [selectedReceiptId, setSelectedReceiptId] = useState(null); // State to track selected receipt
+  const { getStatusColor } = useStatusColor();
 
   useEffect(() => {
     setIsVisible(true);
+    fetchDeliveryReceipts(); // Fetch receipts on mount
   }, []);
+
+  useEffect(() => {
+    // Filter receipts based on po_id whenever allReceipts or po_id changes
+    const filtered = allReceipts.filter((receipt) => receipt.po_id === po_id);
+    setFilteredReceipts(filtered);
+  }, [allReceipts, po_id]);
+
+  const fetchDeliveryReceipts = async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/purchase/receive');
+      setAllReceipts(response.data.receipts); // Populate allReceipts with API data
+    } catch (error) {
+      console.error('Error fetching delivery receipts:', error);
+    }
+  };
 
   const handleClose = () => {
     setIsVisible(false);
+    setSelectedReceiptId(null);
     setTimeout(onClose, 300); // Ensure animation finishes before unmounting
   };
-
-  // Example data for receipts
-  const receipts = [
-    { id: 1, name: "Receipt 1", date: "2024-12-30", amount: "$50.00" },
-    { id: 2, name: "Receipt 2", date: "2024-12-29", amount: "$25.00" },
-    { id: 3, name: "Receipt 3", date: "2024-12-28", amount: "$40.00" },
-    { id: 4, name: "Receipt 4", date: "2024-12-27", amount: "$60.00" },
-  ];
 
   const handleSelectReceipt = (id) => {
     setSelectedReceiptId(id);
@@ -28,7 +45,7 @@ const ViewDrModal = ({ onClose }) => {
   return (
     <div className={`fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-10 transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
       <div className={`bg-white flex flex-col p-8 pb-4 rounded-lg shadow-lg w-[50rem] h-[35rem] relative transition-transform duration-300 transform ${isVisible ? 'scale-100' : 'scale-90'}`}>
-        {/* Header or Title */}
+        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-semibold text-gray-800">Delivery Receipts</h3>
           <button
@@ -41,23 +58,27 @@ const ViewDrModal = ({ onClose }) => {
 
         {/* Modal Content */}
         <div className="flex-grow overflow-auto">
-          <div className="grid p-2 grid-cols-4 gap-6">
-            {receipts.map((receipt) => (
+          <div className="flex flex-col gap-4 p-5">
+            {filteredReceipts.map((receipt) => (
               <div
                 key={receipt.id}
                 onClick={() => handleSelectReceipt(receipt.id)} // Handle selection on click
-                className={`flex flex-col items-center justify-center p-4 border rounded-lg shadow-md cursor-pointer transition-transform transform hover:scale-105 
-                  ${selectedReceiptId === receipt.id ? 'border-blue-500' : 'border-gray-300'}`} // Change border color if selected
+                className={`flex items-center justify-between p-4 border rounded-lg shadow-md cursor-pointer transition-transform transform hover:scale-[101%] 
+                  ${selectedReceiptId === receipt.id ? 'border-green-700' : 'border-gray-300'}`} // Change border color if selected
               >
-                <h4 className="font-semibold text-gray-800">{receipt.name}</h4>
-                <p className="text-gray-600 text-sm">{receipt.date}</p>
-                <p className="text-gray-700 font-semibold">{receipt.amount}</p>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-gray-800">{`Receipt ID: ${receipt.id}`}</h4>
+                  <p className="text-gray-600 text-sm">{new Date(receipt.date).toLocaleDateString()}</p>
+                </div>
+                <div className="flex-1 text-right capitalize">
+                  <p className={`${getStatusColor(receipt.status)} font-semibold`}>{receipt.status}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Footer with Check Receipt Button */}
+        {/* Footer */}
         <div className="flex justify-end mt-4">
           <button
             onClick={handleClose}
@@ -65,12 +86,17 @@ const ViewDrModal = ({ onClose }) => {
           >
             Close
           </button>
-          <button
-            onClick={() => alert(`Checking receipt ${selectedReceiptId}`)}
-            className="bg-green-400 hover:bg-green-500 text-white px-5 py-2 rounded-md transition-all text-sm"
-          >
-            Check Receipt
-          </button>
+          <div className={`${!selectedReceiptId ? "pointer-events-none" : ""}`}>
+            <Link to="/purchase/delivery-receipt" state={{ item, receipt: filteredReceipts.find((receipt) => receipt.id === selectedReceiptId) }}>
+              <button
+                type='button'
+                className={`disabled:pointer-events-none disabled:bg-gray-300 bg-green-400 hover:bg-green-500 text-white px-5 py-2 rounded-md transition-all text-sm`}
+                disabled={selectedReceiptId === null}
+              >
+                Check Receipt
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

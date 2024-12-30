@@ -129,7 +129,75 @@ const createPurchaseRequest = async (req, res) => {
   }
 };
 
+const receivePurchase = async (req, res) => {
+  const { rf_id, user_id, status, po_id } = req.body; // Include `po_id` from request data
+
+  try {
+    // Start a transaction
+    await client.query('BEGIN');
+
+    // Update the request_form table
+    const updateRequestQuery = `
+      UPDATE request_form
+      SET status = $1, updated_by = $2, updated_at = CURRENT_TIMESTAMP
+      WHERE rf_id = $3
+    `;
+    const updateRequestValues = [status, user_id, rf_id];
+    await client.query(updateRequestQuery, updateRequestValues);
+
+    // Insert into the delivery_receipt table
+    const insertDeliveryReceiptQuery = `
+      INSERT INTO delivery_receipt (status, date, po_id, received_by)
+      VALUES ($1, CURRENT_TIMESTAMP, $2, $3)
+      RETURNING dr_id
+    `;
+    const insertDeliveryReceiptValues = ['unchecked', po_id, user_id];
+    const deliveryReceiptResult = await client.query(insertDeliveryReceiptQuery, insertDeliveryReceiptValues);
+
+    // Commit the transaction
+    await client.query('COMMIT');
+
+    res.status(200).json({
+      message: 'Request updated and delivery receipt created successfully',
+      deliveryReceiptId: deliveryReceiptResult.rows[0].dr_id,
+    });
+  } catch (error) {
+    // Rollback the transaction on error
+    await client.query('ROLLBACK');
+    console.error('Error processing request:', error);
+    res.status(500).json({ message: 'Error processing request' });
+  }
+};
+
+const getDeliveryReceipts = async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        dr_id AS id,
+        status,
+        date,
+        po_id,
+        received_by
+      FROM delivery_receipt
+      ORDER BY date DESC
+    `;
+
+    const result = await client.query(query);
+
+    res.status(200).json({
+      message: 'Delivery receipts fetched successfully',
+      receipts: result.rows,
+    });
+  } catch (error) {
+    console.error('Error fetching delivery receipts:', error);
+    res.status(500).json({ message: 'Error fetching delivery receipts' });
+  }
+};
+
+
 module.exports = {
   getPurchaseRequest,
   createPurchaseRequest,
+  receivePurchase,
+  getDeliveryReceipts
 };

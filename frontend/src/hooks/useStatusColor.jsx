@@ -15,6 +15,8 @@ const useStatusColor = () => {
         return "text-green-500";
       case "received":
         return "text-blue-500";
+      case "unchecked":
+        return "text-red-400";
       default:
         return "";
     }

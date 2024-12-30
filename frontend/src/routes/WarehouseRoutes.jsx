@@ -20,6 +20,7 @@ import ViewSupplier from "../pages/Shared/SuppliersViewSupplier";
 import ViewAccount from "../pages/Admin/AccountsViewAccount";
 import ProductOrderForm from "../pages/Warehouse/RequestPurchaseRequest";
 import PurchaseViewMore from "../pages/Warehouse/PurchaseViewMore";
+import DeliveryReceiptCheck from "../pages/Warehouse/DeliveryReceiptCheck";
 
 const WarehouseRoutes = () => {
   return (
@@ -48,6 +49,11 @@ const WarehouseRoutes = () => {
         <Route
           path="/purchase/view-more"
           element={<PurchaseViewMore />}
+        />
+
+        <Route
+          path="/purchase/delivery-receipt"
+          element={<DeliveryReceiptCheck />}
         />
 
         <Route
