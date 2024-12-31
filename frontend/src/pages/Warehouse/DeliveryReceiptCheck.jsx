@@ -81,14 +81,13 @@ const DeliveryReceiptCheck = () => {
 
   const submitDeliveryReceiptCheck = async () => {
     try {
-      const requestData = {
+      const approveData = {
         rf_id: requestFormData.rf_id,
         po_id: requestFormData.po_id,
-        user_id: userID,
-        status: "received"
+        quantities: quantities,
       };
 
-      const response = await axios.post('http://localhost:4000/api/purchase/create/receive', requestData);
+      const response = await axios.post('http://localhost:4000/api/purchase/approve', approveData);
       console.log('Purchase received:', response.data);
 
       setRefreshKey(prevKey => prevKey + 1);
@@ -101,8 +100,8 @@ const DeliveryReceiptCheck = () => {
     }
   };
 
-  const handleReceiveClick = () => {
-    receivePurchaseFunc();
+  const handleReceiptClick = () => {
+    submitDeliveryReceiptCheck();
   };
 
   const sortedData = mappedData.sort((a, b) => {
@@ -266,7 +265,7 @@ const DeliveryReceiptCheck = () => {
         <div className="flex gap-7">
           {canSubmitProductChecking && (
             <button
-              // onClick={() => handleApproveClick()}
+              onClick={() => handleReceiptClick()}
               className="bg-[#7fd6b2] text-white disabled:bg-gray-300 disabled:pointer-events-none font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
               disabled={
                 !products.every((product) => quantities[product.id])

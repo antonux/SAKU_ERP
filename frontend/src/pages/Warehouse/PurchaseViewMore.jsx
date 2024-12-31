@@ -327,11 +327,7 @@ const PurchaseViewMore = () => {
                   <td className="px-6 py-5">₱{product.amount.toLocaleString()}</td>
                   <td className="px-6 py-5">₱{product.total.toLocaleString()}</td>
                   <td className={`${showStatus ? "hidden" : ""} px-6 py-5 font-semibold 
-                    ${product.status === "available" ? "text-green-500"
-                      : product.status === "unavailable" ? "text-red-500"
-                        : product.status === "to be received" ? "text-blue-600"
-                          : product.status === "delivered" ? "text-blue-600" : ""
-                    }`}>
+                    ${getStatusColor(product.status)}`}>
                     {product.status}
                   </td>
                 </tr>

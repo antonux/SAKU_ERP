@@ -195,9 +195,87 @@ const getDeliveryReceipts = async (req, res) => {
 };
 
 
+const approveProduct = async (req, res) => {
+  const { quantities, po_id, rf_id } = req.body; // `quantities` is an object with product_id as keys
+
+  try {
+    // Start a transaction
+    await client.query('BEGIN');
+
+    // Insert into the dr_approved_product table
+    const insertDrApprovedProductQuery = `
+      INSERT INTO dr_approved_product (created_at)
+      VALUES (CURRENT_TIMESTAMP)
+      RETURNING dr_ap_id
+    `;
+    const drApprovedProductResult = await client.query(insertDrApprovedProductQuery);
+    const dr_ap_id = drApprovedProductResult.rows[0].dr_ap_id;
+
+    // Update the delivery_receipt table
+    const updateDeliveryReceiptQuery = `
+      UPDATE delivery_receipt
+      SET status = 'checked', updated_at = CURRENT_TIMESTAMP
+      WHERE po_id = $1
+      RETURNING dr_id
+    `;
+    const deliveryReceiptResult = await client.query(updateDeliveryReceiptQuery, [po_id]);
+    const dr_id = deliveryReceiptResult.rows[0].dr_id;
+
+    // Process each product in `quantities`
+    for (const [product_id, quantity] of Object.entries(quantities)) {
+      // Insert into the approved_products table
+      const insertApprovedProductQuery = `
+        INSERT INTO approved_products (product_id, dr_ap_id, quantity, dr_id)
+        VALUES ($1, $2, $3, $4)
+      `;
+      await client.query(insertApprovedProductQuery, [product_id, dr_ap_id, quantity, dr_id]);
+
+      // Update request_details status based on approved quantities
+      const getRequestDetailsQuery = `
+        SELECT rd.rd_id, rd.quantity, COALESCE(SUM(ap.quantity), 0) AS total_approved
+        FROM request_details rd
+        LEFT JOIN approved_products ap ON rd.product_id = ap.product_id AND rd.rf_id = $1
+        WHERE rd.rf_id = $1 AND rd.product_id = $2
+        GROUP BY rd.rd_id, rd.quantity
+      `;
+      const requestDetailsResult = await client.query(getRequestDetailsQuery, [rf_id, product_id]);
+
+      const { rd_id, quantity: requestedQuantity, total_approved } = requestDetailsResult.rows[0];
+      let newStatus = "Pending";
+
+      if (total_approved >= requestedQuantity) {
+        newStatus = "Approved";
+      } 
+
+      const updateRequestDetailsQuery = `
+        UPDATE request_details
+        SET status = $1
+        WHERE rd_id = $2
+      `;
+      await client.query(updateRequestDetailsQuery, [newStatus, rd_id]);
+    }
+
+    // Commit the transaction
+    await client.query('COMMIT');
+
+    res.status(200).json({
+      message: 'Products approved and statuses updated successfully',
+      dr_ap_id, // Return the dr_ap_id for reference
+    });
+  } catch (error) {
+    // Rollback the transaction on error
+    await client.query('ROLLBACK');
+    console.error('Error processing product approval:', error);
+    res.status(500).json({ message: 'Error processing product approval' });
+  }
+};
+
+
+
 module.exports = {
   getPurchaseRequest,
   createPurchaseRequest,
   receivePurchase,
-  getDeliveryReceipts
+  getDeliveryReceipts,
+  approveProduct
 };

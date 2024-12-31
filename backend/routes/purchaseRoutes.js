@@ -8,13 +8,15 @@ const {
     getPurchaseRequest,
     receivePurchase,
     createPurchaseRequest,
-    getDeliveryReceipts
+    getDeliveryReceipts,
+    approveProduct
 } = require('../controllers/PurchaseController');
 
 router.get('/purchaseRequest', getPurchaseRequest);
 router.get('/receive', getDeliveryReceipts);
-router.post('/create/purchase', createPurchaseRequest);
 router.post('/create/receive', receivePurchase);
+router.post('/create/purchase', createPurchaseRequest);
+router.post('/approve', approveProduct);
 
 
 // router.post('/update', upload, updateUser);
