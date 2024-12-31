@@ -259,7 +259,7 @@ const PurchaseViewMore = () => {
         <ViewDrModal
           onClose={() => setShowFloating(false)}
           po_id={requestFormData.po_id}
-          item={item}
+          item={requestFormData}
         />
       )}
       <button onClick={handleGoBack} className="absolute z-50 translate-y-[3.2rem]">

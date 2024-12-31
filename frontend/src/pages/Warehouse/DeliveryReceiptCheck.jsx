@@ -30,7 +30,6 @@ const DeliveryReceiptCheck = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const { mappedData, purchaseData } = usePurchaseData(refreshKey);
   const [showFloating, setShowFloating] = useState(false)
-  const [showApproveProductModal, setShowApproveProductModal] = useState(false)
   const { getStatusColor } = useStatusColor();
   const navigate = useNavigate();
   const location = useLocation();
@@ -42,7 +41,11 @@ const DeliveryReceiptCheck = () => {
   const [receivedDelivery, setReceivedDelivery] = useState(false);
   const { item, receipt } = location.state;
   const [requestFormData, setRequestFormData] = useState(item)
-
+  // approve product
+  const [showApproveProductModal, setShowApproveProductModal] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [selectedProductQuantity, setSelectedProductQuantity] = useState(0);
+  const [quantities, setQuantities] = useState({}); // Store quantities by productId 
 
 
   useEffect(() => {
@@ -54,7 +57,7 @@ const DeliveryReceiptCheck = () => {
   const handleGoBack = () => {
     localStorage.setItem("lastPurchasePath", "/purchase/view-more");
     const lp = localStorage.getItem("lastPurchasePath")
-    navigate(lp,{ state: { item: item }});
+    navigate(lp, { state: { item: item } });
   };
 
 
@@ -75,6 +78,32 @@ const DeliveryReceiptCheck = () => {
     });
 
   const totalAmount = products.reduce((sum, product) => sum + product.total, 0);
+
+  const submitDeliveryReceiptCheck = async () => {
+    try {
+      const requestData = {
+        rf_id: requestFormData.rf_id,
+        po_id: requestFormData.po_id,
+        user_id: userID,
+        status: "received"
+      };
+
+      const response = await axios.post('http://localhost:4000/api/purchase/create/receive', requestData);
+      console.log('Purchase received:', response.data);
+
+      setRefreshKey(prevKey => prevKey + 1);
+      setTimeout(() => {
+        setReceivedDelivery(true);
+      }, 150);
+
+    } catch (error) {
+      console.error('Error receiving purchase:', error);
+    }
+  };
+
+  const handleReceiveClick = () => {
+    receivePurchaseFunc();
+  };
 
   const sortedData = mappedData.sort((a, b) => {
     const dateA = a.updatedAt || a.date; // Use updatedAt if available, otherwise date
@@ -106,6 +135,8 @@ const DeliveryReceiptCheck = () => {
     (user === "admin" || user === "manager") &&
     requestFormData.status === "pending";
 
+  const canSubmitProductChecking = (user === "warehouse");
+
   const canAcknowledgeRequest =
     (user === "store" || user === "manager") &&
     (requestFormData.status === "to be received");
@@ -122,12 +153,29 @@ const DeliveryReceiptCheck = () => {
 
   const showStatus = false
 
+  const handleOpenModal = (productId, quantity) => {
+    setSelectedProductId(productId);
+    setSelectedProductQuantity(quantity);
+    setShowApproveProductModal(true);
+  };
+
+  const handleSetNewQuantity = (productId, newQuantity) => {
+    setQuantities((prev) => ({
+      ...prev,
+      [productId]: newQuantity, // Update the specific product's quantity
+    }));
+  };
+
 
   return (
     <div className='flex flex-col gap-4 h-screen pb-5 pt-7'>
       {showApproveProductModal && (
         <ApproveProductModal
           onClose={() => setShowApproveProductModal(false)}
+          newQuantity={quantities[selectedProductId] || ""}
+          setNewQuantity={handleSetNewQuantity}
+          selectedProductQuantity={selectedProductQuantity}
+          productId={selectedProductId} // Pass the selected productId
         />
       )}
       <button onClick={handleGoBack} className="absolute z-50 translate-y-[3.2rem]">
@@ -166,8 +214,8 @@ const DeliveryReceiptCheck = () => {
             <h1 className="font-semibold capitalize">{requestFormData.supplier}</h1>
           </div>
         </div>
-        <div className="rounded-lg w-[56rem] mb-10 shrink-0 border-[1px] border-gray-100 overflow-auto scrollbar-thin">
-          <table className="text-sm w-[55rem] text-left text-gray-500">
+        <div className="rounded-lg w-[71rem] mb-10 shrink-0 border-[1px] border-gray-100 overflow-auto scrollbar-thin">
+          <table className="text-sm w-[70rem] text-left text-gray-500">
             <thead className="sticky top-0 bg-white">
               <tr className="text-xs text-gray-700 uppercase">
                 <th scope="col" className="px-6 py-3">ID</th>
@@ -177,7 +225,9 @@ const DeliveryReceiptCheck = () => {
                 <th scope="col" className="px-6 py-3">Quantity</th>
                 <th scope="col" className="px-6 py-3">Amount</th>
                 <th scope="col" className="px-6 py-3">Total Amount</th>
-                <th scope="col" className={`text-center px-6 py-3 ${showStatus ? "hidden" : ""}`}>Status</th>
+                {/* <th scope="col" className={`px-6 py-3 ${showStatus ? "hidden" : ""}`}>Status</th> */}
+                <th scope="col" className="px-6 py-3">Approved</th>
+                <th scope="col" className="text-center px-6 py-3">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -190,16 +240,20 @@ const DeliveryReceiptCheck = () => {
                   <td className="px-6 py-5">{product.quantity}</td>
                   <td className="px-6 py-5">₱{product.amount.toLocaleString()}</td>
                   <td className="px-6 py-5">₱{product.total.toLocaleString()}</td>
-                  <td className={`${showStatus ? "hidden" : ""} px-6 py-5 font-semibold`}>
+                  <td className="px-6 py-5">
+                    {quantities[product.id]} / {product.quantity}
+                  </td>
+                  <td className={`${showStatus ? "hidden" : ""} px-6 py-5 text-center font-semibold`}>
                     <button
-                      className={`px-4 py-2 rounded-md text-white transition-al bg-green-400 hover:bg-green-500/90`}
-                      onClick={() => setShowApproveProductModal(true)}
+                      className="px-4 py-2 rounded-md text-white transition-all bg-green-400 hover:bg-green-500/90"
+                      onClick={() => handleOpenModal(product.id, product.quantity)}
                     >
                       Approve
                     </button>
                   </td>
                 </tr>
               ))}
+
             </tbody>
             <tfoot>
               <tr className="bg-white">
@@ -210,12 +264,15 @@ const DeliveryReceiptCheck = () => {
           </table>
         </div>
         <div className="flex gap-7">
-          {canApproveRequest && (
+          {canSubmitProductChecking && (
             <button
-              onClick={() => handleApproveClick()}
-              className="bg-[#7fd6b2] text-white font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
+              // onClick={() => handleApproveClick()}
+              className="bg-[#7fd6b2] text-white disabled:bg-gray-300 disabled:pointer-events-none font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
+              disabled={
+                !products.every((product) => quantities[product.id])
+              }
             >
-              Approve
+              Submit
             </button>
           )}
         </div>
