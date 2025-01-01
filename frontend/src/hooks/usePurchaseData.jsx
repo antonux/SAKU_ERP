@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-const usepurchaseData = (refreshKey) => {
+const usePurchaseData = (refreshKey) => {
     const [purchaseData, setPurchaseData] = useState({
         purchase_order: [], // Purchase Order table
         request_form: [], // Request Form table
@@ -98,4 +98,4 @@ const usepurchaseData = (refreshKey) => {
     return { mappedData, error, purchaseData };
 };
 
-export default usepurchaseData;
+export default usePurchaseData;

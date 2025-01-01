@@ -1,5 +1,4 @@
 
-
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -15,20 +14,21 @@ import ApproveRequest from "../../modals/approveRequest";
 import CancelRequest from "../../modals/cancelRequest";
 import AcknowledgeRequest from "../../modals/acknowledgeRestock";
 import ReceiveDeliveryModal from "../../modals/receiveDelivery";
-
 import ViewDrModal from "../../components/Warehouse/viewDrModal";
-import ApproveProductModal from "../../modals/ApproveProduct";
+import CheckedProductPurchase from "../../modals/CheckedProductPurchase";
 
 // Hooks
 import usePurchaseData from '../../hooks/usePurchaseData';
 import useStatusColor from '../../hooks/useStatusColor';
 import useApprovedProducts from '../../hooks/useApprovedProducts';
-import useRecentReceipt from '../../hooks/useRecentReceipt';
+import useDeliveryReceipts from '../../hooks/useDeliveryReceipts';
+import useLatestReceipt from '../../hooks/useLatestReceipt';
+import useAllApprovedProducts from '../../hooks/useAllApprovedProducts';
 
 // axios
 import axios from "axios";
 
-const DeliveryReceiptCheck = () => {
+const PurchaseViewMore = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const { mappedData, purchaseData } = usePurchaseData(refreshKey);
   const [showFloating, setShowFloating] = useState(false)
@@ -40,32 +40,58 @@ const DeliveryReceiptCheck = () => {
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showAcknowledeModal, setShowAcknowledeModal] = useState(false);
+  const [showCheckedModal, setShowCheckedModal] = useState(false);
   const [receivedDelivery, setReceivedDelivery] = useState(false);
-  const { item, receipt } = location.state;
+  const { item, isSuccess: isChecked, dr_id: receipt_id } = location.state || false;
   const [requestFormData, setRequestFormData] = useState(item)
-  // approve product
-  const [showApproveProductModal, setShowApproveProductModal] = useState(false);
-  const [selectedProductId, setSelectedProductId] = useState(null);
-  const [selectedProductQuantity, setSelectedProductQuantity] = useState(0);
-  const [quantities, setQuantities] = useState({}); // Store quantities by productId 
-  //hook
-  const { approvedProducts } = useApprovedProducts(receipt.id, receipt.status);
-  const { recentReceipt, approvedProducts: recentApproved } = useRecentReceipt(requestFormData.po_id, receipt.id);
+  const [allReceipts, setAllReceipts] = useState([]); // All fetched receipts
+  const [filteredReceipts, setFilteredReceipts] = useState([]); // Receipts filtered by po_id
+  //hooks
+  const { allApproved } = useAllApprovedProducts(requestFormData.po_id);
+  console.log('all',allApproved)
+  // const { allReceipts } = useDeliveryReceipts();
+  // const receipt = useLatestReceipt(allReceipts, requestFormData.po_id);
 
-  useEffect(() => {
-    console.log('recent approve: ', recentApproved)
-  }, [recentApproved]);
+  const receipt = filteredReceipts.length > 0
+    ? filteredReceipts.reduce((latest, current) =>
+      new Date(current.updated_at) > new Date(latest.updated_at) ? current : latest
+    )
+    : "";
+
+  const { approvedProducts } = useApprovedProducts(receipt.id, receipt.status);
 
   useEffect(() => {
     if (location.pathname !== "/purchase") {
       localStorage.setItem("lastRequestPath", location.pathname);
     }
+    fetchDeliveryReceipts(); // Fetch receipts on mount
+    if (isChecked) {
+      setRefreshKey(prevKey => prevKey + 1);
+      setShowCheckedModal(true);
+    }
   }, []);
+
+ 
+
+  useEffect(() => {
+    // Filter receipts based on po_id whenever allReceipts or po_id changes
+    const filtered = allReceipts.filter((receipt) => receipt.po_id === requestFormData.po_id);
+    setFilteredReceipts(filtered);
+  }, [allReceipts]);
+
+  const fetchDeliveryReceipts = async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/purchase/receive');
+      setAllReceipts(response.data.receipts); // Populate allReceipts with API data
+    } catch (error) {
+      console.error('Error fetching delivery receipts:', error);
+    }
+  };
 
   const handleGoBack = () => {
     localStorage.setItem("lastPurchasePath", "/purchase/view-more");
     const lp = localStorage.getItem("lastPurchasePath")
-    navigate(lp, { state: { item: item } });
+    navigate(lp, { state: { item: requestFormData } }) 
   };
 
 
@@ -87,32 +113,119 @@ const DeliveryReceiptCheck = () => {
 
   const totalAmount = products.reduce((sum, product) => sum + product.total, 0);
 
-  const submitDeliveryReceiptCheck = async () => {
+  const deleteRequest = async (rf_id) => {
     try {
-      const approveData = {
+      const response = await axios.delete(`http://localhost:4000/api/request/delete/${rf_id}`);
+      console.log('Request deleted:', response.data);
+      navigate('/purchase', { state: { isSuccess: true, rf_id: requestFormData.rf_id } });
+    } catch (error) {
+      console.error('Error deleting product:', error);
+    }
+  };
+  const handleDeleteClick = (rf_id) => {
+    deleteRequest(rf_id);
+  };
+
+  const approveRequest = async () => {
+    try {
+      const requestData = {
         rf_id: requestFormData.rf_id,
-        po_id: requestFormData.po_id,
-        quantities: quantities,
+        user_id: userID,
+        status: "approved"
+      };
+
+      const response = await axios.post('http://localhost:4000/api/request/update', requestData);
+      console.log('Request approved:', response.data);
+      setRefreshKey(prevKey => prevKey + 1);
+      setTimeout(() => {
+        setShowApproveModal(true);  // Show the modal after delay
+      }, 150);
+
+    } catch (error) {
+      console.error('Error approving request:', error);
+    }
+  };
+
+  const handleApproveClick = () => {
+    approveRequest();
+  };
+
+  const cancelRequest = async () => {
+    try {
+      const requestData = {
+        rf_id: requestFormData.rf_id,
+        user_id: userID,
+        status: "cancelled"
+      };
+
+      const response = await axios.post('http://localhost:4000/api/request/update', requestData);
+      console.log('Request cancelled:', response.data);
+
+      setRefreshKey(prevKey => prevKey + 1);
+      setTimeout(() => {
+        setShowCancelModal(true);  // Show the modal after delay
+      }, 150);
+
+    } catch (error) {
+      console.error('Error cancelling request:', error);
+    }
+  };
+
+  const handleCancelClick = () => {
+    cancelRequest();
+  };
+
+  const acknowledgeRequestFunc = async () => {
+    try {
+      const requestData = {
+        rf_id: requestFormData.rf_id,
         user_id: userID,
       };
 
-      const response = await axios.post('http://localhost:4000/api/purchase/approve', approveData);
+      const response = await axios.post('http://localhost:4000/api/request/restock/acknowledge', requestData);
+      console.log('Request acknowledged:', response.data);
+
+      setRefreshKey(prevKey => prevKey + 1);
+      setTimeout(() => {
+        setShowAcknowledeModal(true);
+      }, 150);
+
+    } catch (error) {
+      console.error('Error acknowledging request:', error);
+    }
+  };
+
+  const handleAcknowledgeClick = () => {
+    acknowledgeRequestFunc();
+  };
+
+  const receivePurchaseFunc = async () => {
+    try {
+      const requestData = {
+        rf_id: requestFormData.rf_id,
+        po_id: requestFormData.po_id,
+        user_id: userID,
+        status: "received DR"
+      };
+
+      const response = await axios.post('http://localhost:4000/api/purchase/create/receive', requestData);
       console.log('Purchase received:', response.data);
 
       setRefreshKey(prevKey => prevKey + 1);
       setTimeout(() => {
-        setReceivedDelivery(true);
+        setReceivedDelivery(true); 
       }, 150);
-      navigate('/purchase/view-more', { state: { item: requestFormData, isSuccess: true, dr_id: receipt.id } });
 
     } catch (error) {
       console.error('Error receiving purchase:', error);
     }
   };
 
-  const handleReceiptClick = () => {
-    submitDeliveryReceiptCheck();
+  const handleReceiveClick = () => {
+    receivePurchaseFunc();
   };
+
+
 
   const sortedData = mappedData.sort((a, b) => {
     const dateA = a.updatedAt || a.date; // Use updatedAt if available, otherwise date
@@ -127,7 +240,7 @@ const DeliveryReceiptCheck = () => {
       setRequestFormData(itemToNavigate);
       console.log('updated rf data: ', requestFormData)
     }
-  }, [showApproveModal, showCancelModal, showAcknowledeModal, receivedDelivery])
+  }, [showApproveModal, showCancelModal, showAcknowledeModal, receivedDelivery, item, showCheckedModal])
 
   const canDeleteRequest =
     user === "warehouse" && (requestFormData.status === "pending" || requestFormData.status === "cancelled");
@@ -138,17 +251,16 @@ const DeliveryReceiptCheck = () => {
 
   const canMarkReceived =
     user === "warehouse" &&
-    requestFormData.status === "approved";
+    requestFormData.status === "approved" || requestFormData.status === "redeliver" || requestFormData.status === "partially delivered";
 
   const canApproveRequest =
     (user === "admin" || user === "manager") &&
     requestFormData.status === "pending";
 
-  const canSubmitProductChecking = (user === "warehouse" && receipt.status === "unchecked");
-
   const canAcknowledgeRequest =
     (user === "store" || user === "manager") &&
     (requestFormData.status === "to be received");
+
 
   const canViewDR =
     user === "warehouse" && (requestFormData.status !== "pending" && requestFormData.status !== "cancelled" && requestFormData.status !== "approved");
@@ -159,81 +271,88 @@ const DeliveryReceiptCheck = () => {
 
   const hasUnavailable = products.some((product) => product.status === "unavailable");
   const hasAvailable = products.some((product) => product.status === "available");
+  const hasPending = products.some((product) => product.status === "pending");
+  const hasApproved = products.some((product) => product.status === "approved");
 
-  const showAction = receipt.status === "unchecked";
+  const canViewMemo = (user === "admin" || user === "warehouse") && (hasPending || hasApproved)
 
-  const handleOpenModal = (productId, quantity) => {
-    setSelectedProductId(productId);
-    setSelectedProductQuantity(quantity);
-    setShowApproveProductModal(true);
+  const showStatus = requestFormData.status === "pending" || requestFormData.status === "approved" || requestFormData.status === "cancelled" || hasAvailable || hasUnavailable;
+  const showApproved = hasApproved || hasPending;
+
+  const getApprovedQuantity = (productId) => {
+    const approved = allApproved.find(p => p.product_id === productId);
+    return approved ? approved.quantity : 0;
   };
-
-  const handleSetNewQuantity = (productId, newQuantity) => {
-    setQuantities((prev) => ({
-      ...prev,
-      [productId]: newQuantity, // Update the specific product's quantity
-    }));
-  };
-
-  const getRemainingQuantity = (productId, productQuantity, recentApproved) => {
-    const matchedProduct = recentApproved.find(p => p.product_id === productId);
-    return matchedProduct ? productQuantity - matchedProduct.quantity : productQuantity;
-  };
-
 
   return (
     <div className='flex flex-col gap-4 h-screen pb-5 pt-7'>
-      {showApproveProductModal && (
-        <ApproveProductModal
-          onClose={() => setShowApproveProductModal(false)}
-          newQuantity={quantities[selectedProductId] || ""}
-          setNewQuantity={handleSetNewQuantity}
-          selectedProductQuantity={selectedProductQuantity}
-          productId={selectedProductId} // Pass the selected productId
+      {showApproveModal &&
+        <ApproveRequest
+          onClose={() => setShowApproveModal(false)}
+        />
+      }
+      {receivedDelivery &&
+        <ReceiveDeliveryModal
+          onClose={() => setReceivedDelivery(false)}
+        />
+      }
+      {showCancelModal &&
+        <CancelRequest
+          onClose={() => setShowCancelModal(false)}
+        />
+      }
+      {showCheckedModal &&
+        <CheckedProductPurchase
+          onClose={() => setShowCheckedModal(false)}
+          dr_id={receipt_id}
+        />
+      }
+      {showAcknowledeModal &&
+        <AcknowledgeRequest
+          onClose={() => setShowAcknowledeModal(false)}
+        />
+      }
+      {showFloating && (
+        <ViewDrModal
+          onClose={() => setShowFloating(false)}
+          po_id={requestFormData.po_id}
+          item={requestFormData}
         />
       )}
       <button onClick={handleGoBack} className="absolute z-50 translate-y-[3.2rem]">
         <GoBackButton />
       </button>
       <div className="flex flex-col pt-5 px-7 pb-10 gap-10 mt-[6rem] w-full h-full shadow-md overflow-auto rounded-lg bg-white text-black scrollbar-thin">
-        <h1 className="text-xl font-semibold text-[#272525]">Delivery Receipt {`#${receipt.id}`}</h1>
+        <h1 className="text-xl font-semibold text-[#272525]">Receiving Memorandum</h1>
         <div className="flex gap-5 whitespace-nowrap">
           <div className="flex gap-1">
             <h1>Purchase Order No.:</h1>
             <h1 className="font-semibold capitalize">{requestFormData.po_id}</h1>
           </div>
           <div className="flex gap-1">
-            <h1>Requested By:</h1>
-            <h1 className="font-semibold capitalize">{requestFormData.requestedBy}</h1>
-          </div>
-          <div className="flex gap-1">
             <h1>Date Created:</h1>
             <h1 className="font-semibold">{requestFormData.createdAt.toLocaleDateString()}</h1>
           </div>
-          <div className={`${receipt.status === "unchecked" ? "hidden" : "flex"} gap-1`}>
-            <h1>Updated By:</h1>
-            <h1 className="font-semibold capitalize">{requestFormData.updatedBy || "—"}</h1>
-          </div>
           <div className="flex gap-1">
             <h1>Status:</h1>
-            <h1 className={`capitalize font-semibold ${getStatusColor(receipt.status)}`
+            <h1 className={`capitalize font-semibold ${getStatusColor(requestFormData.status)}`
             }>
-              {receipt.status}
+              {requestFormData.status}
             </h1>
           </div>
+          {/* <div className="flex gap-1">
+            <h1>Date Approved:</h1>
+            <h1 className="font-semibold">{requestFormData.updatedAt}</h1>
+          </div> */}
         </div>
-        <div className="translate-y-[-1rem] flex flex-col gap-2">
-          <div className={`${receipt.status === "checked" ? "flex" : "hidden"} gap-1`}>
-            <h1>Date Checked:</h1>
-            <h1 className="font-semibold">{new Date(receipt.updated_at).toLocaleDateString()}</h1>
-          </div>
+        <div>
           <div className="flex gap-1">
             <h1>Supplier:</h1>
             <h1 className="font-semibold capitalize">{requestFormData.supplier}</h1>
           </div>
         </div>
-        <div className="rounded-lg w-[71rem] mb-10 shrink-0 border-[1px] border-gray-100 overflow-auto scrollbar-thin">
-          <table className="text-sm w-[70rem] text-left text-gray-500">
+        <div className="rounded-lg w-[65rem] mb-10 shrink-0 border-[1px] border-gray-100 overflow-auto scrollbar-thin">
+          <table className="text-sm w-[64rem] text-left text-gray-500">
             <thead className="sticky top-0 bg-white">
               <tr className="text-xs text-gray-700 uppercase">
                 <th scope="col" className="px-6 py-3">ID</th>
@@ -243,9 +362,7 @@ const DeliveryReceiptCheck = () => {
                 <th scope="col" className="px-6 py-3">Quantity</th>
                 <th scope="col" className="px-6 py-3">Amount</th>
                 <th scope="col" className="px-6 py-3">Total Amount</th>
-                {/* <th scope="col" className={`px-6 py-3 ${showStatus ? "hidden" : ""}`}>Status</th> */}
-                <th scope="col" className="px-6 py-3">Approved</th>
-                <th scope="col" className={`${showAction ? "" : "hidden"} text-center px-6 py-3`}>Action</th>
+                <th scope="col" className={`${showApproved ? "" : "hidden"} px-6 py-3`}>Approved</th>
               </tr>
             </thead>
             <tbody>
@@ -255,23 +372,14 @@ const DeliveryReceiptCheck = () => {
                   <td className="px-6 py-5">{product.product}</td>
                   <td className="px-6 py-5">{product.size}</td>
                   <td className="px-6 py-5">{product.category}</td>
-                  <td className="px-6 py-5">{getRemainingQuantity(product.id, product.quantity, recentApproved)}</td>
+                  <td className="px-6 py-5">{product.quantity}</td>
                   <td className="px-6 py-5">₱{product.amount.toLocaleString()}</td>
                   <td className="px-6 py-5">₱{product.total.toLocaleString()}</td>
-                  <td className="px-6 py-5">
-                    {receipt.status === "unchecked" ? quantities[product.id] : approvedProducts.find(p => p.product_id === product.id)?.quantity}  / {getRemainingQuantity(product.id, product.quantity, recentApproved)}
-                  </td>
-                  <td className={`${showAction ? "" : "hidden"} px-6 py-5 text-center font-semibold`}>
-                    <button
-                      className="px-4 py-2 rounded-md text-white transition-all bg-green-400 hover:bg-green-500/90"
-                      onClick={() => handleOpenModal(product.id, getRemainingQuantity(product.id, product.quantity, recentApproved))}
-                    >
-                      Approve
-                    </button>
+                  <td className={`${showApproved ? "" : "hidden"} px-6 py-5`}>
+                    {receipt.status === "unchecked" ? "": getApprovedQuantity(product.id)} / {product.quantity}
                   </td>
                 </tr>
               ))}
-
             </tbody>
             <tfoot>
               <tr className="bg-white">
@@ -282,21 +390,10 @@ const DeliveryReceiptCheck = () => {
           </table>
         </div>
         <div className="flex gap-7">
-          {canSubmitProductChecking && (
-            <button
-              onClick={() => handleReceiptClick()}
-              className="bg-[#7fd6b2] text-white disabled:bg-gray-300 disabled:pointer-events-none font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
-              disabled={
-                !products.every((product) => quantities[product.id])
-              }
-            >
-              Submit
-            </button>
-          )}
         </div>
       </div>
     </div>
   );
 };
 
-export default DeliveryReceiptCheck;
+export default PurchaseViewMore;

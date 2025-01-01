@@ -21,6 +21,7 @@ import ViewAccount from "../pages/Admin/AccountsViewAccount";
 import ProductOrderForm from "../pages/Warehouse/RequestPurchaseRequest";
 import PurchaseViewMore from "../pages/Warehouse/PurchaseViewMore";
 import DeliveryReceiptCheck from "../pages/Warehouse/DeliveryReceiptCheck";
+import ReceivingMemorandum from "../pages/Shared/ReceivingMemorandum";
 
 const WarehouseRoutes = () => {
   return (
@@ -54,6 +55,11 @@ const WarehouseRoutes = () => {
         <Route
           path="/purchase/delivery-receipt"
           element={<DeliveryReceiptCheck />}
+        />
+
+        <Route
+          path="/purchase/receiving-memorandum"
+          element={<ReceivingMemorandum />}
         />
 
         <Route

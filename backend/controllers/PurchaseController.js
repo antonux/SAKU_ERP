@@ -197,7 +197,7 @@ const getDeliveryReceipts = async (req, res) => {
 
 
 const approveProduct = async (req, res) => {
-  const { quantities, po_id, rf_id, user_id } = req.body; // `quantities` is an object with product_id as keys
+  const { quantities, po_id, rf_id, user_id } = req.body; // quantities is an object with product_id as keys
 
   try {
     // Start a transaction
@@ -214,16 +214,22 @@ const approveProduct = async (req, res) => {
 
     // Update the delivery_receipt table
     const updateDeliveryReceiptQuery = `
-      UPDATE delivery_receipt
-      SET status = 'checked', updated_at = CURRENT_TIMESTAMP
-      WHERE po_id = $1
-      RETURNING dr_id
+      WITH updated_row AS (
+        UPDATE delivery_receipt
+        SET status = 'checked', updated_at = CURRENT_TIMESTAMP
+        WHERE po_id = $1
+        RETURNING dr_id, date
+      )
+      SELECT dr_id 
+      FROM updated_row
+      ORDER BY date DESC
+      LIMIT 1
     `;
     const deliveryReceiptResult = await client.query(updateDeliveryReceiptQuery, [po_id]);
     const dr_id = deliveryReceiptResult.rows[0].dr_id;
-
+    
     let isAnyProductApproved = false;
-    // Process each product in `quantities`
+    // Process each product in quantities
     for (const [product_id, quantity] of Object.entries(quantities)) {
       // Insert into the approved_products table
       const insertApprovedProductQuery = `
@@ -232,24 +238,37 @@ const approveProduct = async (req, res) => {
       `;
       await client.query(insertApprovedProductQuery, [product_id, dr_ap_id, quantity, dr_id]);
 
-      // Update request_details status based on approved quantities
-      const getRequestDetailsQuery = `
-        SELECT rd.rd_id, rd.quantity, COALESCE(SUM(ap.quantity), 0) AS total_approved
-        FROM request_details rd
-        LEFT JOIN approved_products ap ON rd.product_id = ap.product_id AND rd.rf_id = $1
-        WHERE rd.rf_id = $1 AND rd.product_id = $2
-        GROUP BY rd.rd_id, rd.quantity
+      // Query to get total approved quantity for the product_id in the given po_id
+      const totalApprovedQuantityQuery = `
+        SELECT SUM(ap.quantity) AS total_approved_quantity
+        FROM approved_products ap
+        JOIN delivery_receipt dr ON ap.dr_id = dr.dr_id
+        WHERE ap.product_id = $1 AND dr.po_id = $2
       `;
-      const requestDetailsResult = await client.query(getRequestDetailsQuery, [rf_id, product_id]);
+      const totalApprovedQuantityResult = await client.query(totalApprovedQuantityQuery, [product_id, po_id]);
+      const totalApprovedQuantity = totalApprovedQuantityResult.rows[0].total_approved_quantity || 0;
 
-      const { rd_id, quantity: requestedQuantity, total_approved } = requestDetailsResult.rows[0];
+      // Update request_details status based on total approved quantity
+      const getRequestDetailsQuery = `
+        SELECT rd.rd_id, rd.quantity AS requested_quantity, 
+               COALESCE(ap.quantity, 0) AS approved_quantity
+        FROM request_details rd
+        LEFT JOIN approved_products ap 
+          ON rd.product_id = ap.product_id 
+          AND ap.dr_id = $1  
+        WHERE rd.rf_id = $2 
+          AND rd.product_id = $3
+      `;
+      const requestDetailsResult = await client.query(getRequestDetailsQuery, [dr_id, rf_id, product_id]);
+
+      const { rd_id, requested_quantity } = requestDetailsResult.rows[0];
       let newStatus = "pending";
 
-      if (total_approved >= requestedQuantity) {
+      // Use the total approved quantity here for comparison
+      if (totalApprovedQuantity >= requested_quantity) {
         newStatus = "approved";
         isAnyProductApproved = true;
       }
-      
 
       const updateRequestDetailsQuery = `
         UPDATE request_details
@@ -257,9 +276,10 @@ const approveProduct = async (req, res) => {
         WHERE rd_id = $2
       `;
       await client.query(updateRequestDetailsQuery, [newStatus, rd_id]);
-      console.log(`Product ID: ${product_id}, Requested Quantity: ${requestedQuantity}, Total Approved: ${total_approved}`);
-
+      console.log(`Product ID: ${product_id}, Requested Quantity: ${requested_quantity}, Total Approved: ${totalApprovedQuantity}`);
     }
+
+    // Update the status of the request form based on the products approved
     let requestFormStatus = "redeliver"; // Default status if no product is approved
     if (isAnyProductApproved) {
       requestFormStatus = "to be received"; // Update to "to be received" if at least one product is approved
@@ -286,6 +306,7 @@ const approveProduct = async (req, res) => {
     res.status(500).json({ message: 'Error processing product approval' });
   }
 };
+
 
 
 const getApprovedProducts = async (req, res) => {
@@ -325,9 +346,118 @@ const getApprovedProducts = async (req, res) => {
 };
 
 
+const getRecentCheckedDeliveryReceiptByPO = async (req, res) => {
+  const { po_id, dr_id } = req.params; // Access po_id and dr_id from the URL parameters
+
+  // Validate if po_id and dr_id are provided
+  if (!po_id || !dr_id) {
+    return res.status(400).json({ message: "Both po_id and dr_id are required" });
+  }
+
+  try {
+    // Query to get all "checked" delivery receipts for the given po_id before the specified dr_id
+    const drQuery = `
+      SELECT dr_id
+      FROM delivery_receipt
+      WHERE status = 'checked' AND po_id = $1 
+      AND date < (SELECT date FROM delivery_receipt WHERE dr_id = $2)
+    `;
+
+    const drResult = await client.query(drQuery, [po_id, dr_id]);
+
+    // If no "checked" delivery receipts are found before the specified dr_id
+    if (drResult.rows.length === 0) {
+      return res.status(200).json({
+        message: `No previous checked delivery receipts found for po_id ${po_id} before dr_id ${dr_id}.`,
+        approved_products: [],
+      });
+    }
+
+    const drIds = drResult.rows.map((row) => row.dr_id); // Get all dr_id values
+
+    // Query to get total quantities for each product across all the previous checked delivery receipts
+    const totalQuantitiesQuery = `
+      SELECT ap.product_id, p.name AS product_name, SUM(ap.quantity) AS quantity
+      FROM approved_products ap
+      JOIN product p ON ap.product_id = p.prod_id
+      WHERE ap.dr_id = ANY($1::int[])
+      GROUP BY ap.product_id, p.name
+      ORDER BY p.name;
+    `;
+
+    const totalQuantitiesResult = await client.query(totalQuantitiesQuery, [drIds]);
+
+    // Response
+    res.status(200).json({
+      message: 'Previous checked delivery receipts and total quantities fetched successfully',
+      approved_products: totalQuantitiesResult.rows, // Includes product_id, product_name, and total_quantity
+    });
+  } catch (error) {
+    console.error('Error fetching previous checked delivery receipts and total quantities by po_id:', error);
+    res.status(500).json({
+      message: 'Error fetching previous checked delivery receipts and total quantities by po_id',
+    });
+  }
+};
+
+const getAllCheckedDeliveryReceiptsByPO = async (req, res) => {
+  const { po_id } = req.params; // Access po_id from the URL parameter
+
+  // Validate if po_id is provided
+  if (!po_id) {
+    return res.status(400).json({ message: "po_id is required" });
+  }
+
+  try {
+    // Query to get all "checked" delivery receipts for the given po_id
+    const drQuery = `
+      SELECT dr_id
+      FROM delivery_receipt
+      WHERE status = 'checked' AND po_id = $1
+    `;
+
+    const drResult = await client.query(drQuery, [po_id]);
+
+    // If no "checked" delivery receipts are found
+    if (drResult.rows.length === 0) {
+      return res.status(200).json({
+        message: `No checked delivery receipts found for po_id ${po_id}.`,
+        approved_products: [],
+      });
+    }
+
+    const drIds = drResult.rows.map((row) => row.dr_id); // Get all dr_id values
+
+    // Query to get total quantities for each product across all the checked delivery receipts
+    const totalQuantitiesQuery = `
+      SELECT ap.product_id, p.name AS product_name, SUM(ap.quantity) AS quantity
+      FROM approved_products ap
+      JOIN product p ON ap.product_id = p.prod_id
+      WHERE ap.dr_id = ANY($1::int[])
+      GROUP BY ap.product_id, p.name
+      ORDER BY p.name;
+    `;
+
+    const totalQuantitiesResult = await client.query(totalQuantitiesQuery, [drIds]);
+
+    // Response
+    res.status(200).json({
+      message: 'All checked delivery receipts and total quantities fetched successfully',
+      approved_products: totalQuantitiesResult.rows, // Includes product_id, product_name, and total_quantity
+    });
+  } catch (error) {
+    console.error('Error fetching all checked delivery receipts and total quantities by po_id:', error);
+    res.status(500).json({
+      message: 'Error fetching all checked delivery receipts and total quantities by po_id',
+    });
+  }
+};
+
 
 
 module.exports = {
+  getAllCheckedDeliveryReceiptsByPO,
+  getRecentCheckedDeliveryReceiptByPO,
   getPurchaseRequest,
   getApprovedProducts,
   createPurchaseRequest,
