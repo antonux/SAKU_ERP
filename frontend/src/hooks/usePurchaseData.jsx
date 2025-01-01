@@ -18,7 +18,6 @@ const usepurchaseData = (refreshKey) => {
             try {
                 // Fetch data from your backend
                 const response = await axios.get("http://localhost:4000/api/purchase/purchaseRequest");
-                console.log("Fetched data:", response.data);
                 setPurchaseData(response.data);
             } catch (err) {
                 console.error("Error fetching data:", err);

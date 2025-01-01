@@ -2,26 +2,31 @@ const useStatusColor = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case "pending":
-        return "text-orange-400";
+        return "text-orange-400 font-semibold";
       case "approved":
-        return "text-green-400";
+        return "text-green-400 font-semibold";
       case "cancelled":
-        return "text-red-500";
+        return "text-red-500 font-semibold";
       case "to be received":
-        return "text-blue-500";
+        return "text-blue-500 font-semibold";
       case "partially delivered":
-        return "text-blue-500";
+        return "text-blue-500 font-semibold";
       case "completed":
-        return "text-green-500";
-      case "received":
-        return "text-blue-500";
+        return "text-green-500 font-semibold";
+      case "received DR":
+        return "text-blue-500 font-semibold";
       case "unchecked":
-        return "text-red-400";
+        return "text-red-400 font-semibold";
+      case "checked":
+        return "text-green-400 font-semibold";
+      case "redeliver":
+        return "text-red-400 font-semibold";
       default:
-        return "";
+        return "font-semibold"; 
     }
-  }
-    return {getStatusColor};
   };
+  
+  return { getStatusColor };
+};
 
-  export default useStatusColor;
+export default useStatusColor;
