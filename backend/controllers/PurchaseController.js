@@ -176,6 +176,7 @@ const getDeliveryReceipts = async (req, res) => {
         dr_id AS id,
         status,
         date,
+        updated_at,
         po_id,
         received_by
       FROM delivery_receipt
@@ -196,7 +197,7 @@ const getDeliveryReceipts = async (req, res) => {
 
 
 const approveProduct = async (req, res) => {
-  const { quantities, po_id, rf_id } = req.body; // `quantities` is an object with product_id as keys
+  const { quantities, po_id, rf_id, user_id } = req.body; // `quantities` is an object with product_id as keys
 
   try {
     // Start a transaction
@@ -221,6 +222,7 @@ const approveProduct = async (req, res) => {
     const deliveryReceiptResult = await client.query(updateDeliveryReceiptQuery, [po_id]);
     const dr_id = deliveryReceiptResult.rows[0].dr_id;
 
+    let isAnyProductApproved = false;
     // Process each product in `quantities`
     for (const [product_id, quantity] of Object.entries(quantities)) {
       // Insert into the approved_products table
@@ -241,11 +243,13 @@ const approveProduct = async (req, res) => {
       const requestDetailsResult = await client.query(getRequestDetailsQuery, [rf_id, product_id]);
 
       const { rd_id, quantity: requestedQuantity, total_approved } = requestDetailsResult.rows[0];
-      let newStatus = "Pending";
+      let newStatus = "pending";
 
       if (total_approved >= requestedQuantity) {
-        newStatus = "Approved";
-      } 
+        newStatus = "approved";
+        isAnyProductApproved = true;
+      }
+      
 
       const updateRequestDetailsQuery = `
         UPDATE request_details
@@ -253,7 +257,20 @@ const approveProduct = async (req, res) => {
         WHERE rd_id = $2
       `;
       await client.query(updateRequestDetailsQuery, [newStatus, rd_id]);
+      console.log(`Product ID: ${product_id}, Requested Quantity: ${requestedQuantity}, Total Approved: ${total_approved}`);
+
     }
+    let requestFormStatus = "redeliver"; // Default status if no product is approved
+    if (isAnyProductApproved) {
+      requestFormStatus = "to be received"; // Update to "to be received" if at least one product is approved
+    }
+
+    const updateRequestFormQuery = `
+      UPDATE request_form
+      SET status = $1, updated_by = $2, updated_at = CURRENT_TIMESTAMP
+      WHERE rf_id = $3
+    `;
+    await client.query(updateRequestFormQuery, [requestFormStatus, user_id, rf_id]);
 
     // Commit the transaction
     await client.query('COMMIT');
@@ -271,9 +288,48 @@ const approveProduct = async (req, res) => {
 };
 
 
+const getApprovedProducts = async (req, res) => {
+  const { dr_id } = req.params; // Access dr_id from the URL parameter
+
+  // Validate if dr_id is provided
+  if (!dr_id) {
+    return res.status(400).json({ message: "dr_id is required" });
+  }
+
+  try {
+    // Query to fetch approved products matching the provided dr_id
+    const query = `
+      SELECT ap.ap_id, ap.quantity, ap.product_id, ap.dr_id, ap.dr_ap_id, p.name AS product_name, p.size, p.unit_price
+      FROM approved_products ap
+      JOIN product p ON ap.product_id = p.prod_id
+      WHERE ap.dr_id = $1;
+    `;
+
+    // Execute the query
+    const result = await client.query(query, [dr_id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: 'No approved products found for this delivery receipt.',
+      });
+    }
+
+    res.status(200).json({
+      message: 'Approved products fetched successfully',
+      approved_products: result.rows,
+    });
+  } catch (error) {
+    console.error('Error fetching approved products:', error);
+    res.status(500).json({ message: 'Error fetching approved products' });
+  }
+};
+
+
+
 
 module.exports = {
   getPurchaseRequest,
+  getApprovedProducts,
   createPurchaseRequest,
   receivePurchase,
   getDeliveryReceipts,

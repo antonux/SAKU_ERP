@@ -19,6 +19,9 @@ import ViewDrModal from "../../components/Warehouse/viewDrModal";
 // Hooks
 import usePurchaseData from '../../hooks/usePurchaseData';
 import useStatusColor from '../../hooks/useStatusColor';
+import useApprovedProducts from '../../hooks/useApprovedProducts';
+import useDeliveryReceipts from '../../hooks/useDeliveryReceipts';
+import useLatestReceipt from '../../hooks/useLatestReceipt';
 
 // axios
 import axios from "axios";
@@ -38,14 +41,46 @@ const PurchaseViewMore = () => {
   const [receivedDelivery, setReceivedDelivery] = useState(false);
   const { item } = location.state;
   const [requestFormData, setRequestFormData] = useState(item)
+  //hooks
+  const [allReceipts, setAllReceipts] = useState([]); // All fetched receipts
+  const [filteredReceipts, setFilteredReceipts] = useState([]); // Receipts filtered by po_id
+  // const { allReceipts } = useDeliveryReceipts();
+  
 
+  // const receipt = useLatestReceipt(allReceipts, requestFormData.po_id);
+
+  const receipt = filteredReceipts.length > 0
+    ? filteredReceipts.reduce((latest, current) =>
+      new Date(current.updated_at) > new Date(latest.updated_at) ? current : latest
+    )
+    : "";
+
+  const { approvedProducts } = useApprovedProducts(receipt.id, receipt.status);
 
 
   useEffect(() => {
     if (location.pathname !== "/purchase") {
       localStorage.setItem("lastRequestPath", location.pathname);
     }
+    fetchDeliveryReceipts(); // Fetch receipts on mount
   }, []);
+
+ 
+
+  useEffect(() => {
+    // Filter receipts based on po_id whenever allReceipts or po_id changes
+    const filtered = allReceipts.filter((receipt) => receipt.po_id === requestFormData.po_id);
+    setFilteredReceipts(filtered);
+  }, [allReceipts]);
+
+  const fetchDeliveryReceipts = async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/purchase/receive');
+      setAllReceipts(response.data.receipts); // Populate allReceipts with API data
+    } catch (error) {
+      console.error('Error fetching delivery receipts:', error);
+    }
+  };
 
   const handleGoBack = () => {
     localStorage.setItem("lastPurchasePath", "/purchase");
@@ -164,7 +199,7 @@ const PurchaseViewMore = () => {
         rf_id: requestFormData.rf_id,
         po_id: requestFormData.po_id,
         user_id: userID,
-        status: "received"
+        status: "received DR"
       };
 
       const response = await axios.post('http://localhost:4000/api/purchase/create/receive', requestData);
@@ -199,7 +234,7 @@ const PurchaseViewMore = () => {
       setRequestFormData(itemToNavigate);
       console.log('updated rf data: ', requestFormData)
     }
-  }, [showApproveModal, showCancelModal, showAcknowledeModal, receivedDelivery])
+  }, [showApproveModal, showCancelModal, showAcknowledeModal, receivedDelivery, item])
 
   const canDeleteRequest =
     user === "warehouse" && (requestFormData.status === "pending" || requestFormData.status === "cancelled");
@@ -210,7 +245,7 @@ const PurchaseViewMore = () => {
 
   const canMarkReceived =
     user === "warehouse" &&
-    requestFormData.status === "approved";
+    requestFormData.status === "approved" || requestFormData.status === "redeliver" || requestFormData.status === "partially delivered";
 
   const canApproveRequest =
     (user === "admin" || user === "manager") &&
@@ -229,8 +264,11 @@ const PurchaseViewMore = () => {
 
   const hasUnavailable = products.some((product) => product.status === "unavailable");
   const hasAvailable = products.some((product) => product.status === "available");
+  const hasPending = products.some((product) => product.status === "pending");
+  const hasApproved = products.some((product) => product.status === "approved");
 
   const showStatus = requestFormData.status === "pending" || requestFormData.status === "approved" || requestFormData.status === "cancelled" || hasAvailable || hasUnavailable;
+  const showApproved = hasApproved || hasPending;
 
 
   return (
@@ -302,8 +340,8 @@ const PurchaseViewMore = () => {
             <h1 className="font-semibold capitalize">{requestFormData.supplier}</h1>
           </div>
         </div>
-        <div className="rounded-lg w-[56rem] mb-10 shrink-0 border-[1px] border-gray-100 overflow-auto scrollbar-thin">
-          <table className="text-sm w-[55rem] text-left text-gray-500">
+        <div className="rounded-lg w-[65rem] mb-10 shrink-0 border-[1px] border-gray-100 overflow-auto scrollbar-thin">
+          <table className="text-sm w-[64rem] text-left text-gray-500">
             <thead className="sticky top-0 bg-white">
               <tr className="text-xs text-gray-700 uppercase">
                 <th scope="col" className="px-6 py-3">ID</th>
@@ -313,6 +351,7 @@ const PurchaseViewMore = () => {
                 <th scope="col" className="px-6 py-3">Quantity</th>
                 <th scope="col" className="px-6 py-3">Amount</th>
                 <th scope="col" className="px-6 py-3">Total Amount</th>
+                <th scope="col" className={`${showApproved ? "" : "hidden"} px-6 py-3`}>Approved</th>
                 <th scope="col" className={`px-6 py-3 ${showStatus ? "hidden" : ""}`}>Status</th>
               </tr>
             </thead>
@@ -326,6 +365,9 @@ const PurchaseViewMore = () => {
                   <td className="px-6 py-5">{product.quantity}</td>
                   <td className="px-6 py-5">₱{product.amount.toLocaleString()}</td>
                   <td className="px-6 py-5">₱{product.total.toLocaleString()}</td>
+                  <td className={`${showApproved ? "" : "hidden"} px-6 py-5`}>
+                    {receipt.status === "unchecked" ? "": approvedProducts.find(p => p.product_id === product.id)?.quantity}  / {product.quantity}
+                  </td>
                   <td className={`${showStatus ? "hidden" : ""} px-6 py-5 font-semibold 
                     ${getStatusColor(product.status)}`}>
                     {product.status}

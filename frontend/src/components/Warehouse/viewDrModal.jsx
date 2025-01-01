@@ -93,7 +93,7 @@ const ViewDrModal = ({ onClose, po_id, item }) => {
                 className={`disabled:pointer-events-none disabled:bg-gray-300 bg-green-400 hover:bg-green-500 text-white px-5 py-2 rounded-md transition-all text-sm`}
                 disabled={selectedReceiptId === null}
               >
-                Check Receipt
+                View Receipt
               </button>
             </Link>
           </div>

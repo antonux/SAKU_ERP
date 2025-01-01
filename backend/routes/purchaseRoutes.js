@@ -6,6 +6,7 @@ const upload = require('../middleware/multerConfig');
 
 const {
     getPurchaseRequest,
+    getApprovedProducts,
     receivePurchase,
     createPurchaseRequest,
     getDeliveryReceipts,
@@ -14,6 +15,7 @@ const {
 
 router.get('/purchaseRequest', getPurchaseRequest);
 router.get('/receive', getDeliveryReceipts);
+router.get('/approve/:dr_id', getApprovedProducts);
 router.post('/create/receive', receivePurchase);
 router.post('/create/purchase', createPurchaseRequest);
 router.post('/approve', approveProduct);

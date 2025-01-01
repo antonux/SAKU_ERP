@@ -22,6 +22,7 @@ import ApproveProductModal from "../../modals/ApproveProduct";
 // Hooks
 import usePurchaseData from '../../hooks/usePurchaseData';
 import useStatusColor from '../../hooks/useStatusColor';
+import useApprovedProducts from '../../hooks/useApprovedProducts';
 
 // axios
 import axios from "axios";
@@ -46,7 +47,8 @@ const DeliveryReceiptCheck = () => {
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [selectedProductQuantity, setSelectedProductQuantity] = useState(0);
   const [quantities, setQuantities] = useState({}); // Store quantities by productId 
-
+  //hook
+  const { approvedProducts } = useApprovedProducts(receipt.id, receipt.status);
 
   useEffect(() => {
     if (location.pathname !== "/purchase") {
@@ -85,6 +87,7 @@ const DeliveryReceiptCheck = () => {
         rf_id: requestFormData.rf_id,
         po_id: requestFormData.po_id,
         quantities: quantities,
+        user_id: userID,
       };
 
       const response = await axios.post('http://localhost:4000/api/purchase/approve', approveData);
@@ -134,7 +137,7 @@ const DeliveryReceiptCheck = () => {
     (user === "admin" || user === "manager") &&
     requestFormData.status === "pending";
 
-  const canSubmitProductChecking = (user === "warehouse");
+  const canSubmitProductChecking = (user === "warehouse" && receipt.status === "unchecked");
 
   const canAcknowledgeRequest =
     (user === "store" || user === "manager") &&
@@ -150,7 +153,7 @@ const DeliveryReceiptCheck = () => {
   const hasUnavailable = products.some((product) => product.status === "unavailable");
   const hasAvailable = products.some((product) => product.status === "available");
 
-  const showStatus = false
+  const showAction = receipt.status === "unchecked";
 
   const handleOpenModal = (productId, quantity) => {
     setSelectedProductId(productId);
@@ -207,7 +210,11 @@ const DeliveryReceiptCheck = () => {
             </h1>
           </div>
         </div>
-        <div>
+        <div className="translate-y-[-1rem] flex flex-col gap-2">
+          <div className={`${receipt.status === "checked" ? "flex" : "hidden"} gap-1`}>
+            <h1>Date Checked:</h1>
+            <h1 className="font-semibold">{new Date(receipt.updated_at).toLocaleDateString()}</h1>
+          </div>
           <div className="flex gap-1">
             <h1>Supplier:</h1>
             <h1 className="font-semibold capitalize">{requestFormData.supplier}</h1>
@@ -226,7 +233,7 @@ const DeliveryReceiptCheck = () => {
                 <th scope="col" className="px-6 py-3">Total Amount</th>
                 {/* <th scope="col" className={`px-6 py-3 ${showStatus ? "hidden" : ""}`}>Status</th> */}
                 <th scope="col" className="px-6 py-3">Approved</th>
-                <th scope="col" className="text-center px-6 py-3">Action</th>
+                <th scope="col" className={`${showAction ? "" : "hidden"} text-center px-6 py-3`}>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -240,9 +247,9 @@ const DeliveryReceiptCheck = () => {
                   <td className="px-6 py-5">₱{product.amount.toLocaleString()}</td>
                   <td className="px-6 py-5">₱{product.total.toLocaleString()}</td>
                   <td className="px-6 py-5">
-                    {quantities[product.id]} / {product.quantity}
+                    {receipt.status === "unchecked" ? quantities[product.id] : approvedProducts.find(p => p.product_id === product.id)?.quantity}  / {product.quantity}
                   </td>
-                  <td className={`${showStatus ? "hidden" : ""} px-6 py-5 text-center font-semibold`}>
+                  <td className={`${showAction ? "" : "hidden"} px-6 py-5 text-center font-semibold`}>
                     <button
                       className="px-4 py-2 rounded-md text-white transition-all bg-green-400 hover:bg-green-500/90"
                       onClick={() => handleOpenModal(product.id, product.quantity)}
