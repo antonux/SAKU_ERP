@@ -15,6 +15,7 @@ import DeliverRequest from "../../modals/deliverRequest";
 
 // Hooks
 import useRestockData from '../../hooks/useRestockData';
+import useStatusColor from '../../hooks/useStatusColor';
 
 // axios
 import axios from "axios";
@@ -22,6 +23,7 @@ import axios from "axios";
 const AddStock = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const { mappedData, error, restockData } = useRestockData(refreshKey);
+  const { getStatusColor } = useStatusColor();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, userID } = useRole();
@@ -75,12 +77,21 @@ const AddStock = () => {
     const expectedStock = currentWarehouseStock - detail.quantity;
 
     let stockStatus = "unknown";
-    if (expectedStock > reorderLevel + 5) {
+    if (expectedStock > reorderLevel) {
       stockStatus = "in stock";
-    } else if (expectedStock <= reorderLevel + 5 && expectedStock > 0) {
+    } else if (expectedStock <= reorderLevel && expectedStock > 0) {
       stockStatus = "low stock";
     } else if (expectedStock <= 0) {
       stockStatus = "out of stock";
+    }
+
+    let completeStockStatus = "unknown";
+    if (currentWarehouseStock > reorderLevel) {
+      completeStockStatus = "in stock";
+    } else if (currentWarehouseStock <= reorderLevel) {
+      completeStockStatus = "low stock";
+    } else if (currentWarehouseStock <= 0) {
+      completeStockStatus = "out of stock";
     }
 
     return {
@@ -93,6 +104,7 @@ const AddStock = () => {
       total: product && detail.quantity ? product.unit_price * detail.quantity : 0,
       currentWarehouseStock,
       expectedStock,
+      completeStockStatus,
       stockStatus,
       status: detail.status || "Unknown",
     };
@@ -306,7 +318,7 @@ const AddStock = () => {
                 <th scope="col" className="px-6 py-3">Amount</th>
                 <th scope="col" className="px-6 py-3">Total Amount</th>
                 <th scope="col" className="px-6 py-3">Current Stock</th>
-                <th scope="col" className="px-6 py-3">Expected Stock Status</th>
+                <th scope="col" className="px-6 py-3">{requestFormData.status === "completed" ? "Stock Status" : "Expected Stock Status"}</th>
               </tr>
             </thead>
             <tbody>
@@ -328,10 +340,8 @@ const AddStock = () => {
                   <td className="px-6 py-5">₱{product.amount.toLocaleString()}</td>
                   <td className="px-6 py-5">₱{product.total.toLocaleString()}</td>
                   <td className="px-6 py-5">{product.currentWarehouseStock}</td>
-                  <td className={`px-6 py-5 font-semibold ${product.stockStatus === "in stock" ? "text-green-500" :
-                    product.stockStatus === "low stock" ? "text-orange-500" :
-                      "text-red-500"}`}>
-                    {product.stockStatus}
+                  <td className={`px-6 py-5 font-semibold ${requestFormData.status !== "completed" && (product.status === "devliered" || product.status === "to be received") ? "hidden" : ""} ${requestFormData.status === "completed" ? getStatusColor(product.completeStockStatus) : getStatusColor(product.stockStatus)}`}>
+                    {requestFormData.status === "completed" ? product.completeStockStatus : product.stockStatus}
                   </td>
                 </tr>
               ))}

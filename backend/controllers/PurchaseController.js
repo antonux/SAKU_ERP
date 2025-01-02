@@ -196,12 +196,132 @@ const getDeliveryReceipts = async (req, res) => {
 };
 
 
+// const approveProduct = async (req, res) => {
+//   const { quantities, po_id, rf_id, user_id } = req.body; // quantities is an object with product_id as keys
+
+//   try {
+//     // Start a transaction
+//     await client.query('BEGIN');
+
+//     // Insert into the dr_approved_product table
+//     const insertDrApprovedProductQuery = `
+//       INSERT INTO dr_approved_product (created_at)
+//       VALUES (CURRENT_TIMESTAMP)
+//       RETURNING dr_ap_id
+//     `;
+//     const drApprovedProductResult = await client.query(insertDrApprovedProductQuery);
+//     const dr_ap_id = drApprovedProductResult.rows[0].dr_ap_id;
+
+//     // Update the delivery_receipt table
+//     const updateDeliveryReceiptQuery = `
+//       WITH updated_row AS (
+//         UPDATE delivery_receipt
+//         SET status = 'checked', updated_at = CURRENT_TIMESTAMP
+//         WHERE po_id = $1
+//         RETURNING dr_id, date
+//       )
+//       SELECT dr_id 
+//       FROM updated_row
+//       ORDER BY date DESC
+//       LIMIT 1
+//     `;
+//     const deliveryReceiptResult = await client.query(updateDeliveryReceiptQuery, [po_id]);
+//     const dr_id = deliveryReceiptResult.rows[0].dr_id;
+
+//     let isAnyProductApproved = false;
+//     let isAnyProductPartial = false;
+//     // Process each product in quantities
+//     for (const [product_id, quantity] of Object.entries(quantities)) {
+//       // Insert into the approved_products table
+//       const insertApprovedProductQuery = `
+//         INSERT INTO approved_products (product_id, dr_ap_id, quantity, dr_id)
+//         VALUES ($1, $2, $3, $4)
+//       `;
+//       await client.query(insertApprovedProductQuery, [product_id, dr_ap_id, quantity, dr_id]);
+
+//       // Query to get total approved quantity for the product_id in the given po_id
+//       const totalApprovedQuantityQuery = `
+//         SELECT SUM(ap.quantity) AS total_approved_quantity
+//         FROM approved_products ap
+//         JOIN delivery_receipt dr ON ap.dr_id = dr.dr_id
+//         WHERE ap.product_id = $1 AND dr.po_id = $2
+//       `;
+//       const totalApprovedQuantityResult = await client.query(totalApprovedQuantityQuery, [product_id, po_id]);
+//       const totalApprovedQuantity = totalApprovedQuantityResult.rows[0].total_approved_quantity || 0;
+
+//       // Update request_details status based on total approved quantity
+//       const getRequestDetailsQuery = `
+//         SELECT rd.rd_id, rd.quantity AS requested_quantity, 
+//                COALESCE(ap.quantity, 0) AS approved_quantity
+//         FROM request_details rd
+//         LEFT JOIN approved_products ap 
+//           ON rd.product_id = ap.product_id 
+//           AND ap.dr_id = $1  
+//         WHERE rd.rf_id = $2 
+//           AND rd.product_id = $3
+//       `;
+//       const requestDetailsResult = await client.query(getRequestDetailsQuery, [dr_id, rf_id, product_id]);
+
+//       const { rd_id, requested_quantity } = requestDetailsResult.rows[0];
+
+//       let newStatus = "partial";
+//       // Use the total approved quantity here for comparison
+//       if (totalApprovedQuantity >= requested_quantity) {
+//         newStatus = "complete";
+//         isAnyProductApproved = true;
+//       } else if (totalApprovedQuantity === 0) {
+//         newStatus = "redeliver";
+//       } else {
+//         isAnyProductPartial = true;
+//       }
+
+//       const updateRequestDetailsQuery = `
+//         UPDATE request_details
+//         SET status = $1
+//         WHERE rd_id = $2
+//       `;
+//       await client.query(updateRequestDetailsQuery, [newStatus, rd_id]);
+//       console.log(`Product ID: ${product_id}, Requested Quantity: ${requested_quantity}, Total Approved: ${totalApprovedQuantity}`);
+//     }
+
+//     // Update the status of the request form based on the products approved
+//     let requestFormStatus = "redeliver"; // Default status if no product is approved
+//     if (isAnyProductApproved) {
+//       requestFormStatus = "partially received"; // Update to "to be received" if at least one product is approved
+//     } else if (!isAnyProductPartial) {
+//       requestFormStatus = "completed";
+//     }
+
+//     const updateRequestFormQuery = `
+//       UPDATE request_form
+//       SET status = $1, updated_by = $2, updated_at = CURRENT_TIMESTAMP
+//       WHERE rf_id = $3
+//     `;
+//     await client.query(updateRequestFormQuery, [requestFormStatus, user_id, rf_id]);
+
+//     // Commit the transaction
+//     await client.query('COMMIT');
+
+//     res.status(200).json({
+//       message: 'Products approved and statuses updated successfully',
+//       dr_ap_id, // Return the dr_ap_id for reference
+//     });
+//   } catch (error) {
+//     // Rollback the transaction on error
+//     await client.query('ROLLBACK');
+//     console.error('Error processing product approval:', error);
+//     res.status(500).json({ message: 'Error processing product approval' });
+//   }
+// };
+
+
+
 const approveProduct = async (req, res) => {
-  const { quantities, po_id, rf_id, user_id } = req.body; // quantities is an object with product_id as keys
+  const { quantities, po_id, rf_id, user_id } = req.body;
 
   try {
     // Start a transaction
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
     // Insert into the dr_approved_product table
     const insertDrApprovedProductQuery = `
@@ -227,18 +347,18 @@ const approveProduct = async (req, res) => {
     `;
     const deliveryReceiptResult = await client.query(updateDeliveryReceiptQuery, [po_id]);
     const dr_id = deliveryReceiptResult.rows[0].dr_id;
-    
+
     let isAnyProductApproved = false;
-    // Process each product in quantities
+    let isAnyProductPartial = false;
+    let totalApprovedQuantity = 0;
+
     for (const [product_id, quantity] of Object.entries(quantities)) {
-      // Insert into the approved_products table
       const insertApprovedProductQuery = `
         INSERT INTO approved_products (product_id, dr_ap_id, quantity, dr_id)
         VALUES ($1, $2, $3, $4)
       `;
       await client.query(insertApprovedProductQuery, [product_id, dr_ap_id, quantity, dr_id]);
 
-      // Query to get total approved quantity for the product_id in the given po_id
       const totalApprovedQuantityQuery = `
         SELECT SUM(ap.quantity) AS total_approved_quantity
         FROM approved_products ap
@@ -246,28 +366,26 @@ const approveProduct = async (req, res) => {
         WHERE ap.product_id = $1 AND dr.po_id = $2
       `;
       const totalApprovedQuantityResult = await client.query(totalApprovedQuantityQuery, [product_id, po_id]);
-      const totalApprovedQuantity = totalApprovedQuantityResult.rows[0].total_approved_quantity || 0;
+      const productApprovedQuantity = totalApprovedQuantityResult.rows[0].total_approved_quantity || 0;
 
-      // Update request_details status based on total approved quantity
+      totalApprovedQuantity += productApprovedQuantity;
+
       const getRequestDetailsQuery = `
-        SELECT rd.rd_id, rd.quantity AS requested_quantity, 
-               COALESCE(ap.quantity, 0) AS approved_quantity
+        SELECT rd.rd_id, rd.quantity AS requested_quantity
         FROM request_details rd
-        LEFT JOIN approved_products ap 
-          ON rd.product_id = ap.product_id 
-          AND ap.dr_id = $1  
-        WHERE rd.rf_id = $2 
-          AND rd.product_id = $3
+        WHERE rd.rf_id = $1 AND rd.product_id = $2
       `;
-      const requestDetailsResult = await client.query(getRequestDetailsQuery, [dr_id, rf_id, product_id]);
-
+      const requestDetailsResult = await client.query(getRequestDetailsQuery, [rf_id, product_id]);
       const { rd_id, requested_quantity } = requestDetailsResult.rows[0];
-      let newStatus = "pending";
 
-      // Use the total approved quantity here for comparison
+      let newStatus = "partial";
       if (totalApprovedQuantity >= requested_quantity) {
-        newStatus = "approved";
+        newStatus = "complete";
         isAnyProductApproved = true;
+      } else if (totalApprovedQuantity === 0) {
+        newStatus = "redeliver";
+      } else {
+        isAnyProductPartial = true;
       }
 
       const updateRequestDetailsQuery = `
@@ -276,13 +394,100 @@ const approveProduct = async (req, res) => {
         WHERE rd_id = $2
       `;
       await client.query(updateRequestDetailsQuery, [newStatus, rd_id]);
-      console.log(`Product ID: ${product_id}, Requested Quantity: ${requested_quantity}, Total Approved: ${totalApprovedQuantity}`);
+
+      const { rows: warehouseInventory } = await client.query(
+        `
+      SELECT quantity
+      FROM inventory
+      WHERE product_id = $1 AND location = 'warehouse'
+      `,
+        [product_id]
+      );
+
+      let warehouseQuantity = parseInt(warehouseInventory[0]?.quantity, 10) || 0;
+      const approvedQuantity = parseInt(quantity, 10);
+      const updatedWarehouseQuantity = warehouseQuantity + approvedQuantity;
+
+      await client.query(
+            `
+      UPDATE inventory
+      SET quantity = $1
+      WHERE product_id = $2 AND location = 'warehouse'
+      `,
+        [updatedWarehouseQuantity, product_id]
+      );
+      // Check and update "available/unavailable" statuses
+      const reevaluateRequestDetailsQuery = `
+        SELECT rd_id, quantity, status
+        FROM request_details
+        WHERE product_id = $1 AND (status = 'available' OR status = 'unavailable')
+      `;
+      const { rows: detailsToUpdate } = await client.query(reevaluateRequestDetailsQuery, [product_id]);
+
+      for (const detail of detailsToUpdate) {
+        const { rd_id, quantity: requestedQuantity, status: currentStatus } = detail;
+
+        // Determine new status based on updated warehouse inventory
+        let newStatus = currentStatus;
+        if (updatedWarehouseQuantity >= requestedQuantity) {
+          newStatus = "available";
+        } else {
+          newStatus = "unavailable";
+        }
+
+        // Update the status if it has changed
+        if (newStatus !== currentStatus) {
+          await client.query(
+            `
+            UPDATE request_details
+            SET status = $1
+            WHERE rd_id = $2
+            `,
+            [newStatus, rd_id]
+          );
+        }
+      }
     }
 
-    // Update the status of the request form based on the products approved
-    let requestFormStatus = "redeliver"; // Default status if no product is approved
+    const checkExistingMemoQuery = `
+      SELECT rm_id, total 
+      FROM receiving_memo 
+      WHERE po_id = $1
+    `;
+    const existingMemoResult = await client.query(checkExistingMemoQuery, [po_id]);
+
+    let responseMessage = "";
+    let newMemoStatus = "partially received"
+    if (existingMemoResult.rows.length > 0) {
+      const existingTotal = existingMemoResult.rows[0].total;
+      const updatedTotal = existingTotal + totalApprovedQuantity;
+      if (!isAnyProductPartial) {
+        newMemoStatus = "completed"
+      }
+
+      const updateReceivingMemoQuery = `
+        UPDATE receiving_memo 
+        SET total = $1, status = $4, dr_ap_id = $2, memo_date = CURRENT_TIMESTAMP
+        WHERE po_id = $3
+      `;
+      await client.query(updateReceivingMemoQuery, [updatedTotal, dr_ap_id, po_id, newMemoStatus]);
+      responseMessage = "Receiving memo updated successfully";
+    } else {
+      const createReceivingMemoQuery = `
+        INSERT INTO receiving_memo (total, status, dr_ap_id, memo_date, po_id)
+        VALUES ($1, $4, $2, CURRENT_TIMESTAMP, $3)
+        RETURNING rm_id
+      `;
+      const receivingMemoResult = await client.query(createReceivingMemoQuery, [totalApprovedQuantity, dr_ap_id, po_id, newMemoStatus]);
+      responseMessage = "Receiving memo created successfully";
+    }
+
+    let requestFormStatus = "redeliver";
     if (isAnyProductApproved) {
-      requestFormStatus = "to be received"; // Update to "to be received" if at least one product is approved
+      requestFormStatus = "partially received";
+    }
+    if (!isAnyProductPartial) {
+      requestFormStatus = "completed";
     }
 
     const updateRequestFormQuery = `
@@ -292,20 +497,53 @@ const approveProduct = async (req, res) => {
     `;
     await client.query(updateRequestFormQuery, [requestFormStatus, user_id, rf_id]);
 
-    // Commit the transaction
-    await client.query('COMMIT');
+    await client.query("COMMIT");
 
     res.status(200).json({
-      message: 'Products approved and statuses updated successfully',
-      dr_ap_id, // Return the dr_ap_id for reference
+      message: responseMessage,
+      dr_ap_id,
+      total: totalApprovedQuantity,
     });
   } catch (error) {
-    // Rollback the transaction on error
-    await client.query('ROLLBACK');
-    console.error('Error processing product approval:', error);
-    res.status(500).json({ message: 'Error processing product approval' });
+    await client.query("ROLLBACK");
+    console.error("Error processing product approval:", error);
+    res.status(500).json({ message: "Error processing product approval" });
   }
 };
+
+const getReceivingMemo = async (req, res) => {
+  const { po_id } = req.query;
+
+  if (!po_id) {
+    return res.status(400).json({ message: "po_id is required" });
+  }
+
+  try {
+    // Query to fetch the receiving_memo details based on the po_id
+    const query = `
+      SELECT rm.rm_id, rm.total, rm.status, rm.dr_ap_id, rm.memo_date 
+      FROM receiving_memo rm
+      WHERE rm.po_id = $1
+    `;
+
+    const { rows } = await client.query(query, [po_id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "No receiving memo found for the given po_id" });
+    }
+
+    // Return the receiving memo data
+    res.status(200).json({
+      message: "Receiving memo fetched successfully",
+      data: rows,
+    });
+  } catch (error) {
+    console.error("Error fetching receiving memo:", error);
+    res.status(500).json({ message: "Error fetching receiving memo" });
+  }
+};
+
+
 
 
 
@@ -456,6 +694,7 @@ const getAllCheckedDeliveryReceiptsByPO = async (req, res) => {
 
 
 module.exports = {
+  getReceivingMemo,
   getAllCheckedDeliveryReceiptsByPO,
   getRecentCheckedDeliveryReceiptByPO,
   getPurchaseRequest,

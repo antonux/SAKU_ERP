@@ -12,10 +12,12 @@ const {
     receivePurchase,
     createPurchaseRequest,
     getDeliveryReceipts,
-    approveProduct
+    approveProduct,
+    getReceivingMemo
 } = require('../controllers/PurchaseController');
 
 router.get('/purchaseRequest', getPurchaseRequest);
+router.get('/receiving-memo', getReceivingMemo);
 router.get('/recent-receipt/:po_id/:dr_id', getRecentCheckedDeliveryReceiptByPO);
 router.get('/all-checked/:po_id', getAllCheckedDeliveryReceiptsByPO);
 router.get('/receive', getDeliveryReceipts);

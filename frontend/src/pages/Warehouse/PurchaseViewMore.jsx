@@ -251,7 +251,7 @@ const PurchaseViewMore = () => {
 
   const canMarkReceived =
     user === "warehouse" &&
-    requestFormData.status === "approved" || requestFormData.status === "redeliver" || requestFormData.status === "partially delivered";
+    requestFormData.status === "approved" || requestFormData.status === "redeliver" || requestFormData.status === "partially received";
 
   const canApproveRequest =
     (user === "admin" || user === "manager") &&
@@ -271,8 +271,8 @@ const PurchaseViewMore = () => {
 
   const hasUnavailable = products.some((product) => product.status === "unavailable");
   const hasAvailable = products.some((product) => product.status === "available");
-  const hasPending = products.some((product) => product.status === "pending");
-  const hasApproved = products.some((product) => product.status === "approved");
+  const hasPending = products.some((product) => product.status === "partial");
+  const hasApproved = products.some((product) => product.status === "complete");
 
   const canViewMemo = (user === "admin" || user === "warehouse") && (hasPending || hasApproved)
 

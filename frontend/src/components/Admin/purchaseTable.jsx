@@ -6,9 +6,11 @@ import DeleteRequestSuccessful from "../../modals/DeleteRequestSuccessful";
 
 // Hooks
 import usePurchaseData from '../../hooks/usePurchaseData';
+import useStatusColor from '../../hooks/useStatusColor';
 
 const Table = () => {
   const { mappedData, error, purchaseData, loading } = usePurchaseData();
+  const { getStatusColor } = useStatusColor();
   const navigate = useNavigate();
   const location = useLocation();
   const { isSuccess: isDeleted, rf_id } = location.state || false;
@@ -95,10 +97,7 @@ const Table = () => {
               <td className="px-6 py-5">{item.requestedBy}</td>
               <td className="px-6 py-5">{item.approvedBy || "—"}</td>
               <td className="px-6 py-5">{item.updatedAt ? item.updatedAt.toLocaleDateString() : item.createdAt.toLocaleDateString()}</td>
-              <td className={`px-6 py-5 ${item.status === "pending" ? "text-orange-400" :
-                item.status === "approved" ? "text-green-400" :
-                  item.status === "cancelled" ? "text-red-500" : ""
-                }`}>
+              <td className={`px-6 py-5 ${getStatusColor(item.status)}`}>
                 {item.status}
               </td>
               <td className="px-6 py-5">

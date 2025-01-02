@@ -14,13 +14,25 @@ const useStatusColor = () => {
       case "completed":
         return "text-green-500 font-semibold";
       case "received DR":
-        return "text-blue-500 font-semibold";
+        return "text-orange-400 font-semibold";
       case "unchecked":
         return "text-red-400 font-semibold";
       case "checked":
         return "text-green-400 font-semibold";
       case "redeliver":
-        return "text-red-400 font-semibold";
+        return "text-orange-400 font-semibold";
+      case "partial":
+        return "text-orange-400 font-semibold";
+      case "partially received":
+        return "text-blue-500 font-semibold";
+      case "complete":
+        return "text-green-500 font-semibold";
+      case "in stock":
+        return "text-green-500 font-semibold";
+      case "low stock":
+        return "text-orange-500 font-semibold";
+      case "out of stock":
+        return "text-red-500 font-semibold";
       default:
         return "font-semibold"; 
     }

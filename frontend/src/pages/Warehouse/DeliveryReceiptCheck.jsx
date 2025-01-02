@@ -68,11 +68,18 @@ const DeliveryReceiptCheck = () => {
     navigate(lp, { state: { item: item } });
   };
 
+  const getRemainingQuantity = (productId, productQuantity, recentApproved) => {
+    const matchedProduct = recentApproved.find(p => p.product_id === productId);
+    return matchedProduct ? productQuantity - matchedProduct.quantity : productQuantity;
+  };
 
   const products = purchaseData.request_details
     .filter((detail) => detail.rf_id === requestFormData.rf_id)
     .map((detail) => {
       const product = purchaseData.product.find((prod) => prod.prod_id === detail.product_id);
+      if (getRemainingQuantity(product.prod_id, detail.quantity, recentApproved) === 0) {
+        return undefined;
+      }
       return {
         id: product ? product.prod_id : "N/A",
         product: product ? product.name : "Unknown Product",
@@ -83,9 +90,12 @@ const DeliveryReceiptCheck = () => {
         total: product && detail.quantity ? product.unit_price * detail.quantity : 0,
         status: detail.status || "Unknown",
       };
-    });
+    }).filter((item) => item !== undefined);
 
-  const totalAmount = products.reduce((sum, product) => sum + product.total, 0);
+  const totalAmount = products.reduce((sum, product) => {
+    const remainingQuantity = getRemainingQuantity(product.id, product.quantity, recentApproved);
+    return sum + remainingQuantity * product.amount;
+  }, 0);
 
   const submitDeliveryReceiptCheck = async () => {
     try {
@@ -175,10 +185,6 @@ const DeliveryReceiptCheck = () => {
     }));
   };
 
-  const getRemainingQuantity = (productId, productQuantity, recentApproved) => {
-    const matchedProduct = recentApproved.find(p => p.product_id === productId);
-    return matchedProduct ? productQuantity - matchedProduct.quantity : productQuantity;
-  };
 
 
   return (
@@ -250,15 +256,15 @@ const DeliveryReceiptCheck = () => {
             </thead>
             <tbody>
               {products.map((product) => (
-                <tr key={product.id} className="bg-white border-b hover:bg-gray-50 capitalize">
+                <tr key={product.id} className={`bg-white border-b hover:bg-gray-50 capitalize`}>
                   <td className="px-6 py-5">{product.id}</td>
                   <td className="px-6 py-5">{product.product}</td>
                   <td className="px-6 py-5">{product.size}</td>
                   <td className="px-6 py-5">{product.category}</td>
                   <td className="px-6 py-5">{getRemainingQuantity(product.id, product.quantity, recentApproved)}</td>
                   <td className="px-6 py-5">₱{product.amount.toLocaleString()}</td>
-                  <td className="px-6 py-5">₱{product.total.toLocaleString()}</td>
-                  <td className="px-6 py-5">
+                  <td className="px-6 py-5">₱{(getRemainingQuantity(product.id, product.quantity, recentApproved) * product.amount).toLocaleString()}</td>
+                  <td className={`px-6 py-5 `}>
                     {receipt.status === "unchecked" ? quantities[product.id] : approvedProducts.find(p => p.product_id === product.id)?.quantity}  / {getRemainingQuantity(product.id, product.quantity, recentApproved)}
                   </td>
                   <td className={`${showAction ? "" : "hidden"} px-6 py-5 text-center font-semibold`}>

@@ -46,9 +46,9 @@ const PurchaseViewMore = () => {
   const [requestFormData, setRequestFormData] = useState(item)
   const [allReceipts, setAllReceipts] = useState([]); // All fetched receipts
   const [filteredReceipts, setFilteredReceipts] = useState([]); // Receipts filtered by po_id
+  const [receivingMemo, setReceivingMemo] = useState([]);
   //hooks
   const { allApproved } = useAllApprovedProducts(requestFormData.po_id);
-  console.log('all',allApproved)
   // const { allReceipts } = useDeliveryReceipts();
   // const receipt = useLatestReceipt(allReceipts, requestFormData.po_id);
 
@@ -113,117 +113,24 @@ const PurchaseViewMore = () => {
 
   const totalAmount = products.reduce((sum, product) => sum + product.total, 0);
 
-  const deleteRequest = async (rf_id) => {
+  useEffect(() => {
+  const fetchReceivingMemo = async () => {
     try {
-      const response = await axios.delete(`http://localhost:4000/api/request/delete/${rf_id}`);
-      console.log('Request deleted:', response.data);
-      navigate('/purchase', { state: { isSuccess: true, rf_id: requestFormData.rf_id } });
-    } catch (error) {
-      console.error('Error deleting product:', error);
-    }
-  };
-  const handleDeleteClick = (rf_id) => {
-    deleteRequest(rf_id);
-  };
+      const response = await axios.get("http://localhost:4000/api/purchase/receiving-memo", {
+        params: { po_id: requestFormData.po_id }, 
+      });
 
-  const approveRequest = async () => {
-    try {
-      const requestData = {
-        rf_id: requestFormData.rf_id,
-        user_id: userID,
-        status: "approved"
-      };
-
-      const response = await axios.post('http://localhost:4000/api/request/update', requestData);
-      console.log('Request approved:', response.data);
-      setRefreshKey(prevKey => prevKey + 1);
-      setTimeout(() => {
-        setShowApproveModal(true);  // Show the modal after delay
-      }, 150);
-
-    } catch (error) {
-      console.error('Error approving request:', error);
+      setReceivingMemo(response.data.data[0]);
+    } catch (err) {
+      console.error("Error fetching receiving memo:", err);
     }
   };
 
-  const handleApproveClick = () => {
-    approveRequest();
-  };
+  if (requestFormData.po_id) {
+    fetchReceivingMemo();
+  }
+}, [requestFormData.po_id]);
 
-  const cancelRequest = async () => {
-    try {
-      const requestData = {
-        rf_id: requestFormData.rf_id,
-        user_id: userID,
-        status: "cancelled"
-      };
-
-      const response = await axios.post('http://localhost:4000/api/request/update', requestData);
-      console.log('Request cancelled:', response.data);
-
-      setRefreshKey(prevKey => prevKey + 1);
-      setTimeout(() => {
-        setShowCancelModal(true);  // Show the modal after delay
-      }, 150);
-
-    } catch (error) {
-      console.error('Error cancelling request:', error);
-    }
-  };
-
-  const handleCancelClick = () => {
-    cancelRequest();
-  };
-
-  const acknowledgeRequestFunc = async () => {
-    try {
-      const requestData = {
-        rf_id: requestFormData.rf_id,
-        user_id: userID,
-      };
-
-      const response = await axios.post('http://localhost:4000/api/request/restock/acknowledge', requestData);
-      console.log('Request acknowledged:', response.data);
-
-      setRefreshKey(prevKey => prevKey + 1);
-      setTimeout(() => {
-        setShowAcknowledeModal(true);
-      }, 150);
-
-    } catch (error) {
-      console.error('Error acknowledging request:', error);
-    }
-  };
-
-  const handleAcknowledgeClick = () => {
-    acknowledgeRequestFunc();
-  };
-
-  const receivePurchaseFunc = async () => {
-    try {
-      const requestData = {
-        rf_id: requestFormData.rf_id,
-        po_id: requestFormData.po_id,
-        user_id: userID,
-        status: "received DR"
-      };
-
-      const response = await axios.post('http://localhost:4000/api/purchase/create/receive', requestData);
-      console.log('Purchase received:', response.data);
-
-      setRefreshKey(prevKey => prevKey + 1);
-      setTimeout(() => {
-        setReceivedDelivery(true); 
-      }, 150);
-
-    } catch (error) {
-      console.error('Error receiving purchase:', error);
-    }
-  };
-
-  const handleReceiveClick = () => {
-    receivePurchaseFunc();
-  };
 
 
 
@@ -241,29 +148,6 @@ const PurchaseViewMore = () => {
       console.log('updated rf data: ', requestFormData)
     }
   }, [showApproveModal, showCancelModal, showAcknowledeModal, receivedDelivery, item, showCheckedModal])
-
-  const canDeleteRequest =
-    user === "warehouse" && (requestFormData.status === "pending" || requestFormData.status === "cancelled");
-
-  const canCancelRequest =
-    user === "admin" &&
-    requestFormData.status === "pending";
-
-  const canMarkReceived =
-    user === "warehouse" &&
-    requestFormData.status === "approved" || requestFormData.status === "redeliver" || requestFormData.status === "partially delivered";
-
-  const canApproveRequest =
-    (user === "admin" || user === "manager") &&
-    requestFormData.status === "pending";
-
-  const canAcknowledgeRequest =
-    (user === "store" || user === "manager") &&
-    (requestFormData.status === "to be received");
-
-
-  const canViewDR =
-    user === "warehouse" && (requestFormData.status !== "pending" && requestFormData.status !== "cancelled" && requestFormData.status !== "approved");
 
   const hasDelivered = products.some((product) => product.status === "delivered");
 
@@ -286,39 +170,6 @@ const PurchaseViewMore = () => {
 
   return (
     <div className='flex flex-col gap-4 h-screen pb-5 pt-7'>
-      {showApproveModal &&
-        <ApproveRequest
-          onClose={() => setShowApproveModal(false)}
-        />
-      }
-      {receivedDelivery &&
-        <ReceiveDeliveryModal
-          onClose={() => setReceivedDelivery(false)}
-        />
-      }
-      {showCancelModal &&
-        <CancelRequest
-          onClose={() => setShowCancelModal(false)}
-        />
-      }
-      {showCheckedModal &&
-        <CheckedProductPurchase
-          onClose={() => setShowCheckedModal(false)}
-          dr_id={receipt_id}
-        />
-      }
-      {showAcknowledeModal &&
-        <AcknowledgeRequest
-          onClose={() => setShowAcknowledeModal(false)}
-        />
-      }
-      {showFloating && (
-        <ViewDrModal
-          onClose={() => setShowFloating(false)}
-          po_id={requestFormData.po_id}
-          item={requestFormData}
-        />
-      )}
       <button onClick={handleGoBack} className="absolute z-50 translate-y-[3.2rem]">
         <GoBackButton />
       </button>
@@ -335,9 +186,9 @@ const PurchaseViewMore = () => {
           </div>
           <div className="flex gap-1">
             <h1>Status:</h1>
-            <h1 className={`capitalize font-semibold ${getStatusColor(requestFormData.status)}`
+            <h1 className={`capitalize font-semibold ${getStatusColor(receivingMemo.status)}`
             }>
-              {requestFormData.status}
+              {receivingMemo.status}
             </h1>
           </div>
           {/* <div className="flex gap-1">
@@ -360,9 +211,11 @@ const PurchaseViewMore = () => {
                 <th scope="col" className="px-6 py-3">Size/Model</th>
                 <th scope="col" className="px-6 py-3">Category</th>
                 <th scope="col" className="px-6 py-3">Quantity</th>
-                <th scope="col" className="px-6 py-3">Amount</th>
-                <th scope="col" className="px-6 py-3">Total Amount</th>
-                <th scope="col" className={`${showApproved ? "" : "hidden"} px-6 py-3`}>Approved</th>
+                <th scope="col" className="px-6 py-3">Received</th>
+                <th scope="col" className="px-6 py-3">Remaining</th>
+                <th scope="col" className="px-6 py-3">Unit Price</th>
+                <th scope="col" className="px-6 py-3">Amount Paid</th>
+                {/* <th scope="col" className={`${showApproved ? "" : "hidden"} px-6 py-3`}>Approved</th> */}
               </tr>
             </thead>
             <tbody>
@@ -373,18 +226,29 @@ const PurchaseViewMore = () => {
                   <td className="px-6 py-5">{product.size}</td>
                   <td className="px-6 py-5">{product.category}</td>
                   <td className="px-6 py-5">{product.quantity}</td>
+                  <td className="px-6 py-5">{getApprovedQuantity(product.id)}</td>
+                  <td className="px-6 py-5">{product.quantity - getApprovedQuantity(product.id)}</td>
                   <td className="px-6 py-5">₱{product.amount.toLocaleString()}</td>
-                  <td className="px-6 py-5">₱{product.total.toLocaleString()}</td>
-                  <td className={`${showApproved ? "" : "hidden"} px-6 py-5`}>
+                  <td className="px-6 py-5">₱{product.amount * getApprovedQuantity(product.id)}</td>
+                  {/* <td className={`${showApproved ? "" : "hidden"} px-6 py-5`}>
                     {receipt.status === "unchecked" ? "": getApprovedQuantity(product.id)} / {product.quantity}
-                  </td>
+                  </td> */}
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr className="bg-white">
-                <td colSpan="6" className="px-6 py-4 font-semibold">TOTAL</td>
-                <td className="px-6 py-5 font-semibold">₱{totalAmount.toLocaleString()}</td>
+                <td colSpan="8" className="px-6 py-4 font-semibold">TOTAL</td>
+                <td className="px-6 py-5 font-semibold">
+                  ₱
+                  {products
+                    .reduce(
+                      (total, product) =>
+                        total + getApprovedQuantity(product.id) * product.amount,
+                      0
+                    )
+                    .toLocaleString()}
+                </td>
               </tr>
             </tfoot>
           </table>
