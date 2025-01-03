@@ -349,7 +349,7 @@ const approveProduct = async (req, res) => {
     const dr_id = deliveryReceiptResult.rows[0].dr_id;
 
     let isAnyProductApproved = false;
-    let isAnyProductPartial = false;
+    let isAllCompleted = true;
     let totalApprovedQuantity = 0;
 
     for (const [product_id, quantity] of Object.entries(quantities)) {
@@ -382,10 +382,11 @@ const approveProduct = async (req, res) => {
       if (totalApprovedQuantity >= requested_quantity) {
         newStatus = "complete";
         isAnyProductApproved = true;
-      } else if (totalApprovedQuantity === 0) {
+      } else if (totalApprovedQuantity < 1) {
         newStatus = "redeliver";
+        isAllCompleted = false;
       } else {
-        isAnyProductPartial = true;
+        isAllCompleted = false;
       }
 
       const updateRequestDetailsQuery = `
@@ -461,7 +462,7 @@ const approveProduct = async (req, res) => {
     if (existingMemoResult.rows.length > 0) {
       const existingTotal = existingMemoResult.rows[0].total;
       const updatedTotal = existingTotal + totalApprovedQuantity;
-      if (!isAnyProductPartial) {
+      if (isAllCompleted) {
         newMemoStatus = "completed"
       }
 
@@ -486,7 +487,7 @@ const approveProduct = async (req, res) => {
     if (isAnyProductApproved) {
       requestFormStatus = "partially received";
     }
-    if (!isAnyProductPartial) {
+    if (isAllCompleted) {
       requestFormStatus = "completed";
     }
 
