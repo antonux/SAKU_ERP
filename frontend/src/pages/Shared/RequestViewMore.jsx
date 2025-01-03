@@ -176,7 +176,7 @@ const AddStock = () => {
     requestFormData.status === "pending";
 
   const canApproveRequest =
-    (user === "admin" || user === "manager") &&
+    (user === "admin" || (user === "manager" && totalAmount < 50000)) &&
     requestFormData.status === "pending";
 
   const canAcknowledgeRequest =

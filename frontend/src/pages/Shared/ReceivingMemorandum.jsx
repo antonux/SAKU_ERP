@@ -186,9 +186,9 @@ const PurchaseViewMore = () => {
           </div>
           <div className="flex gap-1">
             <h1>Status:</h1>
-            <h1 className={`capitalize font-semibold ${getStatusColor(receivingMemo.status)}`
+            <h1 className={`capitalize font-semibold ${requestFormData.status === "completed" ? getStatusColor(requestFormData.status) :  getStatusColor(receivingMemo.status)}`
             }>
-              {receivingMemo.status}
+              {requestFormData.status === "completed" ? requestFormData.status : receivingMemo.status}
             </h1>
           </div>
           {/* <div className="flex gap-1">
