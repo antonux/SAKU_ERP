@@ -95,7 +95,7 @@ const Table = () => {
               <td className="px-6 py-5">{item.totalAmount.toFixed(2)}</td>
               <td className="px-6 py-5">{item.supplier}</td>
               <td className="px-6 py-5">{item.requestedBy}</td>
-              <td className="px-6 py-5">{item.approvedBy || "—"}</td>
+              <td className="px-6 py-5">{item.updatedBy || "—"}</td>
               <td className="px-6 py-5">{item.updatedAt ? item.updatedAt.toLocaleDateString() : item.createdAt.toLocaleDateString()}</td>
               <td className={`px-6 py-5 ${getStatusColor(item.status)}`}>
                 {item.status}
