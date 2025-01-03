@@ -19,7 +19,7 @@ const Inventory = () => {
 
   return (
     <div className='flex flex-col gap-4 h-screen pb-5'>
-      <div className="px-10 py-[0.7rem] items-center mt-[6rem] flex-shrink-0 w-full h-[8rem] shadow-md overflow-auto rounded-lg bg-white text-black scrollbar-thin">
+      <div className="px-6 py-[0.7rem] items-center mt-[6rem] flex-shrink-0 w-full h-[8rem] shadow-md overflow-auto rounded-lg bg-white text-black scrollbar-thin">
         <Boxes />
       </div>
 
