@@ -6,7 +6,7 @@ import Settings from "../pages/Shared/Settings";
 import Overview from "../pages/Shared/Overview";
 import Request from "../pages/Admin/Request";
 import Purchase from "../pages/Admin/Purchase";
-import PurchaseViewMore from "../pages/Admin/PurchaseViewMore";
+import PurchaseViewMore from "../pages/Shared/PurchaseViewMore";
 import Inventory from "../pages/Shared/Inventory";
 import Accounts from "../pages/Admin/Accounts";
 import Notifications from "../pages/Shared/Notifications";
@@ -19,6 +19,8 @@ import AddSupplier from "../pages/Shared/SuppliersAddSupplier";
 import AddAccount from "../pages/Admin/AccountsAddAccount";
 import ViewSupplier from "../pages/Shared/SuppliersViewSupplier";
 import ViewAccount from "../pages/Admin/AccountsViewAccount";
+import DeliveryReceiptCheck from "../pages/Shared/DeliveryReceiptCheck";
+import ReceivingMemorandum from "../pages/Shared/ReceivingMemorandum";
 
 const AdminRoutes = () => {
   return (
@@ -112,6 +114,16 @@ const AdminRoutes = () => {
         <Route
           path="/request/acknowledge-receipt"
           element={<AcknowledgeReceipt />}
+        />
+
+        <Route
+          path="/purchase/delivery-receipt"
+          element={<DeliveryReceiptCheck />}
+        />
+
+        <Route
+          path="/purchase/receiving-memorandum"
+          element={<ReceivingMemorandum />}
         />
 
       </Routes>

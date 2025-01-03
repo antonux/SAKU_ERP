@@ -170,7 +170,7 @@ const DeliveryReceiptCheck = () => {
   const hasUnavailable = products.some((product) => product.status === "unavailable");
   const hasAvailable = products.some((product) => product.status === "available");
 
-  const showAction = receipt.status === "unchecked";
+  const showAction = receipt.status === "unchecked" && user === "warehouse";
 
   const handleOpenModal = (productId, quantity) => {
     setSelectedProductId(productId);

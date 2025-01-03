@@ -19,8 +19,8 @@ import AddAccount from "../pages/Admin/AccountsAddAccount";
 import ViewSupplier from "../pages/Shared/SuppliersViewSupplier";
 import ViewAccount from "../pages/Admin/AccountsViewAccount";
 import ProductOrderForm from "../pages/Warehouse/RequestPurchaseRequest";
-import PurchaseViewMore from "../pages/Warehouse/PurchaseViewMore";
-import DeliveryReceiptCheck from "../pages/Warehouse/DeliveryReceiptCheck";
+import PurchaseViewMore from "../pages/Shared/PurchaseViewMore";
+import DeliveryReceiptCheck from "../pages/Shared/DeliveryReceiptCheck";
 import ReceivingMemorandum from "../pages/Shared/ReceivingMemorandum";
 
 const WarehouseRoutes = () => {
