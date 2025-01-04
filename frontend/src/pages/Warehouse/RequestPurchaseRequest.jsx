@@ -14,7 +14,11 @@ import { useRole } from "../../contexts/RoleContext";
 import EditQuantity from "../../modals/EditQuantity";
 import RestockRequest from "../../modals/restockRequest";
 
+//hooks
+import useStatusColor from '../../hooks/useStatusColor';
+
 const ProductOrderForm = () => {
+  const { getStatusColor } = useStatusColor();
   const { user, userID } = useRole();
   const [showFloating, setShowFloating] = useState(false)
   const navigate = useNavigate()
@@ -29,28 +33,65 @@ const ProductOrderForm = () => {
   const QuantityInputRef = useRef(null)
   const [isRestockRequestModalOpen, setIsRestockRequestModalOpen] = useState(false);
 
+  const [productSuppliers, setProductSuppliers] = useState([]);
+  const { requestReferenceId: rr_id, products: rp } = location.state || false;
+  const [requestReferenceId, setRequestReferenceId] = useState(rr_id);
+  const [request_purchase, setRequestPurchase] = useState(rp);
 
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState(request_purchase || []);
   const [suppliers, setSuppliers] = useState([]);
 
   const handleSupplierChange = (e) => {
-    const supplierID = parseInt(e.target.value, 10);
+    const supplierID = parseInt(e.target.value, 10); // Get selected supplier ID
     if (isNaN(supplierID)) {
       console.error("Invalid Supplier ID");
       return;
     }
+
     console.log("Supplier ID Selected:", supplierID);
     setSelectedSupplier(supplierID);
-    setProducts([]);
 
-    // Filter products based on the selected supplier ID
+    if (request_purchase && request_purchase.length > 0) {
+      // Step 1: Get product IDs that match the selected supplier ID
+      const supplierProductIDs = productSuppliers
+        .filter((ps) => ps.supplier_id === supplierID)
+        .map((ps) => ps.product_id);
+
+      // Step 2: Filter the products in request_purchase that match the product IDs
+      const filteredProducts = request_purchase.filter((product) =>
+        supplierProductIDs.includes(product.id)
+      );
+
+      // Update the products state with the filtered list
+      setProducts(filteredProducts);
+    } else {
+      // If no request_purchase data is available, clear the products list
+      setProducts([]);
+    }
+  };
+
+
+  const handleRemoveReference = () => {
+    setRequestPurchase("")
+    setRequestReferenceId("")
+    setProducts([])
   };
 
   useEffect(() => {
     if (location.pathname !== "/request") {
       localStorage.setItem("lastRequestPath", location.pathname)
     }
+    fetchProductSuppliers();
   }, [])
+
+  const fetchProductSuppliers = async () => {
+    try {
+      const response = await axios.get("http://localhost:4000/api/supplier/product-supplier");
+      setProductSuppliers(response.data);
+    } catch (error) {
+      console.error("Error fetching product supplier data:", error);
+    }
+  };
 
   const handleGoBack = () => {
     localStorage.setItem("lastRequestPath", "/request")
@@ -213,6 +254,7 @@ const ProductOrderForm = () => {
         totalAmount: totalAmount,
         productData: productData,
         supplier: selectedSupplier,
+        request_reference: requestReferenceId,
       };
 
       console.log("Request Data Sent to Backend:", requestData); // Debug request data
@@ -280,13 +322,29 @@ const ProductOrderForm = () => {
               required
             >
               <option value="">Select a supplier</option>
-              {suppliers.map((supplier) => (
-                <option key={supplier.supplier_id} value={supplier.supplier_id}>
-                  {supplier.company_name}
-                </option>
-              ))}
+              {request_purchase && request_purchase.length > 0
+                ? suppliers
+                  .filter((supplier) =>
+                    // Filter suppliers that have products in request_purchase
+                    productSuppliers.some(
+                      (ps) => ps.supplier_id === supplier.supplier_id &&
+                        request_purchase.some(
+                          (product) => product.id === ps.product_id
+                        )
+                    )
+                  )
+                  .map((supplier) => (
+                    <option key={supplier.supplier_id} value={supplier.supplier_id}>
+                      {supplier.company_name}
+                    </option>
+                  ))
+                : suppliers.map((supplier) => (
+                  <option key={supplier.supplier_id} value={supplier.supplier_id}>
+                    {supplier.company_name}
+                  </option>
+                ))
+              }
             </select>
-
           </div>
           <div className="flex gap-5 whitespace-nowrap items-center">
             <div className="w-[20rem]">
@@ -307,7 +365,7 @@ const ProductOrderForm = () => {
                     : ""
                 }
                 placeholder="Choose product"
-                className={`${!selectedSupplier? "pointer-events-none" : "placeholder-black hover:shadow-md hover:placeholder-[#383131] hover:border-gray-200"} block cursor-pointer w-full px-3 py-3 transition  text-center text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none`}
+                className={`${!selectedSupplier ? "pointer-events-none" : "placeholder-black hover:shadow-md hover:placeholder-[#383131] hover:border-gray-200"} block cursor-pointer w-full px-3 py-3 transition  text-center text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none`}
                 disabled={!selectedSupplier} // Disable product selection if no supplier is selected
               />
             </div>
@@ -347,9 +405,13 @@ const ProductOrderForm = () => {
               </button>
             </div>
           </div>
+          <div className={`${requestReferenceId ? "flex" : "hidden"} gap-1`}>
+            <h1>Reference No:</h1>
+            <h1 className="font-semibold capitalize">{requestReferenceId}</h1>
+          </div>
         </div>
-        <div className="rounded-lg w-[65rem] mb-10 shrink-0 border-[1px] border-gray-100 overflow-auto scrollbar-thin">
-          <table className="text-sm w-[64rem] text-left text-gray-500">
+        <div className={`rounded-lg ${requestReferenceId ? "w-[75rem]" : "w-[65rem]"} mb-10 shrink-0 border-[1px] border-gray-100 overflow-auto scrollbar-thin`}>
+          <table className={`text-sm ${requestReferenceId ? "w-[74rem]" : "w-[64rem]"} text-left text-gray-500`}>
             <thead className="sticky top-0 bg-white">
               <tr className="text-xs text-gray-700 uppercase">
                 <th scope="col" className="px-6 py-3">
@@ -377,11 +439,14 @@ const ProductOrderForm = () => {
                 <th scope="col" className="px-6 py-3 text-center">
                   Actions
                 </th>
+                <th scope="col" className={`${requestReferenceId ? "" : "hidden"} px-6 py-3`}>
+                  Reference Status
+                </th>
               </tr>
             </thead>
             <tbody>
               {products.map((product) => (
-                <tr key={product.id} className="bg-white border-b hover:bg-gray-50">
+                <tr key={product.id} className="bg-white border-b hover:bg-gray-50 capitalize">
                   <td className="px-6 py-5">{product.id}</td>
                   <td className="px-6 py-5">{product.product}</td>
                   <td className="px-6 py-5">{product.size}</td>
@@ -389,12 +454,18 @@ const ProductOrderForm = () => {
                   <td className="px-6 py-5">{product.quantity}</td>
                   <td className="px-6 py-5">₱{product.amount.toLocaleString()}</td>
                   <td className="px-6 py-5">₱{product.total.toLocaleString()}</td>
-                  <td className="px-6 py-5">{product.currentStock || 0}</td>
+                  <td className="px-6 py-5">{requestReferenceId ? product.currentWarehouseStock : product.currentStock || 0}</td>
                   <td className="px-6 py-5 flex gap-2 justify-center items-center">
                     <button
                       className="text-blue-600 mr-5 hover:text-blue-800"
                       type="button"
-                      onClick={() => handleEditQuantity(product)}
+                      onClick={() => {
+                        if (selectedSupplier === "") {
+                          alert("Please select supplier");
+                          return;
+                        }
+                        handleEditQuantity(product); // This will only run if the button is not disabled
+                      }}
                     >
                       Edit Quantity
                     </button>
@@ -406,6 +477,7 @@ const ProductOrderForm = () => {
                       <FaRegTrashCan className="size-[1.1rem] hover:scale-110 transition-all" />
                     </button>
                   </td>
+                  <td className={`${requestReferenceId ? getStatusColor(product.status) : "hidden"} px-6 py-5`}>{product.status}</td>
                 </tr>
               ))}
             </tbody>
@@ -431,11 +503,11 @@ const ProductOrderForm = () => {
             />
           )}
         </div>
-        <div>
+        <div className="flex gap-10">
           {user !== "warehouse" && (
-            <button 
-            className="bg-[#7fd6b2] text-white font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
-            type="button"
+            <button
+              className="bg-[#7fd6b2] text-white font-normal text-sm px-20 py-[.72rem] rounded-lg hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
+              type="button"
             >
               Approve
             </button>
@@ -447,6 +519,15 @@ const ProductOrderForm = () => {
               disabled={products.length === 0}
             >
               Submit
+            </button>
+          )}
+          {user === "warehouse" && requestReferenceId && (
+            <button
+              className="bg-orange-300 text-white font-normal text-sm px-16 py-[.72rem] rounded-lg hover:bg-orange-300/90 focus:outline-none focus:ring-2 focus:ring-green-50"
+              type="button"
+              onClick={() => handleRemoveReference()}
+            >
+              Remove Reference
             </button>
           )}
         </div>

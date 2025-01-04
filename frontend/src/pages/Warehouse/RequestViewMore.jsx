@@ -65,50 +65,50 @@ const AddStock = () => {
   //   });
 
   const products = restockData.request_details
-  .filter((detail) => detail.rf_id === requestFormData.rf_id)
-  .map((detail) => {
-    const product = restockData.product.find((prod) => prod.prod_id === detail.product_id);
-    const inventory = restockData.inventory.find(
-      (inv) => inv.product_id === detail.product_id && inv.location === "warehouse"
-    );
+    .filter((detail) => detail.rf_id === requestFormData.rf_id)
+    .map((detail) => {
+      const product = restockData.product.find((prod) => prod.prod_id === detail.product_id);
+      const inventory = restockData.inventory.find(
+        (inv) => inv.product_id === detail.product_id && inv.location === "warehouse"
+      );
 
-    const currentWarehouseStock = inventory ? inventory.quantity : 0;
-    const reorderLevel = product ? product.reorder_level : 0;
-    const expectedStock = currentWarehouseStock - detail.quantity;
+      const currentWarehouseStock = inventory ? inventory.quantity : 0;
+      const reorderLevel = product ? product.reorder_level : 0;
+      const expectedStock = currentWarehouseStock - detail.quantity;
 
-    let stockStatus = "unknown";
-    if (expectedStock > reorderLevel) {
-      stockStatus = "in stock";
-    } else if (expectedStock <= reorderLevel && expectedStock > 0) {
-      stockStatus = "low stock";
-    } else if (expectedStock <= 0) {
-      stockStatus = "out of stock";
-    }
+      let stockStatus = "unknown";
+      if (expectedStock > reorderLevel) {
+        stockStatus = "in stock";
+      } else if (expectedStock <= reorderLevel && expectedStock > 0) {
+        stockStatus = "low stock";
+      } else if (expectedStock <= 0) {
+        stockStatus = "out of stock";
+      }
 
-    let completeStockStatus = "unknown";
-    if (currentWarehouseStock > reorderLevel) {
-      completeStockStatus = "in stock";
-    } else if (currentWarehouseStock <= reorderLevel) {
-      completeStockStatus = "low stock";
-    } else if (currentWarehouseStock <= 0) {
-      completeStockStatus = "out of stock";
-    }
+      let completeStockStatus = "unknown";
+      if (currentWarehouseStock > reorderLevel) {
+        completeStockStatus = "in stock";
+      } else if (currentWarehouseStock <= reorderLevel) {
+        completeStockStatus = "low stock";
+      } else if (currentWarehouseStock <= 0) {
+        completeStockStatus = "out of stock";
+      }
 
-    return {
-      id: product ? product.prod_id : "N/A",
-      product: product ? product.name : "Unknown Product",
-      size: product ? product.size : "Unknown Size",
-      category: product ? product.type : "Unknown Category",
-      quantity: detail.quantity || 0,
-      amount: product ? product.unit_price : 0,
-      total: product && detail.quantity ? product.unit_price * detail.quantity : 0,
-      currentWarehouseStock,
-      expectedStock,
-      completeStockStatus,
-      stockStatus,
-      status: detail.status || "Unknown",
-    };
-  });
+      return {
+        id: product ? product.prod_id : "N/A",
+        product: product ? product.name : "Unknown Product",
+        size: product ? product.size : "Unknown Size",
+        category: product ? product.type : "Unknown Category",
+        quantity: detail.quantity || 0,
+        amount: product ? product.unit_price : 0,
+        total: product && detail.quantity ? product.unit_price * detail.quantity : 0,
+        currentWarehouseStock,
+        expectedStock,
+        completeStockStatus,
+        stockStatus,
+        status: detail.status || "Unknown",
+      };
+    });
 
   const totalAmount = products.reduce((sum, product) => sum + product.total, 0);
 
@@ -242,10 +242,10 @@ const AddStock = () => {
       : "unavailable";
 
   const canDeliverRequest =
-    user === "warehouse" && (requestFormData.status !== "cancelled" && requestFormData.status !== "pending") ;
+    user === "warehouse" && (requestFormData.status !== "cancelled" && requestFormData.status !== "pending");
 
   const canRequestPurchase =
-    user === "warehouse" && (requestFormData.status !== "cancelled" && requestFormData.status !== "pending") ;
+    user === "warehouse" && (requestFormData.status !== "cancelled" && requestFormData.status !== "pending");
 
   const hasDelivered = products.some((product) => product.status === "delivered");
 
@@ -274,6 +274,10 @@ const AddStock = () => {
       <div className="flex flex-col pt-5 px-7 pb-10 gap-10 mt-[6rem] w-full h-full shadow-md overflow-auto rounded-lg bg-white text-black scrollbar-thin">
         <h1 className="text-xl font-semibold text-[#272525]">Product Request</h1>
         <div className="flex gap-5 whitespace-nowrap">
+          <div className="flex gap-1">
+            <h1>RF ID:</h1>
+            <h1 className="font-semibold capitalize">{requestFormData.rf_id}</h1>
+          </div>
           <div className="flex gap-1">
             <h1>Requested By:</h1>
             <h1 className="font-semibold capitalize">{requestFormData.requestedBy}</h1>
@@ -329,12 +333,7 @@ const AddStock = () => {
                   <td className="px-6 py-5">{product.size}</td>
                   <td className="px-6 py-5">{product.category}</td>
                   <td className="px-6 py-5">{product.quantity}</td>
-                  <td className={`px-6 py-5 font-semibold 
-                    ${product.status === "available" ? "text-green-500"
-                      : product.status === "unavailable" ? "text-red-500"
-                        : product.status === "to be received" ? "text-blue-600"
-                          : product.status === "delivered" ? "text-blue-600" : ""
-                    }`}>
+                  <td className={`px-6 py-5 font-semibold ${getStatusColor(product.status)}`}>
                     {product.status}
                   </td>
                   <td className="px-6 py-5">₱{product.amount.toLocaleString()}</td>
@@ -399,12 +398,14 @@ const AddStock = () => {
             </button>
           )}
           {canRequestPurchase && (
-            <button
-              // onClick={() => }
-              className={`bg-[#7ad0ac] text-white font-normal text-sm px-10 py-[.72rem] transition-all rounded-lg hover:bg-[#73c5a3] focus:outline-none focus:ring-2 focus:ring-green-50`}
-            >
-              Request for Purchase
-            </button>
+            <Link to="/request/purchase-request" state={{ products, requestReferenceId: requestFormData.rf_id }}>
+              <button
+                // onClick={() => }
+                className={`bg-[#7ad0ac] text-white font-normal text-sm px-10 py-[.72rem] transition-all rounded-lg hover:bg-[#73c5a3] focus:outline-none focus:ring-2 focus:ring-green-50`}
+              >
+                Request for Purchase
+              </button>
+            </Link>
           )}
           {canViewAR && (
             <Link to="/request/acknowledge-receipt" state={{ requestFormData }}>
