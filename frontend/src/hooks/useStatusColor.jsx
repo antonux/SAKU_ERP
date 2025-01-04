@@ -1,6 +1,10 @@
 const useStatusColor = () => {
   const getStatusColor = (status) => {
     switch (status) {
+      case "available":
+        return "text-green-500 font-semibold";
+      case "unavailable":
+        return "text-red-500 font-semibold";
       case "pending":
         return "text-orange-400 font-semibold";
       case "approved":
@@ -11,6 +15,8 @@ const useStatusColor = () => {
         return "text-blue-500 font-semibold";
       case "partially delivered":
         return "text-blue-500 font-semibold";
+      case "delivered":
+        return "text-blue-600 font-semibold";
       case "completed":
         return "text-green-500 font-semibold";
       case "received DR":

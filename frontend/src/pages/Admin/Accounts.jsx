@@ -79,30 +79,33 @@ const Accounts = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {accountData.map((account, index) => (
-                            <tr
-                                key={account.user_id}
-                                className="bg-white border-b hover:bg-gray-50"
-                            >
-                                <td className="px-6 py-4">{index + 1}</td>
-                                <td className="px-6 py-4">{account.fname}</td>
-                                <td className="px-6 py-4">{account.lname}</td>
-                                <td className="px-6 py-4">{account.gender}</td>
-                                <td className="px-6 py-4">{account.email}</td>
-                                <td className="px-6 py-4">{account.phone}</td>
-                                <td className="px-6 py-4">{account.role}</td>
-                                <td className="px-6 py-4">
-                                    <Link
-                                        to="/accounts/view-account"
-                                        state={{ account }}
-                                    >
-                                        <button className="text-blue-500 hover:underline">
-                                            View more
-                                        </button>
-                                    </Link>
-                                </td>
-                            </tr>
-                        ))}
+                        {accountData
+                            .filter(account => account.role !== "admin") // Filter out accounts with role "admin"
+                            .map((account, index) => (
+                                <tr
+                                    key={account.user_id}
+                                    className="bg-white border-b hover:bg-gray-50"
+                                >
+                                    <td className="px-6 py-4">{index + 1}</td>
+                                    <td className="px-6 py-4">{account.fname}</td>
+                                    <td className="px-6 py-4">{account.lname}</td>
+                                    <td className="px-6 py-4">{account.gender}</td>
+                                    <td className="px-6 py-4">{account.email}</td>
+                                    <td className="px-6 py-4">{account.phone}</td>
+                                    <td className="px-6 py-4">{account.role}</td>
+                                    <td className="px-6 py-4">
+                                        <Link
+                                            to="/accounts/view-account"
+                                            state={{ account }}
+                                        >
+                                            <button className="text-blue-500 hover:underline">
+                                                View more
+                                            </button>
+                                        </Link>
+                                    </td>
+                                </tr>
+                            ))}
+
                     </tbody>
                 </table>
             </div>

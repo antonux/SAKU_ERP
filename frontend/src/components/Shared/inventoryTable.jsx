@@ -28,6 +28,9 @@ const Table = () => {
       }
     };
     fetchSupplierData();
+    if (user === "warehouse") {
+      setInventoryFilter("warehouse")
+    }
   }, []);
 
   return (
