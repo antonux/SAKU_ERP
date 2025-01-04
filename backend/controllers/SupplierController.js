@@ -48,6 +48,21 @@ const getSupplier = async (req, res) => {
   }
 };
 
+const getProductSupplier = async (req, res) => {
+   try {
+    const query = `
+      SELECT prod_sup_id, supplier_id, product_id
+      FROM product_supplier;
+    `;
+    const result = await client.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching product-supplier data:', error);
+    res.status(500).send('Error fetching product-supplier data');
+  }
+};
+
+
 
 const deleteSupplier = async (req, res) => {
   const { supplier_id } = req.params; 
@@ -241,6 +256,7 @@ const updateSupplier = async (req, res) => {
 
 module.exports = {
   getSupplier,
+  getProductSupplier,
   createSupplier,
   updateSupplier,
   deleteSupplier

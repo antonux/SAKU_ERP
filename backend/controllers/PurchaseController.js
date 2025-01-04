@@ -36,17 +36,21 @@ const getPurchaseRequest = async (req, res) => {
 };
 
 const createPurchaseRequest = async (req, res) => {
-  const { requestedBy, totalAmount, products, productData, supplier } = req.body;
+  const { requestedBy, totalAmount, products, productData, supplier, request_reference } = req.body;
 
   try {
     await client.query('BEGIN'); // Start a transaction
 
     const requestFormQuery = `
-            INSERT INTO request_form (status, total_amount, type, requested_by)
-            VALUES ($1, $2, $3, $4)
-            RETURNING rf_id;
-        `;
-    const requestFormValues = ["pending", totalAmount, "purchase", requestedBy];
+    INSERT INTO request_form (status, total_amount, type, requested_by${request_reference ? ", request_reference" : ""})
+    VALUES ($1, $2, $3, $4${request_reference ? ", $5" : ""})
+    RETURNING rf_id;
+  `;
+
+    // Conditional values based on the presence of request_reference
+    const requestFormValues = request_reference
+      ? ["pending", totalAmount, "purchase", requestedBy, request_reference]
+      : ["pending", totalAmount, "purchase", requestedBy];
     const requestFormResult = await client.query(requestFormQuery, requestFormValues);
     const rf_id = requestFormResult.rows[0].rf_id;
 

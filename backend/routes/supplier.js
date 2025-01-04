@@ -9,6 +9,7 @@ const upload = require('../middleware/multerConfig');
 // controllers
 const {
   getSupplier,
+  getProductSupplier,
   createSupplier,
   updateSupplier,
   deleteSupplier
@@ -17,6 +18,7 @@ const {
 
 // routes
 router.get('/', getSupplier);
+router.get('/product-supplier', getProductSupplier);
 router.post('/create', upload, createSupplier);
 router.post('/update', upload, updateSupplier);
 router.delete('/delete/:supplier_id', deleteSupplier);
