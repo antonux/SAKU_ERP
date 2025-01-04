@@ -454,7 +454,7 @@ const ProductOrderForm = () => {
                   <td className="px-6 py-5">{product.quantity}</td>
                   <td className="px-6 py-5">₱{product.amount.toLocaleString()}</td>
                   <td className="px-6 py-5">₱{product.total.toLocaleString()}</td>
-                  <td className="px-6 py-5">{requestReferenceId ? product.currentWarehouseStock : product.currentStock || 0}</td>
+                  <td className="px-6 py-5">{(requestReferenceId && product.status) ? product.currentWarehouseStock : product.currentStock || 0}</td>
                   <td className="px-6 py-5 flex gap-2 justify-center items-center">
                     <button
                       className="text-blue-600 mr-5 hover:text-blue-800"
