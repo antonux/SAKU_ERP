@@ -15,23 +15,24 @@ import EditQuantity from "../../modals/EditQuantity";
 import RestockRequest from "../../modals/restockRequest";
 
 //hooks
-import useStatusColor from '../../hooks/useStatusColor';
+import useStatusColor from "../../hooks/useStatusColor";
 
 const ProductOrderForm = () => {
   const { getStatusColor } = useStatusColor();
   const { user, userID } = useRole();
-  const [showFloating, setShowFloating] = useState(false)
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [currentProduct, setCurrentProduct] = useState(null)
-  const [newQuantity, setNewQuantity] = useState("")
-  const [productData, setProductData] = useState([])
-  const [selectedProduct, setSelectedProduct] = useState(null)
-  const [selected, setSelected] = useState(null)
-  const [selectedSupplier, setSelectedSupplier] = useState("")
-  const QuantityInputRef = useRef(null)
-  const [isRestockRequestModalOpen, setIsRestockRequestModalOpen] = useState(false);
+  const [showFloating, setShowFloating] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState(null);
+  const [newQuantity, setNewQuantity] = useState("");
+  const [productData, setProductData] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selected, setSelected] = useState(null);
+  const [selectedSupplier, setSelectedSupplier] = useState("");
+  const QuantityInputRef = useRef(null);
+  const [isRestockRequestModalOpen, setIsRestockRequestModalOpen] =
+    useState(false);
 
   const [productSuppliers, setProductSuppliers] = useState([]);
   const { requestReferenceId: rr_id, products: rp } = location.state || false;
@@ -70,23 +71,24 @@ const ProductOrderForm = () => {
     }
   };
 
-
   const handleRemoveReference = () => {
-    setRequestPurchase("")
-    setRequestReferenceId("")
-    setProducts([])
+    setRequestPurchase("");
+    setRequestReferenceId("");
+    setProducts([]);
   };
 
   useEffect(() => {
     if (location.pathname !== "/request") {
-      localStorage.setItem("lastRequestPath", location.pathname)
+      localStorage.setItem("lastRequestPath", location.pathname);
     }
     fetchProductSuppliers();
-  }, [])
+  }, []);
 
   const fetchProductSuppliers = async () => {
     try {
-      const response = await axios.get("http://localhost:4000/api/supplier/product-supplier");
+      const response = await axios.get(
+        "http://localhost:4000/api/supplier/product-supplier"
+      );
       setProductSuppliers(response.data);
     } catch (error) {
       console.error("Error fetching product supplier data:", error);
@@ -94,32 +96,36 @@ const ProductOrderForm = () => {
   };
 
   const handleGoBack = () => {
-    localStorage.setItem("lastRequestPath", "/request")
+    localStorage.setItem("lastRequestPath", "/request");
     setSelectedSupplier(""); // Reset the selected supplier after submission
-    setProducts([]);  // Clear form data before navigating back
-    setSelectedProduct(null);  // Reset selected product
-    const lp = localStorage.getItem("lastRequestPath")
-    navigate(lp)
-  }
+    setProducts([]); // Clear form data before navigating back
+    setSelectedProduct(null); // Reset selected product
+    const lp = localStorage.getItem("lastRequestPath");
+    navigate(lp);
+  };
 
-  const totalAmount = products.reduce((sum, product) => sum + product.total, 0)
+  const totalAmount = products.reduce((sum, product) => sum + product.total, 0);
 
   const handleDelete = (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this item?")
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this item?"
+    );
     if (confirmDelete) {
-      setProducts((prevProducts) => prevProducts.filter((product) => product.id !== id))
+      setProducts((prevProducts) =>
+        prevProducts.filter((product) => product.id !== id)
+      );
     }
-  }
+  };
 
   const handleEditQuantity = (product) => {
-    setCurrentProduct(product)
-    setNewQuantity(product.quantity)
-    setIsModalOpen(true)
-  }
+    setCurrentProduct(product);
+    setNewQuantity(product.quantity);
+    setIsModalOpen(true);
+  };
 
   const closeModal = () => {
-    setIsModalOpen(false)
-  }
+    setIsModalOpen(false);
+  };
 
   const saveNewQuantity = () => {
     if (!isNaN(newQuantity) && newQuantity > 0) {
@@ -127,19 +133,19 @@ const ProductOrderForm = () => {
         prevProducts.map((product) =>
           product.id === currentProduct.id
             ? {
-              ...product,
-              quantity: parseInt(newQuantity),
-              total: product.amount * parseInt(newQuantity),
-            }
+                ...product,
+                quantity: parseInt(newQuantity),
+                total: product.amount * parseInt(newQuantity),
+              }
             : product
         )
-      )
-      setIsModalOpen(false)
-      setCurrentProduct(null)
+      );
+      setIsModalOpen(false);
+      setCurrentProduct(null);
     } else {
-      alert("Please enter a valid quantity.")
+      alert("Please enter a valid quantity.");
     }
-  }
+  };
 
   useEffect(() => {
     const fetchSupplierData = async () => {
@@ -157,15 +163,14 @@ const ProductOrderForm = () => {
   useEffect(() => {
     const fetchProductData = async () => {
       try {
-        const response = await axios.get('http://localhost:4000/api/product');
-        setProductData(response.data)
+        const response = await axios.get("http://localhost:4000/api/product");
+        setProductData(response.data);
       } catch (err) {
-        console.error('Error fetching product data:', err);
+        console.error("Error fetching product data:", err);
       }
     };
     fetchProductData();
   }, []);
-
 
   const getFilteredProductData = (data) => {
     return data
@@ -182,7 +187,6 @@ const ProductOrderForm = () => {
       }));
   };
 
-
   const handleAdd = () => {
     if (selectedProduct && selectedSupplier) {
       setProducts((prevProducts) => [
@@ -194,44 +198,46 @@ const ProductOrderForm = () => {
           category: selectedProduct.type,
           quantity: selectedProduct.quantity,
           amount: parseFloat(selectedProduct.unit_price),
-          total: parseFloat(selectedProduct.unit_price * selectedProduct.quantity),
+          total: parseFloat(
+            selectedProduct.unit_price * selectedProduct.quantity
+          ),
           currentStock: selectedProduct.location_quantity?.[0]?.quantity || 0,
         },
-      ])
-      setSelectedProduct()
-      setSelected(null)
+      ]);
+      setSelectedProduct();
+      setSelected(null);
     } else {
-      alert("Please select both a supplier and a product")
+      alert("Please select both a supplier and a product");
     }
-  }
+  };
 
   useEffect(() => {
     if (QuantityInputRef.current) {
-      QuantityInputRef.current.focus()
+      QuantityInputRef.current.focus();
     }
-  }, [selectedProduct])
+  }, [selectedProduct]);
 
   const handleQuantityChange = (e) => {
-    const quantity = e.target.value
+    const quantity = e.target.value;
     if (quantity === "") {
       setSelectedProduct((prev) => ({
         ...prev,
         quantity: "",
-      }))
-      return
+      }));
+      return;
     }
     if (quantity.includes(".") || quantity <= 0 || quantity >= 1000) {
-      e.preventDefault()
-      return
+      e.preventDefault();
+      return;
     }
     setSelectedProduct((prev) => ({
       ...prev,
       quantity: quantity,
-    }))
-  }
+    }));
+  };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault(); // Prevent the form submission on Enter key
     }
   };
@@ -246,7 +252,6 @@ const ProductOrderForm = () => {
     console.log("Total Amount:", totalAmount); // Verify total amount
     console.log("Requested By (User ID):", userID); // Verify user ID
 
-
     try {
       const requestData = {
         requestedBy: userID,
@@ -259,23 +264,25 @@ const ProductOrderForm = () => {
 
       console.log("Request Data Sent to Backend:", requestData); // Debug request data
 
-      const response = await axios.post('http://localhost:4000/api/purchase/create/purchase', requestData, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await axios.post(
+        "http://localhost:4000/api/purchase/create/purchase",
+        requestData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-      console.log('Purchase Request Created:', response.data);
+      console.log("Purchase Request Created:", response.data);
       setIsRestockRequestModalOpen(true);
 
       setProducts([]);
       setSelectedProduct();
       setSelectedSupplier(""); // Reset the selected supplier after submission
-
-
     } catch (error) {
-      console.error('Error creating Purchase request:', error);
-      alert('Failed to create Purchase request. Please try again.');
+      console.error("Error creating Purchase request:", error);
+      alert("Failed to create Purchase request. Please try again.");
     }
   };
 
@@ -284,11 +291,18 @@ const ProductOrderForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className='flex flex-col gap-4 h-screen pb-5 pt-7'>
-      {isRestockRequestModalOpen &&
+    <form
+      onSubmit={handleSubmit}
+      onKeyDown={handleKeyDown}
+      className="flex flex-col gap-4 h-screen pb-5 pt-7"
+    >
+      {isRestockRequestModalOpen && (
         <RestockRequest onClose={closeRestockRequestModal} />
-      }
-      <button onClick={handleGoBack} className="absolute z-50 translate-y-[3.2rem]">
+      )}
+      <button
+        onClick={handleGoBack}
+        className="absolute z-50 translate-y-[3.2rem]"
+      >
         <GoBackButton />
       </button>
       <div className="flex flex-col pt-5 px-7 pb-10 gap-10 mt-[6rem] w-full h-full shadow-md overflow-auto rounded-lg bg-white text-black scrollbar-thin">
@@ -324,26 +338,32 @@ const ProductOrderForm = () => {
               <option value="">Select a supplier</option>
               {request_purchase && request_purchase.length > 0
                 ? suppliers
-                  .filter((supplier) =>
-                    // Filter suppliers that have products in request_purchase
-                    productSuppliers.some(
-                      (ps) => ps.supplier_id === supplier.supplier_id &&
-                        request_purchase.some(
-                          (product) => product.id === ps.product_id
-                        )
+                    .filter((supplier) =>
+                      // Filter suppliers that have products in request_purchase
+                      productSuppliers.some(
+                        (ps) =>
+                          ps.supplier_id === supplier.supplier_id &&
+                          request_purchase.some(
+                            (product) => product.id === ps.product_id
+                          )
+                      )
                     )
-                  )
-                  .map((supplier) => (
-                    <option key={supplier.supplier_id} value={supplier.supplier_id}>
+                    .map((supplier) => (
+                      <option
+                        key={supplier.supplier_id}
+                        value={supplier.supplier_id}
+                      >
+                        {supplier.company_name}
+                      </option>
+                    ))
+                : suppliers.map((supplier) => (
+                    <option
+                      key={supplier.supplier_id}
+                      value={supplier.supplier_id}
+                    >
                       {supplier.company_name}
                     </option>
-                  ))
-                : suppliers.map((supplier) => (
-                  <option key={supplier.supplier_id} value={supplier.supplier_id}>
-                    {supplier.company_name}
-                  </option>
-                ))
-              }
+                  ))}
             </select>
           </div>
           <div className="flex gap-5 whitespace-nowrap items-center">
@@ -365,7 +385,11 @@ const ProductOrderForm = () => {
                     : ""
                 }
                 placeholder="Choose product"
-                className={`${!selectedSupplier ? "pointer-events-none" : "placeholder-black hover:shadow-md hover:placeholder-[#383131] hover:border-gray-200"} block cursor-pointer w-full px-3 py-3 transition  text-center text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none`}
+                className={`${
+                  !selectedSupplier
+                    ? "pointer-events-none"
+                    : "placeholder-black hover:shadow-md hover:placeholder-[#383131] hover:border-gray-200"
+                } block cursor-pointer w-full px-3 py-3 transition  text-center text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none`}
                 disabled={!selectedSupplier} // Disable product selection if no supplier is selected
               />
             </div>
@@ -397,7 +421,7 @@ const ProductOrderForm = () => {
                   selectedProduct.quantity === ""
                 }
                 onClick={() => {
-                  handleAdd()
+                  handleAdd();
                 }}
                 className="bg-[#7ad0ac] text-white text-sm font-normal px-8 py-[0.65rem] rounded-lg hover:bg-[#71c2a0] disabled:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-green-50"
               >
@@ -410,8 +434,16 @@ const ProductOrderForm = () => {
             <h1 className="font-semibold capitalize">{requestReferenceId}</h1>
           </div>
         </div>
-        <div className={`rounded-lg ${requestReferenceId ? "w-[75rem]" : "w-[65rem]"} mb-10 shrink-0 border-[1px] border-gray-100 overflow-auto scrollbar-thin`}>
-          <table className={`text-sm ${requestReferenceId ? "w-[74rem]" : "w-[64rem]"} text-left text-gray-500`}>
+        <div
+          className={`rounded-lg ${
+            requestReferenceId ? "w-[75rem]" : "w-[65rem]"
+          } mb-10 shrink-0 border-[1px] border-gray-100 overflow-auto scrollbar-thin`}
+        >
+          <table
+            className={`text-sm ${
+              requestReferenceId ? "w-[74rem]" : "w-[64rem]"
+            } text-left text-gray-500`}
+          >
             <thead className="sticky top-0 bg-white">
               <tr className="text-xs text-gray-700 uppercase">
                 <th scope="col" className="px-6 py-3">
@@ -435,26 +467,42 @@ const ProductOrderForm = () => {
                 <th scope="col" className="px-6 py-3">
                   Total Amount
                 </th>
-                <th scope="col" className="px-6 py-3">Current Stock</th>
+                <th scope="col" className="px-6 py-3">
+                  Current Stock
+                </th>
                 <th scope="col" className="px-6 py-3 text-center">
                   Actions
                 </th>
-                <th scope="col" className={`${requestReferenceId ? "" : "hidden"} px-6 py-3`}>
+                <th
+                  scope="col"
+                  className={`${requestReferenceId ? "" : "hidden"} px-6 py-3`}
+                >
                   Reference Status
                 </th>
               </tr>
             </thead>
             <tbody>
               {products.map((product) => (
-                <tr key={product.id} className="bg-white border-b hover:bg-gray-50 capitalize">
+                <tr
+                  key={product.id}
+                  className="bg-white border-b hover:bg-gray-50 capitalize"
+                >
                   <td className="px-6 py-5">{product.id}</td>
                   <td className="px-6 py-5">{product.product}</td>
                   <td className="px-6 py-5">{product.size}</td>
                   <td className="px-6 py-5">{product.category}</td>
                   <td className="px-6 py-5">{product.quantity}</td>
-                  <td className="px-6 py-5">₱{product.amount.toLocaleString()}</td>
-                  <td className="px-6 py-5">₱{product.total.toLocaleString()}</td>
-                  <td className="px-6 py-5">{(requestReferenceId && product.status) ? product.currentWarehouseStock : product.currentStock || 0}</td>
+                  <td className="px-6 py-5">
+                    ₱{product.amount.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-5">
+                    ₱{product.total.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-5">
+                    {requestReferenceId && product.status
+                      ? product.currentWarehouseStock
+                      : product.currentStock || 0}
+                  </td>
                   <td className="px-6 py-5 flex gap-2 justify-center items-center">
                     <button
                       className="text-blue-600 mr-5 hover:text-blue-800"
@@ -477,7 +525,15 @@ const ProductOrderForm = () => {
                       <FaRegTrashCan className="size-[1.1rem] hover:scale-110 transition-all" />
                     </button>
                   </td>
-                  <td className={`${requestReferenceId ? getStatusColor(product.status) : "hidden"} px-6 py-5`}>{product.status}</td>
+                  <td
+                    className={`${
+                      requestReferenceId
+                        ? getStatusColor(product.status)
+                        : "hidden"
+                    } px-6 py-5`}
+                  >
+                    {product.status}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -533,8 +589,7 @@ const ProductOrderForm = () => {
         </div>
       </div>
     </form>
-  )
+  );
 };
 
 export default ProductOrderForm;
-
