@@ -1,7 +1,7 @@
 const client = require('../connection');
 
 const createNotification = async (req, res) => {
-  const { role, type, message, productId } = req.body;
+  const { role, type, message } = req.body;
 
   if (!role || !type || !message) {
     return res.status(400).json({ error: "Role, type, and message are required" });
@@ -9,26 +9,43 @@ const createNotification = async (req, res) => {
 
   try {
     await client.query('BEGIN'); // Start a transaction
+    let notifId;
 
-    // Insert into notification table
-    const notificationQuery = `
-      INSERT INTO notification (type, message, product_id)
-      VALUES ($1, $2, $3)
-      RETURNING notif_id;
+    // Check if notification with the same type and message already exists
+    const existingNotificationQuery = `
+      SELECT notif_id
+      FROM notification
+      WHERE type = $1 AND message = $2;
     `;
-    const notificationResult = await client.query(notificationQuery, [type, message, productId || null]);
-    const notifId = notificationResult.rows[0].notif_id;
+    const existingNotificationResult = await client.query(existingNotificationQuery, [type, message]);
+
+    if (existingNotificationResult.rows.length > 0) {
+      // Use the existing notif_id
+      notifId = existingNotificationResult.rows[0].notif_id;
+    } else {
+      // Insert a new notification
+      const notificationQuery = `
+        INSERT INTO notification (type, message)
+        VALUES ($1, $2)
+        RETURNING notif_id;
+      `;
+      const notificationResult = await client.query(notificationQuery, [type, message]);
+      notifId = notificationResult.rows[0].notif_id;
+    }
+
+    // --
+    const roles = Array.isArray(role) ? role : [role];
 
     // Find users with the specified role
     const usersQuery = `
       SELECT user_id
       FROM users
-      WHERE role = $1;
+      WHERE role = ANY($1);
     `;
-    const usersResult = await client.query(usersQuery, [role]);
+    const usersResult = await client.query(usersQuery, [roles]);
 
     if (usersResult.rows.length === 0) {
-      throw new Error(`No users found with the role "${role}"`);
+      throw new Error(`No users found with the roles "${roles.join(", ")}"`);
     }
 
     // Insert into user_notification table
