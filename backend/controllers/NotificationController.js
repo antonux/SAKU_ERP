@@ -61,7 +61,7 @@ const createNotification = async (req, res) => {
 
     res.status(201).json({
       message: "Notification created and assigned successfully",
-      notification: { notifId, type, message, productId },
+      notification: { notifId, type, message },
       role,
       usersNotified: usersResult.rows.length,
     });
