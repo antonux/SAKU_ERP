@@ -508,6 +508,7 @@ const approveProduct = async (req, res) => {
       message: responseMessage,
       dr_ap_id,
       total: totalApprovedQuantity,
+      status: requestFormStatus,
     });
   } catch (error) {
     await client.query("ROLLBACK");
