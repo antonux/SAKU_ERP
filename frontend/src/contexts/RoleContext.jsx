@@ -5,6 +5,7 @@ const RoleContext = createContext();
 export const RoleProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [userID, setUserID] = useState(null);
+  const [markedAsRead, setMarkedAsRead] = useState(false); // Track the open menu
   const logUser = (loggedUser) => {
     setUser(loggedUser);
   }
@@ -23,7 +24,7 @@ export const RoleProvider = ({ children }) => {
   }, [])
 
   return (
-    <RoleContext.Provider value={{ userID, user, logUser, setUserID }}>
+    <RoleContext.Provider value={{ userID, user, logUser, setUserID, markedAsRead, setMarkedAsRead }}>
       {children}
     </RoleContext.Provider>
   );
