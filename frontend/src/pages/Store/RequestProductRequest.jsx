@@ -208,7 +208,8 @@ const RequestProductRequest = () => {
           },
         }
       );
-      const notificationMessage = `The following products need restocking: ${products
+      const rf_id = response?.data?.request?.rf_id || null;
+      const notificationMessage = `(PENDING) The following products need restocking: ${products
         .map((product) => product.product)
         .join(", ")}`;
 
@@ -218,6 +219,7 @@ const RequestProductRequest = () => {
           role: ["warehouse", "admin", "manager"],
           type: "restock_request",
           message: notificationMessage,
+          rf_id: rf_id,
         });
         console.log("Notification created:", result);
       } catch (notificationError) {
