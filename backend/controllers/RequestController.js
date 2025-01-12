@@ -291,14 +291,25 @@ const acknowledgeRequest = async (req, res) => {
     await client.query('BEGIN');
 
     // Step 1: Update `request_details` status from "to be received" to "delivered"
-    await client.query(
+    const productIdResults = await client.query(
       `
       UPDATE request_details
       SET status = 'delivered'
       WHERE rf_id = $1 AND status = 'to be received'
+      RETURNING product_id
       `,
       [rf_id]
     );
+    const productIds = productIdResults.rows.map(row => row.product_id);
+
+    const productsResult = await client.query(
+      `
+      SELECT name FROM product
+      WHERE prod_id = ANY($1::int[])
+      `,
+      [productIds]
+    );
+    const productNames = productsResult.rows.map(row => row.name);
 
     // Step 2: Check statuses in `request_details` for the associated `rf_id`
     const { rows: statuses } = await client.query(
@@ -381,7 +392,7 @@ const acknowledgeRequest = async (req, res) => {
 
     res
       .status(200)
-      .json({ message: 'Request acknowledged, inventory updated successfully.' });
+      .json({ message: 'Request acknowledged, inventory updated successfully.', productNames: productNames });
   } catch (error) {
     console.error('Error processing request:', error);
 
