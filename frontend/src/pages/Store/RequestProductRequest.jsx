@@ -39,19 +39,6 @@ const RequestProductRequest = () => {
   // hooks
   const { createNotification } = useCreateNotification();
 
-  const handleNotification = async () => {
-    const result = await createNotification({
-      role: ["store", "warehouse", "admin"], // Multiple roles
-      type: "alert",
-      message: "System maintenance scheduled for tonight.",
-    });
-
-    if (result) {
-      alert("Notification created successfully!");
-      console.log("Notification result:", result);
-    }
-  };
-
   useEffect(() => {
     if (location.pathname !== "/request") {
       localStorage.setItem("lastRequestPath", location.pathname);
@@ -208,12 +195,12 @@ const RequestProductRequest = () => {
           },
         }
       );
+      // Create the notification start --
       const rf_id = response?.data?.request?.rf_id || null;
-      const notificationMessage = `(PENDING) The following products need restocking: ${products
+      const notificationMessage = `(RESTOCK PENDING) The following products need restocking: ${products
         .map((product) => product.product)
         .join(", ")}`;
 
-      // Create the notification
       try {
         const result = await createNotification({
           role: ["warehouse", "admin", "manager"],
@@ -226,6 +213,7 @@ const RequestProductRequest = () => {
         console.error("Error creating notification:", notificationError);
         alert("Failed to create notification for restock request.");
       }
+      // Create the notification end --
       
       console.log("Restock Request Created:", response.data);
       setIsRestockRequestModalOpen(true);

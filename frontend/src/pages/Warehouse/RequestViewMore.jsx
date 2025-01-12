@@ -16,17 +16,15 @@ import DeliverRequest from "../../modals/deliverRequest";
 // Hooks
 import useRestockData from '../../hooks/useRestockData';
 import useStatusColor from '../../hooks/useStatusColor';
+import useCreateNotification from "../../hooks/useCreateNotification";
 
 // axios
 import axios from "axios";
 
 const AddStock = () => {
   const [refreshKey, setRefreshKey] = useState(0);
-  const { mappedData, error, restockData } = useRestockData(refreshKey);
-  const { getStatusColor } = useStatusColor();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, userID } = useRole();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -34,6 +32,13 @@ const AddStock = () => {
   const { item } = location.state;
   const [requestFormData, setRequestFormData] = useState(item)
 
+  //contexts
+  const { user, userID } = useRole();
+
+  //hooks
+  const { createNotification } = useCreateNotification();
+  const { mappedData, error, restockData } = useRestockData(refreshKey);
+  const { getStatusColor } = useStatusColor();
 
 
   useEffect(() => {
@@ -185,8 +190,27 @@ const AddStock = () => {
       };
 
       const response = await axios.post('http://localhost:4000/api/request/restock/deliver', requestData);
-      console.log('Request delivered:', response.data);
+      // create notif start --
+      const availableProducts = products
+        .filter((product) => product.status === "available")
+        .map((product) => product.product)
+        .join(", ");
 
+      const notificationMessage = `(TO BE RECEIVED) The following products are ready to be received: ${availableProducts}`;
+      try {
+        const result = await createNotification({
+          role: ["manager", "store"],
+          type: "restock_request",
+          message: notificationMessage,
+          rf_id: requestFormData.rf_id,
+        });
+        console.log("Notification created:", result);
+      } catch (notificationError) {
+        console.error("Error creating notification:", notificationError);
+        alert("Failed to create notification for restock request.");
+      }
+      // create notif end -- 
+      console.log('Request delivered:', response.data);
       setRefreshKey(prevKey => prevKey + 1);
       setTimeout(() => {
         setShowDeliverModal(true);  // Show the modal after delay

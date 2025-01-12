@@ -15,13 +15,13 @@ import AcknowledgeRequest from "../../modals/acknowledgeRestock";
 
 // Hooks
 import useRestockData from '../../hooks/useRestockData';
+import useCreateNotification from "../../hooks/useCreateNotification";
 
 // axios
 import axios from "axios";
 
 const AddStock = () => {
   const [refreshKey, setRefreshKey] = useState(0);
-  const { mappedData, restockData } = useRestockData(refreshKey);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, userID } = useRole();
@@ -31,6 +31,10 @@ const AddStock = () => {
   const [showAcknowledeModal, setShowAcknowledeModal] = useState(false);
   const { item } = location.state;
   const [requestFormData, setRequestFormData] = useState(item)
+  
+  // hooks
+  const { createNotification } = useCreateNotification();
+  const { mappedData, restockData } = useRestockData(refreshKey);
 
 
 
@@ -87,6 +91,24 @@ const AddStock = () => {
       };
 
       const response = await axios.post('http://localhost:4000/api/request/update', requestData);
+
+      // create notif start --
+      const notificationMessage = `(RESTOCK APPROVED) The following products are approved for restock: ${products
+        .map((product) => product.product)
+        .join(", ")}`;
+      try {
+        const result = await createNotification({
+          role: ["warehouse", "manager", "store"],
+          type: "restock_request",
+          message: notificationMessage,
+          rf_id: requestFormData.rf_id,
+        });
+        console.log("Notification created:", result);
+      } catch (notificationError) {
+        console.error("Error creating notification:", notificationError);
+        alert("Failed to create notification for restock request.");
+      }
+      // create notif end -- 
       console.log('Request approved:', response.data);
       setRefreshKey(prevKey => prevKey + 1);
       setTimeout(() => {
@@ -111,8 +133,24 @@ const AddStock = () => {
       };
 
       const response = await axios.post('http://localhost:4000/api/request/update', requestData);
+      // create notif start --
+      const notificationMessage = `(RESTOCK CANCELLED) The following products are cancelled for restock: ${products
+        .map((product) => product.product)
+        .join(", ")}`;
+      try {
+        const result = await createNotification({
+          role: ["warehouse", "manager", "store"],
+          type: "restock_request",
+          message: notificationMessage,
+          rf_id: requestFormData.rf_id,
+        });
+        console.log("Notification created:", result);
+      } catch (notificationError) {
+        console.error("Error creating notification:", notificationError);
+        alert("Failed to create notification for restock request.");
+      }
+      // create notif end -- 
       console.log('Request cancelled:', response.data);
-
       setRefreshKey(prevKey => prevKey + 1);
       setTimeout(() => {
         setShowCancelModal(true);  // Show the modal after delay
@@ -135,8 +173,24 @@ const AddStock = () => {
       };
 
       const response = await axios.post('http://localhost:4000/api/request/restock/acknowledge', requestData);
-      console.log('Request acknowledged:', response.data);
+      // create notif start --
+      const receivedProducts = response.data.productNames;
+      const notificationMessage = `(RESTOCK ACKNOWLEDGED) The following products are received: ${receivedProducts.join(", ")}`;
+      try {
+        const result = await createNotification({
+          role: ["warehouse", "admin"],
+          type: "restock_request",
+          message: notificationMessage,
+          rf_id: requestFormData.rf_id,
+        });
+        console.log("Notification created:", result);
+      } catch (notificationError) {
+        console.error("Error creating notification:", notificationError);
+        alert("Failed to create notification for restock request.");
+      }
+      // create notif end -- 
 
+      console.log('Request acknowledged:', response.data);
       setRefreshKey(prevKey => prevKey + 1);
       setTimeout(() => {
         setShowAcknowledeModal(true);
