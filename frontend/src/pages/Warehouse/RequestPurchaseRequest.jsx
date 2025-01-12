@@ -16,10 +16,9 @@ import RestockRequest from "../../modals/restockRequest";
 
 //hooks
 import useStatusColor from "../../hooks/useStatusColor";
+import useCreateNotification from "../../hooks/useCreateNotification";
 
 const ProductOrderForm = () => {
-  const { getStatusColor } = useStatusColor();
-  const { user, userID } = useRole();
   const [showFloating, setShowFloating] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -41,6 +40,13 @@ const ProductOrderForm = () => {
 
   const [products, setProducts] = useState(request_purchase || []);
   const [suppliers, setSuppliers] = useState([]);
+
+  //contexts
+  const { user, userID } = useRole();
+
+  //hooks
+  const { createNotification } = useCreateNotification();
+  const { getStatusColor } = useStatusColor();
 
   const handleSupplierChange = (e) => {
     const supplierID = parseInt(e.target.value, 10); // Get selected supplier ID
@@ -263,7 +269,6 @@ const ProductOrderForm = () => {
       };
 
       console.log("Request Data Sent to Backend:", requestData); // Debug request data
-
       const response = await axios.post(
         "http://localhost:4000/api/purchase/create/purchase",
         requestData,
@@ -273,6 +278,25 @@ const ProductOrderForm = () => {
           },
         }
       );
+      // Create the notification start --
+      const rf_id = response?.data?.request?.rf_id || null;
+      const notificationMessage = `(P.O PENDING) The following products need purchasing: ${products
+        .map((product) => product.product)
+        .join(", ")}`;
+
+      try {
+        const result = await createNotification({
+          role: "admin",
+          type: "purchase_request",
+          message: notificationMessage,
+          rf_id: rf_id,
+        });
+        console.log("Notification created:", result);
+      } catch (notificationError) {
+        console.error("Error creating notification:", notificationError);
+        alert("Failed to create notification for restock request.");
+      }
+      // Create the notification end --
 
       console.log("Purchase Request Created:", response.data);
       setIsRestockRequestModalOpen(true);

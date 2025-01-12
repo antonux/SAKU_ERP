@@ -19,10 +19,10 @@ const Notifications = () => {
   });
   const [unreadCount, setUnreadCount] = useState(0);
   const [showMenu, setShowMenu] = useState(null); // Track the open menu
-  const [markedAsRead, setMarkedAsRead] = useState(false); // Track the open menu
+  // const [markedAsRead, setMarkedAsRead] = useState(false); // Track the open menu
 
   // contexts
-  const { user, userID } = useRole();
+  const { user, userID, markedAsRead, setMarkedAsRead } = useRole();
 
   // Fetch notifications on mount
   useEffect(() => {
@@ -134,9 +134,6 @@ const Notifications = () => {
         <h1 className="text-2xl font-semibold">
           Notifications ({unreadCount} unread)
         </h1>
-        <button className="bg-[#7ad0ac] text-white px-16 py-3 rounded-full hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
-          Clear all
-        </button>
       </div>
 
       <div className="px-10 py-6  flex flex-col gap-6 flex-grow overflow-auto scrollbar-thin rounded-lg bg-white shadow-md">
@@ -174,24 +171,23 @@ const Notifications = () => {
                   {formatTime(notification.created_at)}
                 </span>
               </div>
-              {notification.isUnread && (
-                <div className="w-2 h-2 rounded-full bg-blue-500 mt-2" />
-              )}
-              <div className="relative">
-                <button onClick={() => toggleMenu(notification.user_notif_id)}>
-                  <DotsHorizontalIcon className="w-5 h-5 text-gray-600" />
-                </button>
-                {showMenu === notification.user_notif_id && notification.isUnread && (
-                  <div className="absolute right-0 w-40 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
+              <div className="flex items-center justify-center">
+                {true && notification.isUnread && (
+                  <div className="w-40 mt-2 bg-blue-200 rounded-lg z-10">
                     <button
                       onClick={() => markAsRead(notification.user_notif_id)}
-                      className={`${notification.isUnread ? "block" : "hidden"}  w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100`}
+                      className={`${
+                        notification.isUnread ? "block" : "hidden"
+                      } w-full px-4 py-2 text-sm text-gray-700 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
                     >
                       Mark as Read
                     </button>
                   </div>
                 )}
               </div>
+              {notification.isUnread && (
+                <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 translate-y-[-15px]" />
+              )}
             </div>
           ))}
         </div>
@@ -229,13 +225,13 @@ const Notifications = () => {
                   </span>
                 </div>
                 {notification.isUnread && (
-                  <div className="w-2 h-2 rounded-full bg-blue-500 mt-2" />
+                  <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 translate-y-[-15px]" />
                 )}
                 <div className="relative">
                   <button
                     onClick={() => toggleMenu(notification.user_notif_id)}
                   >
-                    <DotsHorizontalIcon className="w-5 h-5 text-gray-600" />
+                    <DotsHorizontalIcon className="w-5 h-5 text-gray-600 translate-y-[-8px]" />
                   </button>
                   {showMenu === notification.user_notif_id && (
                     <div className="absolute right-0 w-40 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
@@ -297,13 +293,13 @@ const Notifications = () => {
                   </span>
                 </div>
                 {notification.isUnread && (
-                  <div className="w-2 h-2 rounded-full bg-blue-500 mt-2" />
+                  <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 translate-y-[-15px]" />
                 )}
                 <div className="relative">
                   <button
                     onClick={() => toggleMenu(notification.user_notif_id)}
                   >
-                    <DotsHorizontalIcon className="w-5 h-5 text-gray-600" />
+                    <DotsHorizontalIcon className="w-5 h-5 text-gray-600 translate-y-[-8px]" />
                   </button>
                   {showMenu === notification.user_notif_id && (
                     <div className="absolute right-0 w-40 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-10">

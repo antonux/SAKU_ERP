@@ -24,6 +24,7 @@ import usePurchaseData from '../../hooks/usePurchaseData';
 import useStatusColor from '../../hooks/useStatusColor';
 import useApprovedProducts from '../../hooks/useApprovedProducts';
 import useRecentReceipt from '../../hooks/useRecentReceipt';
+import useCreateNotification from "../../hooks/useCreateNotification";
 
 // axios
 import axios from "axios";
@@ -51,6 +52,7 @@ const DeliveryReceiptCheck = () => {
   //hook
   const { approvedProducts } = useApprovedProducts(receipt.id, receipt.status);
   const { recentReceipt, approvedProducts: recentApproved } = useRecentReceipt(requestFormData.po_id, receipt.id);
+  const { createNotification } = useCreateNotification();
 
   useEffect(() => {
     console.log('recent approve: ', recentApproved)
@@ -107,8 +109,26 @@ const DeliveryReceiptCheck = () => {
       };
 
       const response = await axios.post('http://localhost:4000/api/purchase/approve', approveData);
-      console.log('Purchase received:', response.data);
+      // create notif start --
+      const isCompleted = response?.data?.status || null;
+      const notificationMessage = `(RECEIPT #${receipt.id} CHECKED) Following products ${isCompleted === "completed" ? "are approved completely" : ""}: ${products
+        .map((product) => product.product)
+        .join(", ")}`;
+      try {
+        const result = await createNotification({
+          role: "admin",
+          type: "purchase_request_receipt",
+          message: notificationMessage,
+          rf_id: requestFormData.rf_id,
+        });
+        console.log("Notification created:", result);
+      } catch (notificationError) {
+        console.error("Error creating notification:", notificationError);
+        alert("Failed to create notification for restock request.");
+      }
+      // create notif end -- 
 
+      console.log('Purchase received:', response.data);
       setRefreshKey(prevKey => prevKey + 1);
       setTimeout(() => {
         setReceivedDelivery(true);

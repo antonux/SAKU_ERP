@@ -24,6 +24,7 @@ import useApprovedProducts from '../../hooks/useApprovedProducts';
 import useDeliveryReceipts from '../../hooks/useDeliveryReceipts';
 import useLatestReceipt from '../../hooks/useLatestReceipt';
 import useAllApprovedProducts from '../../hooks/useAllApprovedProducts';
+import useCreateNotification from "../../hooks/useCreateNotification";
 
 // axios
 import axios from "axios";
@@ -47,7 +48,9 @@ const PurchaseViewMore = () => {
   const [allReceipts, setAllReceipts] = useState([]); // All fetched receipts
   const [filteredReceipts, setFilteredReceipts] = useState([]); // Receipts filtered by po_id
   //hooks
+  const { createNotification } = useCreateNotification();
   const { allApproved } = useAllApprovedProducts(requestFormData.po_id);
+
   console.log('all',allApproved)
   // const { allReceipts } = useDeliveryReceipts();
   // const receipt = useLatestReceipt(allReceipts, requestFormData.po_id);
@@ -135,6 +138,23 @@ const PurchaseViewMore = () => {
       };
 
       const response = await axios.post('http://localhost:4000/api/request/update', requestData);
+      // create notif start --
+      const notificationMessage = `(P.O APPROVED) The following products are approved for purchasing: ${products
+        .map((product) => product.product)
+        .join(", ")}`;
+      try {
+        const result = await createNotification({
+          role: "warehouse",
+          type: "restock_request",
+          message: notificationMessage,
+          rf_id: requestFormData.rf_id,
+        });
+        console.log("Notification created:", result);
+      } catch (notificationError) {
+        console.error("Error creating notification:", notificationError);
+        alert("Failed to create notification for restock request.");
+      }
+      // create notif end -- 
       console.log('Request approved:', response.data);
       setRefreshKey(prevKey => prevKey + 1);
       setTimeout(() => {
@@ -159,8 +179,25 @@ const PurchaseViewMore = () => {
       };
 
       const response = await axios.post('http://localhost:4000/api/request/update', requestData);
-      console.log('Request cancelled:', response.data);
+      // create notif start --
+      const notificationMessage = `(P.O CANCELLED) The following products are cancelled for purchasing: ${products
+        .map((product) => product.product)
+        .join(", ")}`;
+      try {
+        const result = await createNotification({
+          role: "warehouse",
+          type: "purchase_request",
+          message: notificationMessage,
+          rf_id: requestFormData.rf_id,
+        });
+        console.log("Notification created:", result);
+      } catch (notificationError) {
+        console.error("Error creating notification:", notificationError);
+        alert("Failed to create notification for restock request.");
+      }
+      // create notif end -- 
 
+      console.log('Request cancelled:', response.data);
       setRefreshKey(prevKey => prevKey + 1);
       setTimeout(() => {
         setShowCancelModal(true);  // Show the modal after delay
@@ -209,6 +246,23 @@ const PurchaseViewMore = () => {
       };
 
       const response = await axios.post('http://localhost:4000/api/purchase/create/receive', requestData);
+      // create notif start --
+      const notificationMessage = `(P.O RECEIVED) The following products have been received: ${products
+        .map((product) => product.product)
+        .join(", ")}`;
+      try {
+        const result = await createNotification({
+          role: "admin",
+          type: "purchase_request",
+          message: notificationMessage,
+          rf_id: requestFormData.rf_id,
+        });
+        console.log("Notification created:", result);
+      } catch (notificationError) {
+        console.error("Error creating notification:", notificationError);
+        alert("Failed to create notification for restock request.");
+      }
+      // create notif end -- 
       console.log('Purchase received:', response.data);
 
       setRefreshKey(prevKey => prevKey + 1);
@@ -250,8 +304,7 @@ const PurchaseViewMore = () => {
     requestFormData.status === "pending";
 
   const canMarkReceived =
-    user === "warehouse" &&
-    requestFormData.status === "approved" || requestFormData.status === "redeliver" || requestFormData.status === "partially received";
+    user === "warehouse" && (requestFormData.status === "approved" || requestFormData.status === "redeliver" || requestFormData.status === "partially received");
 
   const canApproveRequest =
     (user === "admin" || user === "manager") &&
