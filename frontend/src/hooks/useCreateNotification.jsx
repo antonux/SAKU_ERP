@@ -3,13 +3,14 @@ import axios from "axios";
 
 const useCreateNotification = () => {
 
-  const createNotification = async ({ role, type, message }) => {
+  const createNotification = async ({ role, type, message, rf_id }) => {
 
     try {
       const response = await axios.post("http://localhost:4000/api/notification/create", {
         role,
         type,
         message,
+        rf_id,
       });
       return response.data; 
     } catch (err) {
