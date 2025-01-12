@@ -5,10 +5,14 @@ const router = express.Router();
 const upload = require('../middleware/multerConfig');
 
 const {
-    createNotification
+    createNotification,
+    getNotifications,
+    markAsRead
 } = require('../controllers/NotificationController');
 
 router.post('/create', createNotification);
+router.post('/mark-as-read', markAsRead);
+router.get('/', getNotifications);
 // router.get('/', getUsers);
 // router.post('/create', upload, createUser);
 // router.post('/update', upload, updateUser);
