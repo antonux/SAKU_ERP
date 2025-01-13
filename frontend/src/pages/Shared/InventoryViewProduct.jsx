@@ -63,33 +63,61 @@ const AddStock = () => {
     console.log('update data: ', productData)
 
     try {
-      const formData = new FormData();
+      const { data: existingProducts } = await axios.get(
+        "http://localhost:4000/api/product"
+      );
 
-      formData.append('prod_id', productData.prod_id);
-      formData.append('name', productData.name);
-      formData.append('type', productData.type);
-      formData.append('size', productData.size);
-      formData.append('unit_price', productData.unit_price);
-      formData.append('reorder_level', productData.reorder_level);
-      formData.append('product_supplier', JSON.stringify(productData.product_supplier));
-      formData.append('location_quantity', JSON.stringify(productData.location_quantity));
+      // Check if the name + size combination already exists
+      const isDuplicate = existingProducts.some(
+        (product) =>
+          product.name.trim().toLowerCase() ===
+            productData.name.trim().toLowerCase() &&
+          product.size.trim().toLowerCase() ===
+            productData.size.trim().toLowerCase() &&
+          product.prod_id !== initialData.prod_id
+      );
+
+      if (isDuplicate) {
+        alert("Product already exists.");
+        return;
+      }
+      const formData = new FormData();
+      formData.append("prod_id", productData.prod_id);
+      formData.append("name", productData.name.trim());
+      formData.append("type", productData.type.trim());
+      formData.append("size", productData.size.trim());
+      formData.append("unit_price", productData.unit_price);
+      formData.append("reorder_level", productData.reorder_level);
+      formData.append(
+        "product_supplier",
+        JSON.stringify(productData.product_supplier)
+      );
+      formData.append(
+        "location_quantity",
+        JSON.stringify(productData.location_quantity)
+      );
 
       if (productData.image) {
-        formData.append('image', productData.image);
+        formData.append("image", productData.image);
       }
 
-      const response = await axios.post('http://localhost:4000/api/product/update', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await axios.post(
+        "http://localhost:4000/api/product/update",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
       const fetchNewData = await axios.get(`http://localhost:4000/api/product`);
-      const newData = fetchNewData.data.find(product => product.prod_id === productData.prod_id);
-      console.log('Product updated:', response.data);
-      setInitialData(newData)
+      const newData = fetchNewData.data.find(
+        (product) => product.prod_id === productData.prod_id
+      );
+      console.log("Product updated:", response.data);
+      setInitialData(newData);
       setIsUpdate(false);
       setIsView(true);
-
     } catch (error) {
       console.error('Error updating product:', error);
     }
@@ -118,7 +146,7 @@ const AddStock = () => {
       </button>
       <div className="flex flex-col pt-5 px-7 gap-10 mt-[6rem] w-full h-full shadow-md overflow-auto rounded-lg bg-white text-black scrollbar-thin">
         <div className="flex">
-          <h1 className="flex whitespace-nowrap text-xl font-semibold text-[#272525]">Goodyear 155R12 <span className="text-gray-400 font-normal pl-2">#100083</span></h1>
+          <h1 className="flex whitespace-nowrap text-xl font-semibold text-[#272525]">{productData.name + " " + productData.size} <span className="text-gray-400 font-normal pl-2">#{productData.prod_id}</span></h1>
           <div className="flex justify-end w-[75rem] text-sm gap-2 text-center items-center pr-12 cursor-pointer">
             <h1 className="font-normal text-[#272525] cursor-default">
               Location:

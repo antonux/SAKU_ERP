@@ -180,8 +180,13 @@ const AddStockInput = ({ isView, setIsView, isUpdate, setIsUpdate, viewProductDa
 
   useEffect(() => {
     newProductData(productData);
-    console.log('current pdata: ', productData)
-  }, [productData])
+    if (productData.type && initialSupplierData.length > 0) {
+      const filteredSupplierData = initialSupplierData.filter((supplier) =>
+        supplier.product_types.includes(productData.type)
+      );
+      setSupplierData(filteredSupplierData);
+    };
+  }, [productData, isUpdate])
 
 
   return (

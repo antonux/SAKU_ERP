@@ -153,7 +153,6 @@ const handleLocationQuantityChange = (e) => {
 
   }, [productData.type]);
 
-
   useEffect(() => {
     const unitPrice = parseFloat(productData.unit_price) || 0;
     const totalQuantity = productData.location_quantity.reduce(

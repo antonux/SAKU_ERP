@@ -6,8 +6,12 @@ import { useEffect, useState } from "react";
 import { IoCamera } from "react-icons/io5";
 import axios from "axios";
 
+// modals
+import AddedProduct from "../../modals/addedProduct";
+
 const AddStock = () => {
   const navigate = useNavigate();
+  const [showAddedModal, setShowAddedModal] = useState(false);
   const location = useLocation();
   const [preview, setPreview] = useState(null);
   const [productData, setProductData] = useState({});
@@ -21,8 +25,8 @@ const AddStock = () => {
 
   const handleGoBack = () => {
     localStorage.setItem("lastInventoryPath", "/inventory");
-    const lp = localStorage.getItem("lastInventoryPath")
-    navigate(lp)
+    const lp = localStorage.getItem("lastInventoryPath");
+    navigate(lp);
   };
 
   const handleFileChange = (event) => {
@@ -31,48 +35,82 @@ const AddStock = () => {
       setPreview(URL.createObjectURL(file));
       setProductData({
         ...productData,
-        image: file
+        image: file,
       });
-    };
+    }
   };
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const formData = new FormData();
+      // Fetch existing products
+      const { data: existingProducts } = await axios.get(
+        "http://localhost:4000/api/product"
+      );
 
-      formData.append('name', productData.name);
-      formData.append('type', productData.type);
-      formData.append('size', productData.size);
-      formData.append('unit_price', productData.unit_price);
-      formData.append('reorder_level', productData.reorder_level);
-      formData.append('product_supplier', JSON.stringify(productData.product_supplier));
-      formData.append('location_quantity', JSON.stringify(productData.location_quantity));
+      // Check if the name + size combination already exists
+      const isDuplicate = existingProducts.some(
+        (product) =>
+          product.name.trim().toLowerCase() ===
+            productData.name.trim().toLowerCase() &&
+          product.size.trim().toLowerCase() ===
+            productData.size.trim().toLowerCase()
+      );
 
-      if (productData.image) {
-        formData.append('image', productData.image);
+      if (isDuplicate) {
+        alert("Product already exists.");
+        return;
       }
 
-      const response = await axios.post('http://localhost:4000/api/product/create', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      console.log('Product Created:', response.data);
+      // If no duplicate, proceed to create the product
+      const formData = new FormData();
+      formData.append("name", productData.name.trim());
+      formData.append("type", productData.type.trim());
+      formData.append("size", productData.size.trim());
+      formData.append("unit_price", productData.unit_price);
+      formData.append("reorder_level", productData.reorder_level);
+      formData.append(
+        "product_supplier",
+        JSON.stringify(productData.product_supplier)
+      );
+      formData.append(
+        "location_quantity",
+        JSON.stringify(productData.location_quantity)
+      );
+
+      if (productData.image) {
+        formData.append("image", productData.image);
+      }
+
+      const response = await axios.post(
+        "http://localhost:4000/api/product/create",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      console.log("Product Created:", response.data);
+      setShowAddedModal(true);
       setIsSubmitted(true);
       setPreview(null);
-
     } catch (error) {
-      console.error('Error creating product:', error);
+      console.error("Error creating product:", error);
     }
   };
 
-
   return (
-    <div className='flex flex-col gap-4 h-screen pb-5 pt-7'>
-      <button onClick={handleGoBack} className="absolute z-50 translate-y-[3.2rem]">
+    <div className="flex flex-col gap-4 h-screen pb-5 pt-7">
+      {showAddedModal && (
+        <AddedProduct onClose={() => setShowAddedModal(false)} />
+      )}
+      <button
+        onClick={handleGoBack}
+        className="absolute z-50 translate-y-[3.2rem]"
+      >
         <GoBackButton />
       </button>
       <div className="flex flex-col pt-5 px-7 gap-10 mt-[6rem] w-full h-full shadow-md overflow-auto rounded-lg bg-white text-black scrollbar-thin">
@@ -81,8 +119,14 @@ const AddStock = () => {
           <div className="flex flex-col gap-5">
             {/* upload picture */}
             <div className="flex flex-col gap-12 items-center border-[2px] w-[19rem] border-[#f9f9f9] pt-10 pb-5 px-20">
-              <div className={`flex flex-col relative items-center justify-center  bg-[#f2f2f2] rounded-lg  ${preview ? "size-44" : "size-40"}`}>
-                {!preview && <div className="border-[1px] border-[#dfdfdf] border-dashed size-48 absolute rounded-lg z-0"></div>}
+              <div
+                className={`flex flex-col relative items-center justify-center  bg-[#f2f2f2] rounded-lg  ${
+                  preview ? "size-44" : "size-40"
+                }`}
+              >
+                {!preview && (
+                  <div className="border-[1px] border-[#dfdfdf] border-dashed size-48 absolute rounded-lg z-0"></div>
+                )}
                 {!preview && <IoCamera className="text-xl text-[#a2a2a2]" />}
                 <div className="flex flex-col">
                   {/* Label wraps the input for accessibility and interaction */}
@@ -97,8 +141,9 @@ const AddStock = () => {
                   )}
                   <label className="cursor-pointer order-2 z-50">
                     <h1
-                      className={`text-sm text-[#515150] hover:text-[#999999] text-center ${preview ? "absolute pl-11 pt-2" : ""
-                        }`}
+                      className={`text-sm text-[#515150] hover:text-[#999999] text-center ${
+                        preview ? "absolute pl-11 pt-2" : ""
+                      }`}
                     >
                       {preview ? "Change Photo" : "Upload Photo"}
                     </h1>
@@ -110,7 +155,6 @@ const AddStock = () => {
                       onChange={handleFileChange}
                     />
                   </label>
-
                 </div>
               </div>
               <div className="flex flex-col gap-3 text-center text-[#272525]">
@@ -126,15 +170,18 @@ const AddStock = () => {
             </div>
             <button
               type="submit"
-              className="bg-[#7ad0ac] text-white px-16 py-3 rounded-xl hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50">
+              className="bg-[#7ad0ac] text-white px-16 py-3 rounded-xl hover:bg-[#71c2a0] focus:outline-none focus:ring-2 focus:ring-green-50"
+            >
               Add item
             </button>
             {/* upload picture */}
           </div>
-          <Input productInputData={setProductData} isSubmitted={isSubmitted} Submitted={setIsSubmitted}/>
-
+          <Input
+            productInputData={setProductData}
+            isSubmitted={isSubmitted}
+            Submitted={setIsSubmitted}
+          />
         </form>
-
       </div>
     </div>
   );

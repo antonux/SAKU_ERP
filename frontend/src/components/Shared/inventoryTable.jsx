@@ -11,6 +11,8 @@ const Table = () => {
   const { user } = useRole();
   const role = user;
   const [productData, setProductData] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredData, setFilteredData] = useState([]);
 
   const inventoryFilterClass = (value) =>
     `px-4 font-normal rounded-full text-[#272525] ${inventoryFilter === value
@@ -22,7 +24,9 @@ const Table = () => {
     const fetchSupplierData = async () => {
       try {
         const response = await axios.get('http://localhost:4000/api/product');
-        setProductData(response.data);
+        const sortedData = response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        setProductData(sortedData);
+        setFilteredData(sortedData);
       } catch (err) {
         console.error('Error fetching product data:', err);
       }
@@ -33,10 +37,25 @@ const Table = () => {
     }
   }, []);
 
+  const handleSearch = (e) => {
+    const query = e.target.value.toLowerCase();
+    setSearchQuery(query);
+
+    // Filter products based on the query
+    const filteredProducts = productData.filter(
+      (product) =>
+        product.name.toLowerCase().includes(query) ||
+        product.type.toLowerCase().includes(query) ||
+        product.size.toLowerCase().includes(query)
+    );
+
+    setFilteredData(filteredProducts);
+  };
+
   return (
     <div className="rounded-lg h-full bg-white shadow-md overflow-auto scrollbar-thin">
       <table className="w-full text-sm text-left text-gray-500">
-        <thead className='sticky top-0'>
+        <thead className="sticky top-0">
           <tr className="text-xs text-gray-700 bg-white">
             <th colSpan="10" className="px-6 py-5">
               <div className="flex justify-between items-center">
@@ -44,29 +63,44 @@ const Table = () => {
                   <h1 className="text-xl font-semibold text-[#272525]">
                     {role === "store" ? "Store Stock List" : "Stock List"}
                   </h1>
-                  <div className="relative ml-4"> {/* Add margin for spacing */}
-                    <IoIosSearch className="absolute size-5 left-2 top-1/2 transform -translate-y-1/2 text-[#2a2929]" /> {/* Position the icon */}
+                  <div className="relative ml-4">
+                    {" "}
+                    {/* Add margin for spacing */}
+                    <IoIosSearch className="absolute size-5 left-2 top-1/2 transform -translate-y-1/2 text-[#2a2929]" />{" "}
+                    {/* Position the icon */}
                     <input
                       type="text"
-                      placeholder="Search..."
-                      className="text-[#121212] font-sans text-[15px] pl-8 pr-2 h-10 w-[180px] font-light outline-none bg-transparent border-b border-gray-400 transition-all duration-500 focus:outline-none focus:border-b-2 focus:border-gray-400 focus:w-[220px]"
+                      value={searchQuery}
+                      onChange={handleSearch}
+                      placeholder="name, size/model, type "
+                      className="text-[#121212] font-sans text-[15px] pl-8 pr-2 h-10 w-[220px] font-light outline-none bg-transparent border-b border-gray-400 transition-all duration-500 focus:outline-none focus:border-b-2 focus:border-gray-400 focus:w-[250px]"
                     />
                   </div>
                 </div>
-                <div className={`flex text-sm space-x-2 gap-2 text-center pr-12 cursor-pointer ${(role == "store" || role == "manager") ? "hidden" : ""}`}>
+                <div
+                  className={`flex text-sm space-x-2 gap-2 text-center pr-12 cursor-pointer ${
+                    role == "store" || role == "manager" ? "hidden" : ""
+                  }`}
+                >
                   <h1 className="font-normal text-[#272525] cursor-default">
                     Location:
                   </h1>
-                  <h1 className={inventoryFilterClass("all")}
-                    onClick={() => setInventoryFilter("all")}>
+                  <h1
+                    className={inventoryFilterClass("all")}
+                    onClick={() => setInventoryFilter("all")}
+                  >
                     All
                   </h1>
-                  <h1 className={inventoryFilterClass("store")}
-                    onClick={() => setInventoryFilter("store")}>
+                  <h1
+                    className={inventoryFilterClass("store")}
+                    onClick={() => setInventoryFilter("store")}
+                  >
                     Store
                   </h1>
-                  <h1 className={inventoryFilterClass("warehouse")}
-                    onClick={() => setInventoryFilter("warehouse")}>
+                  <h1
+                    className={inventoryFilterClass("warehouse")}
+                    onClick={() => setInventoryFilter("warehouse")}
+                  >
                     Warehouse
                   </h1>
                 </div>
@@ -74,29 +108,56 @@ const Table = () => {
             </th>
           </tr>
           <tr className="text-xs text-gray-700 uppercase bg-white">
-            <th scope="col" className="px-6 py-3">Image</th>
-            <th scope="col" className="px-6 py-3">Product Name</th>
-            <th scope="col" className="px-6 py-3">Size/Model</th>
-            <th scope="col" className="px-6 py-3">Category</th>
-            <th scope="col" className="px-6 py-3">Unit Price</th>
-            <th scope="col" className="px-6 py-3">Total Amount</th>
-            <th scope="col" className="px-6 py-3">Location</th>
-            <th scope="col" className="px-6 py-3">Quantity</th>
-            <th scope="col" className="px-6 py-3">Status</th>
-            <th scope="col" className={`px-6 py-3 ${(role == "store" || role == "manager") ? "hidden" : ""}`}>Action</th>
+            <th scope="col" className="px-6 py-3">
+              Image
+            </th>
+            <th scope="col" className="px-6 py-3">
+              Product Name
+            </th>
+            <th scope="col" className="px-6 py-3">
+              Size/Model
+            </th>
+            <th scope="col" className="px-6 py-3">
+              Category
+            </th>
+            <th scope="col" className="px-6 py-3">
+              Unit Price
+            </th>
+            <th scope="col" className="px-6 py-3">
+              Total Amount
+            </th>
+            <th scope="col" className="px-6 py-3">
+              Location
+            </th>
+            <th scope="col" className="px-6 py-3">
+              Quantity
+            </th>
+            <th scope="col" className="px-6 py-3">
+              Status
+            </th>
+            <th
+              scope="col"
+              className={`px-6 py-3 ${
+                role == "store" || role == "manager" ? "hidden" : ""
+              }`}
+            >
+              Action
+            </th>
           </tr>
         </thead>
         <tbody>
-
-          {productData.map((item) => {
+          {filteredData.map((item) => {
             // Filter location_quantity based on inventoryFilter value
             const filteredLocations =
-              (role === "store" || role === "manager" ) ? item.location_quantity.filter((location) => location.location === 'store') :
-              inventoryFilter === "all"
+              role === "store" || role === "manager"
+                ? item.location_quantity.filter(
+                    (location) => location.location === "store"
+                  )
+                : inventoryFilter === "all"
                 ? item.location_quantity // Show all locations
                 : item.location_quantity.filter(
-                  (location) => location.location === inventoryFilter // Filter by store or warehouse
-                );
+                    (location) => location.location === inventoryFilter // Filter by store or warehouse
+                  );
 
             return filteredLocations.map((location, locIndex) => {
               // Calculate status based on reorder_level
@@ -111,15 +172,18 @@ const Table = () => {
               if (quantity === 0) {
                 status = "Out of Stock";
                 statusColor = "text-red-600";
-              } else if (quantity <= reorderLevel + 5) {
+              } else if (quantity <= reorderLevel) {
                 status = "Low Stock";
                 statusColor = "text-orange-400";
-              } else if (quantity > reorderLevel + 5) {
+              } else if (quantity > reorderLevel) {
                 status = "In Stock";
                 statusColor = "text-green-500";
               }
               return (
-                <tr key={`${item.prod_id}-${locIndex}`} className="bg-white border-b hover:bg-gray-50">
+                <tr
+                  key={`${item.prod_id}-${locIndex}`}
+                  className="bg-white border-b hover:bg-gray-50"
+                >
                   <td className="px-6 py-3">
                     <img
                       src={`http://localhost:4000${item.image}`}
@@ -135,9 +199,15 @@ const Table = () => {
                   <td className="px-6 py-3">{location.location}</td>
                   <td className="px-6 py-3">{location.quantity || "0"}</td>
                   <td className={`px-6 py-3 ${statusColor}`}>{status}</td>
-                  <td className={`px-6 py-4 ${(role === "store" || role === "manager") ? "hidden" : ""}`}>
+                  <td
+                    className={`px-6 py-4 ${
+                      role === "store" || role === "manager" ? "hidden" : ""
+                    }`}
+                  >
                     <Link to="/inventory/view-stock" state={{ item, location }}>
-                      <button className="text-blue-500 hover:underline">View</button>
+                      <button className="text-blue-500 hover:underline">
+                        View
+                      </button>
                     </Link>
                   </td>
                 </tr>
@@ -146,10 +216,8 @@ const Table = () => {
           })}
         </tbody>
       </table>
-
     </div>
-
-  )
+  );
 }
 
 export default Table;
