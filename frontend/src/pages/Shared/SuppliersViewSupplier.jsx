@@ -49,15 +49,42 @@ const ViewSupplier = () => {
     e.preventDefault();
 
     try {
+       // Fetch existing suppliers to check for duplicates
+      const existingSuppliersResponse = await axios.get(
+        "http://localhost:4000/api/supplier"
+      );
+      const existingSuppliers = existingSuppliersResponse.data;
+
+      // Trim input fields
+      const trimmedCompanyName = supplierData.company_name.trim().toLowerCase();
+      const trimmedPhone = supplierData.phone.trim();
+      const trimmedEmail = supplierData.email.trim().toLowerCase();
+
+      // Check for duplicates based on trimmed values
+      const isDuplicate = existingSuppliers.some(
+        (supplier) =>
+          (supplier.company_name.trim().toLowerCase() === trimmedCompanyName ||
+            supplier.phone.trim() === trimmedPhone ||
+            supplier.email.trim().toLowerCase() === trimmedEmail) &&
+          supplier.supplier_id !== initialData.supplier_id
+      );
+
+
+      if (isDuplicate) {
+        alert(
+          "A supplier with the same company name, phone, or email already exists."
+        );
+        return; // Stop submission
+      }
       const formData = new FormData();
 
-      formData.append('supplier_id', supplierData.supplier_id);
-      formData.append('company_name', supplierData.company_name);
-      formData.append('address', supplierData.address);
-      formData.append('contact_name', supplierData.contact_name);
-      formData.append('phone', supplierData.phone);
-      formData.append('email', supplierData.email);
-      formData.append('product_types', JSON.stringify(supplierData.product_types));
+      formData.append("supplier_id", supplierData.supplier_id);
+      formData.append("company_name", supplierData.company_name.trim());
+      formData.append("address", supplierData.address.trim());
+      formData.append("contact_name", supplierData.contact_name.trim());
+      formData.append("phone", supplierData.phone.trim());
+      formData.append("email", supplierData.email.trim());
+      formData.append("product_types",JSON.stringify(supplierData.product_types));
 
       if (supplierData.image) {
         formData.append('image', supplierData.image);

@@ -9,7 +9,8 @@ const Suppliers = () => {
     const fetchSupplierData = async () => {
       try {
         const response = await axios.get('http://localhost:4000/api/supplier');
-        setSupplierData(response.data);
+        const sortedData = response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        setSupplierData(sortedData);
       } catch (err) {
         console.error('Error fetching supplier data:', err);
       }

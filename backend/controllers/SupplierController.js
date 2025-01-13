@@ -5,7 +5,7 @@ const getSupplier = async (req, res) => {
   try {
     // Query to get supplier data along with their product types and product type IDs
     const query = `
-      SELECT s.supplier_id, s.company_name, s.address, s.contact_name, s.phone, s.email, s.image, 
+      SELECT s.supplier_id, s.company_name, s.address, s.contact_name, s.created_at, s.phone, s.email, s.image, 
              pt.type AS product_type
       FROM SUPPLIER s
       LEFT JOIN SUPPLIER_TYPE st ON s.supplier_id = st.supplier_id
@@ -26,6 +26,7 @@ const getSupplier = async (req, res) => {
           address: row.address,
           contact_name: row.contact_name,
           phone: row.phone,
+          created_at: row.created_at,
           email: row.email,
           image: row.image,
           product_types: []
