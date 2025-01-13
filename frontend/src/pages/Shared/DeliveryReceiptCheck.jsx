@@ -111,7 +111,7 @@ const DeliveryReceiptCheck = () => {
       const response = await axios.post('http://localhost:4000/api/purchase/approve', approveData);
       // create notif start --
       const isCompleted = response?.data?.status || null;
-      const notificationMessage = `(RECEIPT #${receipt.id} CHECKED) Following products ${isCompleted === "completed" ? "are approved completely" : ""}: ${products
+      const notificationMessage = `(RECEIPT #${receipt.id} CHECKED) Following products ${isCompleted === "completed" ? "are approved COMPLETELY" : ""}: ${products
         .map((product) => product.product)
         .join(", ")}`;
       try {

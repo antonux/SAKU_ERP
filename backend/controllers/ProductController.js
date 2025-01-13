@@ -23,6 +23,7 @@ const getProduct = async (req, res) => {
         p.image, 
         p.size, 
         p.unit_price, 
+        p.created_at, 
         p.reorder_level,
         i.location AS inventory_location,
         i.quantity AS inventory_quantity,
@@ -44,6 +45,7 @@ const getProduct = async (req, res) => {
           prod_id: row.prod_id,
           name: row.name,
           type: row.type,
+          created_at: row.created_at,
           image: row.image || '', // Default empty string if null
           size: row.size,
           unit_price: row.unit_price.toString(),
