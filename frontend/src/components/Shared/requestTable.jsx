@@ -65,7 +65,7 @@ const Table = () => {
                     All Product Request
                   </h1>
                 </div>
-                <div className="flex text-sm items-center space-x-2 gap-2 text-center pr-12 cursor-pointer">
+                <div className="hidden text-sm items-center space-x-2 gap-2 text-center pr-12 cursor-pointer">
                   <h1 className="font-normal text-[#272525] cursor-default">
                     Filter Date:
                   </h1>

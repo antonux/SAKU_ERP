@@ -93,11 +93,13 @@ const AddStock = () => {
       let completeStockStatus = "unknown";
       if (currentWarehouseStock > reorderLevel) {
         completeStockStatus = "in stock";
-      } else if (currentWarehouseStock <= reorderLevel) {
+      } else if (currentWarehouseStock <= reorderLevel && currentWarehouseStock > 0) {
         completeStockStatus = "low stock";
       } else if (currentWarehouseStock <= 0) {
         completeStockStatus = "out of stock";
       }
+      console.log('complete stock status', completeStockStatus, product.name)
+      console.log(requestFormData.status)
 
       return {
         id: product ? product.prod_id : "N/A",
@@ -363,8 +365,8 @@ const AddStock = () => {
                   <td className="px-6 py-5">₱{product.amount.toLocaleString()}</td>
                   <td className="px-6 py-5">₱{product.total.toLocaleString()}</td>
                   <td className="px-6 py-5">{product.currentWarehouseStock}</td>
-                  <td className={`px-6 py-5 font-semibold ${requestFormData.status !== "completed" && (product.status === "devliered" || product.status === "to be received") ? "hidden" : ""} ${requestFormData.status === "completed" ? getStatusColor(product.completeStockStatus) : getStatusColor(product.stockStatus)}`}>
-                    {requestFormData.status === "completed" ? product.completeStockStatus : product.stockStatus}
+                  <td className={`px-6 py-5 font-semibold ${requestFormData.status !== "completed" && (product.status === "delivered" || product.status === "to be received") ? "hidden" : ""} ${requestFormData.status === "completed" ? getStatusColor(product.completeStockStatus) : getStatusColor(product.stockStatus)}`}>
+                    {requestFormData.status === "completed" ? (product.completeStockStatus) : product.stockStatus}
                   </td>
                 </tr>
               ))}
