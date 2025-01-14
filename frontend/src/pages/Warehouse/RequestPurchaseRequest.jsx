@@ -12,7 +12,7 @@ import { useRole } from "../../contexts/RoleContext";
 
 // Modals
 import EditQuantity from "../../modals/EditQuantity";
-import RestockRequest from "../../modals/restockRequest";
+import RestockRequest from "../../modals/purchaseRequest";
 
 //hooks
 import useStatusColor from "../../hooks/useStatusColor";
